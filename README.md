@@ -1,0 +1,2 @@
+# YoungManGomoku
+Pray for JSH
