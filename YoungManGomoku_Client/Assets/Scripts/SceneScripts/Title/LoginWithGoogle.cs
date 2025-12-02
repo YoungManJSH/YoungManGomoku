@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Firebase.Extensions;
@@ -12,41 +13,53 @@ using UnityEngine.Networking;
 public class LoginWithGoogle : MonoBehaviour
 {
     [Header("Google API")]
-    private string GoogleAPI = "73345955248-rkt1qojvprclr1g2es3p878bv6d0c7tc.apps.googleusercontent.com"; // Replace with your actual WebClientID
-    private GoogleSignInConfiguration configuration;
+    private string googleAPI = "73345955248-rkt1qojvprclr1g2es3p878bv6d0c7tc.apps.googleusercontent.com";
 
-    [Header("Firebase Auth")]
+    //private GoogleSignInConfiguration configuration;
+
+    [Header("Firebase Auth")] 
     private FirebaseAuth auth;
     private FirebaseUser user;
 
-    [Header("UI References")]
-    public TextMeshProUGUI Username, UserEmail;
-    public GameObject LoginPanel, UserPanel;
-    public Image UserProfilePic;
+    [Header("UI References")] 
+    [SerializeField] private TextMeshProUGUI username;
+
+    [SerializeField] private TextMeshProUGUI userEmail;
+
+    [SerializeField] private GameObject loginPanel;
+    [SerializeField] private GameObject userPanel;
+    [SerializeField] private Image userProfilePic;
 
     private string imageUrl;
-    private bool isGoogleSignInInitialized = false;
+    private bool isGoogleSignInInitialized;
+
+    private void Awake()
+    {
+        isGoogleSignInInitialized = false;
+    }
 
     private void Start()
     {
         InitFirebase();
     }
 
-    void InitFirebase()
+    private void InitFirebase()
     {
         auth = FirebaseAuth.DefaultInstance;
     }
 
     public void Login()
     {
+#if UNITY_ANDROID && !UNITY_EDITOR
         if (!isGoogleSignInInitialized)
         {
             GoogleSignIn.Configuration = new GoogleSignInConfiguration
             {
                 RequestIdToken = true,
-                WebClientId = GoogleAPI,
+                WebClientId = googleAPI,
                 RequestEmail = true
             };
+            
             isGoogleSignInInitialized = true;
         }
 
@@ -84,15 +97,20 @@ public class LoginWithGoogle : MonoBehaviour
 
                 user = auth.CurrentUser;
 
-                Username.text = user.DisplayName;
-                UserEmail.text = user.Email;
+                username.text = user.DisplayName;
+                userEmail.text = user.Email;
 
-                LoginPanel.SetActive(false);
-                UserPanel.SetActive(true);
+                loginPanel.SetActive(false);
+                userPanel.SetActive(true);
 
                 StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
             });
         });
+
+#elif UNITY_STANDALONE || UNITY_EDITOR
+        //Debug.Log("pc환경입니다. 익명 로그인 실행");
+
+#endif
     }
 
     private string CheckImageUrl(string url)
@@ -101,10 +119,11 @@ public class LoginWithGoogle : MonoBehaviour
         {
             return url;
         }
+
         return imageUrl;
     }
 
-    IEnumerator LoadImage(string imageUri)
+    private IEnumerator LoadImage(string imageUri)
     {
         UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUri);
         yield return www.SendWebRequest();
@@ -112,7 +131,8 @@ public class LoginWithGoogle : MonoBehaviour
         if (www.result == UnityWebRequest.Result.Success)
         {
             Texture2D texture = DownloadHandlerTexture.GetContent(www);
-            UserProfilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            userProfilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f));
             Debug.Log("Image loaded successfully.");
         }
         else
@@ -120,11 +140,12 @@ public class LoginWithGoogle : MonoBehaviour
             Debug.LogError("Error loading profile image: " + www.error);
         }
     }
+
     // User SignOut From Firebase First Then again Sign IN With Google
     public void SignOut()
     {
         GoogleSignIn.DefaultInstance.SignOut();
-        LoginPanel.SetActive(true);
-        UserPanel.SetActive(false);
+        loginPanel.SetActive(true);
+        userPanel.SetActive(false);
     }
 }
