@@ -12,34 +12,39 @@ public class BoardGenerator : MonoBehaviour
     [SerializeField] private Color lineColor;
 
     private SpriteRenderer _spriteRenderer;
+    private int _totalPixel;
+    
+    public int TotalPixel => _totalPixel;
+    public int CellSize => cellSize;
+    public int MarginSize => marginSize;
 
-    private void Start()
+    private void Awake()
     {
-        int totalPixel = cellSize * Board.MaxCoord + marginSize * 2;
+        _totalPixel = cellSize * Board.MaxCoord + marginSize * 2;
 
         _spriteRenderer = GetComponent<SpriteRenderer>();
-        _spriteRenderer.sprite = GenerateBoard(totalPixel);
+        _spriteRenderer.sprite = GenerateBoard();
         
-        AdjustBoardScale(totalPixel);
+        AdjustBoardScale();
     }
 
-    private void AdjustBoardScale(int totalPixel)
+    private void AdjustBoardScale()
     {
-        float worldSize = totalPixel / PPU;
+        float worldSize = _totalPixel / PPU;
         float screenWidth = Camera.main!.orthographicSize * 2f * Camera.main.aspect;
         float scale = screenWidth / worldSize;
         transform.localScale = new Vector3(scale, scale, 1f);
     }
 
-    private Sprite GenerateBoard(int totalPixel)
+    private Sprite GenerateBoard()
     {
-        int endGridPos = totalPixel - marginSize;
-        Texture2D boardTexture = new Texture2D(totalPixel, totalPixel, TextureFormat.RGBA32, false);
+        int endGridPos = _totalPixel - marginSize;
+        Texture2D boardTexture = new Texture2D(_totalPixel, _totalPixel, TextureFormat.RGBA32, false);
 
         // woodTexture(배경) 적용
-        for (int y = 0; y < totalPixel; ++y)
+        for (int y = 0; y < _totalPixel; ++y)
         {
-            for (int x = 0; x < totalPixel; ++x)
+            for (int x = 0; x < _totalPixel; ++x)
             {
                 boardTexture.SetPixel(x, y, woodTexture.GetPixel(x % woodTexture.width, y % woodTexture.height));
             }
@@ -60,7 +65,7 @@ public class BoardGenerator : MonoBehaviour
         // 화점 적용
         int center = marginSize + Board.MaxCoord / 2 * cellSize;
         int point1 = marginSize + 3 * cellSize;
-        int point2 = totalPixel - point1;
+        int point2 = _totalPixel - point1;
         DrawCircle(boardTexture, center, center, pointRadius, lineColor);
         DrawCircle(boardTexture, point1, point1, pointRadius, lineColor);
         DrawCircle(boardTexture, point1, point2, pointRadius, lineColor);
@@ -70,7 +75,7 @@ public class BoardGenerator : MonoBehaviour
         boardTexture.Apply();
         boardTexture.filterMode = FilterMode.Point;
         
-        return Sprite.Create(boardTexture, new Rect(0, 0, totalPixel, totalPixel),
+        return Sprite.Create(boardTexture, new Rect(0, 0, _totalPixel, _totalPixel),
             new Vector2(0.5f, 0.5f), PPU);
     }
 

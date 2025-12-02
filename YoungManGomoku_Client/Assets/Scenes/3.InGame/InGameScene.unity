@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 362371474}
   - component: {fileID: 362371473}
   - component: {fileID: 362371475}
+  - component: {fileID: 362371476}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -184,7 +185,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -1635789395, guid: c2d527fddd257a949bf824f171ed4583, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -192,7 +193,7 @@ SpriteRenderer:
   m_Size: {x: 10, y: 10}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &362371474
@@ -228,6 +229,22 @@ MonoBehaviour:
   lineThickness: 2
   pointRadius: 12
   lineColor: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &362371476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 362371472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b59a28e239b1ff40a9e6b3584a9e1b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StoneMoveController
+  blackStone: {fileID: 5064696670536264343, guid: f3268151f9f2f42468e8645e9dd5ff21, type: 3}
+  whiteStone: {fileID: 5419395727140812493, guid: 00a3216d908dfe94abea5cda38ed9ad6, type: 3}
+  previewAlpha: 0.7
+  _boardGenerator: {fileID: 362371475}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
