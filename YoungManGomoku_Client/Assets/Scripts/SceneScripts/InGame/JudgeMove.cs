@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using UnityEngine;
 
 public static class JudgeMove
 {
@@ -166,7 +166,7 @@ public static class JudgeMove
                 coord.col = col;
                 return true;
             default:
-                Debug.Fail($"{nameof(CoordinateMove)} 로직 에러");
+                Debug.LogError($"Unknown dir : {dir}");
                 return false;
         }
     }

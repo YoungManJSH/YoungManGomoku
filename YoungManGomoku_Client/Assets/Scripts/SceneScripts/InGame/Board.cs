@@ -37,9 +37,7 @@ public class Board
         }
 
         ++NowTurn;
-
-        // 테스트용 출력
-        Console.WriteLine($"현재 {NowTurn}수 진행 중...");
+        
         return true;
     }
 
@@ -68,19 +66,10 @@ public class Board
 
         if (_blackJudges[row, col] == JudgeType.Forbidden)
         {
-            Console.WriteLine($"[{row}, {col}] 위치는 흑돌 금수입니다.");
             return false;
         }
 
         _nowBoard[row, col] = Stone.Black;
-
-        // 테스트용 출력
-        Console.WriteLine($"흑돌 [{row}, {col}] 착수");
-        if (_blackJudges[row, col] == JudgeType.Omok)
-        {
-            Console.WriteLine("*** 흑돌 오목! ***");
-        }
-
         return true;
     }
 
@@ -91,12 +80,5 @@ public class Board
         Debug.Assert(_nowBoard[row, col] == Stone.Empty);
 
         _nowBoard[row, col] = Stone.White;
-
-        // 테스트용 출력
-        Console.WriteLine($"백돌 [{row}, {col}] 착수");
-        if (JudgeMove.JudgeWhiteOmok(this, row, col))
-        {
-            Console.WriteLine("*** 백돌 오목! ***");
-        }
     }
 }
