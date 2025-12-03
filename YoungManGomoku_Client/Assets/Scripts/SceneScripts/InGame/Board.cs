@@ -65,9 +65,7 @@ public class Board
         Debug.Assert(_nowBoard[row, col] == Stone.Empty);
 
         if (_blackJudges[row, col] == JudgeType.Forbidden)
-        {
             return false;
-        }
 
         _nowBoard[row, col] = Stone.Black;
         return true;

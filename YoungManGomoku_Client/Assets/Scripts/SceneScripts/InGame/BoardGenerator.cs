@@ -24,7 +24,11 @@ public class BoardGenerator : MonoBehaviour
 
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _spriteRenderer.sprite = GenerateBoard();
-        
+    }
+
+    private void Start()
+    {
+        // 자식 오브젝트 생성 후에 통째로 크기를 조절하기 위해 Start에서 실행 
         AdjustBoardScale();
     }
 
