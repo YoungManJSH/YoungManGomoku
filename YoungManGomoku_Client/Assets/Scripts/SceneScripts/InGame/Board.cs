@@ -20,7 +20,7 @@ public class Board
         NowTurn = 0;
     }
 
-    public bool MoveStone(int row, int col)
+    public bool TryMoveStone(int row, int col)
     {
         if (NowTurn % 2 == 0)
         {
