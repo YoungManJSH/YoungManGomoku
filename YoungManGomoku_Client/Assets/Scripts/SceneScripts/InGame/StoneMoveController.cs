@@ -24,8 +24,8 @@ public class StoneMoveController : MonoBehaviour
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
-    private bool _isBlackTurn;
     private (int row, int col) _prevCoord;
+    private bool _isBlackTurn;
     
     private void Awake()
     {
@@ -60,13 +60,9 @@ public class StoneMoveController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 worldPos;
-        bool setFlag;
-        
 #if UNITY_EDITOR || UNITY_STANDALONE
-        worldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 worldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
         worldPos.z = 0;
-        setFlag = Input.GetMouseButton(0);
 
         if (TryGetBoardCoord(worldPos, out (int row, int col) coord))
         {
@@ -76,12 +72,14 @@ public class StoneMoveController : MonoBehaviour
                 return;
             }
             
-            if (setFlag)
+            if (Input.GetMouseButtonDown(0))
             {
                 MoveStone(coord);
                 (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
+                return;
             }
-            else if (coord != _prevCoord)
+            
+            if (coord != _prevCoord)
             {
                 _prevCoord = coord;
                 UpdatePreview(coord);
@@ -99,7 +97,7 @@ public class StoneMoveController : MonoBehaviour
         
         if (touch.phase is TouchPhase.Began or TouchPhase.Moved)
         {
-            worldPos = _mainCamera.ScreenToWorldPoint(touch.position);
+            Vector3 worldPos = _mainCamera.ScreenToWorldPoint(touch.position);
             worldPos.z = 0;
 
             if (TryGetBoardCoord(worldPos, out (int row, int col) coord))
@@ -109,16 +107,18 @@ public class StoneMoveController : MonoBehaviour
                     (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
                     return;
                 }
-            
-                if (coord == _prevCoord)
-                {
-                    MoveStone(coord);
-                    (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
-                }
-                else
+
+                if (coord != _prevCoord)
                 {
                     _prevCoord = coord;
                     UpdatePreview(coord);
+                    return;
+                }
+
+                if (touch.phase is TouchPhase.Began)
+                {
+                    MoveStone(coord);
+                    (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
                 }
 
                 return;
