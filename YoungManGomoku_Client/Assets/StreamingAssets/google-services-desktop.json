@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "73345955248",
+    "project_id": "gomoku-5d13b",
+    "storage_bucket": "gomoku-5d13b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73345955248:android:c5602a3898eed7e2ab9275",
+        "android_client_info": {
+          "package_name": "com.JSH.YoungManGomoku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "73345955248-rll91t54h1iolhnd4vais5iu4uja9qrh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.JSH.YoungManGomoku",
+            "certificate_hash": "ffa933e19c6086b35c74550f428c01afcc3e09d2"
+          }
+        },
+        {
+          "client_id": "73345955248-rkt1qojvprclr1g2es3p878bv6d0c7tc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5evrg3VOjPLVYwa0NojwjdeRAuynXvys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "73345955248-rkt1qojvprclr1g2es3p878bv6d0c7tc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

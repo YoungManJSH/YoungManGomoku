@@ -1,0 +1,37 @@
+using System;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.Video;
+using DG.Tweening;
+using UnityEngine.UI;
+
+public class TitleSceneManager : MonoBehaviour
+{
+    [SerializeField] private VideoPlayer videoPlayer;
+    [SerializeField] private GameObject openingVideo;
+    [SerializeField] private GameObject gameTitle;
+    [SerializeField] private GameObject whiteEffect;
+
+
+    private void OnEnable()
+    {
+        videoPlayer.loopPointReached += OnVideoEnd;
+    }
+
+    private void OnDisable()
+    {
+        videoPlayer.loopPointReached -= OnVideoEnd;
+    }
+
+    private void Start()
+    {
+        videoPlayer.Play();
+    }
+
+    private void OnVideoEnd(VideoPlayer videoPlayer)
+    {
+        openingVideo.SetActive(false);
+        gameTitle.SetActive(true);
+        whiteEffect.GetComponent<Image>().DOFade(0f, 1.5f).SetEase(Ease.InOutSine);
+    }
+}
