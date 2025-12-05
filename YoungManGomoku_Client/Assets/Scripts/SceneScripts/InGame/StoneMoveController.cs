@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class StoneMoveController : MonoBehaviour
@@ -20,10 +21,11 @@ public class StoneMoveController : MonoBehaviour
     private Transform _forbiddenParent;
     private HashSet<(int row, int col)> _forbiddenCoords;
     private Camera _mainCamera;
-    private float _pixelToWorld; // Board pixel to world ratio
+    
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
+    
     private (int row, int col) _prevCoord;
     private bool _isBlackTurn;
     
@@ -52,10 +54,17 @@ public class StoneMoveController : MonoBehaviour
     private void Start()
     {
         _mainCamera = Camera.main;
-        _pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
-        _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * _pixelToWorld;
-        _firstLineWorld = boardGenerator.MarginSize * _pixelToWorld;
-        _cellSizeWorld = boardGenerator.CellSize * _pixelToWorld;
+        
+        CalcWorldValue();
+        
+#if  UNITY_EDITOR || UNITY_STANDALONE
+        boardGenerator.OnBoardScaled += async() =>
+        {
+            // 변경된 스케일이 렌더러에 적용 완료될 때까지 대기
+            await Awaitable.EndOfFrameAsync();
+            CalcWorldValue();
+        };
+#endif
     }
 
     private void Update()
@@ -129,6 +138,14 @@ public class StoneMoveController : MonoBehaviour
 #endif
     }
 
+    private void CalcWorldValue()
+    {
+        float pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
+        _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * pixelToWorld;
+        _firstLineWorld = boardGenerator.MarginSize * pixelToWorld;
+        _cellSizeWorld = boardGenerator.CellSize * pixelToWorld;
+    }
+    
     private void CreatePreview()
     {
         Color previewColor = new Color(1f, 1f, 1f, previewAlpha);
@@ -166,6 +183,12 @@ public class StoneMoveController : MonoBehaviour
 
         coord = (Board.MaxCoord - Mathf.FloorToInt((localPos.y - _marginWorld) / _cellSizeWorld),
             Mathf.FloorToInt((localPos.x - _marginWorld) / _cellSizeWorld));
+        
+        if (coord.row < 0 || Board.MaxCoord < coord.row || coord.col < 0 || Board.MaxCoord < coord.col)
+        {
+            Debug.LogError($"[{coord.row}, {coord.col}], localPos: {localPos}");
+        }
+        
         return true;
     }
 
