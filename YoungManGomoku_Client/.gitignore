@@ -1,7 +1,10 @@
+# Created by https://www.toptal.com/developers/gitignore/api/unity
+# Edit at https://www.toptal.com/developers/gitignore?templates=unity
+
+### Unity ###
 # This .gitignore file should be placed at the root of your Unity project directory
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
-#
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -71,50 +74,34 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# End of https://www.toptal.com/developers/gitignore/api/unity
 
 
-# kjh's C++ gitignores
-#
+# Rider / IntelliJ / Pycharm (JetBrains)
+.idea/
 
-/.vs
-*.ilk
-*.pdb
-*.log
-*.idb
-*.tlog
-*.lastbuildstate
-*.suo
-*.db
+# Plastic SCM workspace data
+.plastic/
 
-# Prerequisites
-*.d
+# Unity temporary metadata
+.utmp/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Visual Studio Setting (But, We're Project IDE is Rider)
+.vsconfig
 
-# Precompiled Headers
-*.gch
-*.pch
+# Plastic SCM or Unity VCS ignore Setting
+ignore.conf
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# macOS
+.DS_Store
 
-# Fortran module files
-*.mod
-*.smod
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# Android Build
 
-# Executables
-*.exe
-*.out
-*.app
+# Unity auto-generated build backup (IL2CPP Build Data)
+*BackUpThisFolder_ButDontShipItWithYourGame/
+
+# Burst Debug info ( Burst Compiler Native Code Debugging Data)
+*BurstDebugInformation_DoNotShip/
+
+
