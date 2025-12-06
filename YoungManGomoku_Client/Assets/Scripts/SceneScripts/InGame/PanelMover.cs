@@ -1,47 +1,35 @@
-using System;
 using UnityEngine;
 
 public class PanelMover : MonoBehaviour
 {
     [SerializeField] private RectTransform topPanel;
     [SerializeField] private RectTransform bottomPanel;
-    [SerializeField] private GameObject board;
-
-    private SpriteRenderer _boardRenderer;
-    private BoardGenerator _boardGenerator;
+    [SerializeField] private RectTransform startCountDown;
+    [SerializeField] private SpriteRenderer boardRenderer;
+    [SerializeField] private BoardGenerator boardGenerator;
+    
     private Camera _mainCamera;
 
+    private void Awake()
+    {
+        boardGenerator.OnBoardScaled += async() => await MoveUIPanel();
+    }
+    
     private void Start()
     {
         _mainCamera = Camera.main;
-        _boardRenderer = board.GetComponent<SpriteRenderer>();
-        _boardGenerator = board.GetComponent<BoardGenerator>();
-        
-#if  UNITY_EDITOR || UNITY_STANDALONE
-        _boardGenerator.OnBoardScaled += async() =>
-        {
-            // 변경된 스케일이 렌더러에 적용 완료될 때까지 대기
-            await Awaitable.EndOfFrameAsync();
-            MoveUIPanel();
-        };
-#endif
     }
     
-    public void MoveUIPanel()
+    private async Awaitable MoveUIPanel()
     {
-        Rect boardRect = GetScreenRectOfBoard();
+        await Awaitable.EndOfFrameAsync();
+        
+        Vector3 minPoint = _mainCamera.WorldToScreenPoint(boardRenderer.bounds.min);
+        Vector3 maxPoint = _mainCamera.WorldToScreenPoint(boardRenderer.bounds.max);
+        Rect boardRect = new Rect(minPoint, maxPoint - minPoint);
 
         topPanel.position = new Vector3(0f, boardRect.yMax, 0f);
         bottomPanel.position = new Vector3(0f, boardRect.yMin, 0f);
-    }
-    
-    private Rect GetScreenRectOfBoard()
-    {
-        Bounds bounds = _boardRenderer.bounds;
-
-        Vector3 minPoint = _mainCamera.WorldToScreenPoint(bounds.min);
-        Vector3 maxPoint = _mainCamera.WorldToScreenPoint(bounds.max);
-
-        return new Rect(minPoint, maxPoint - minPoint);
+        startCountDown.position = new Vector3(boardRect.width / 2f, boardRect.yMin + boardRect.height / 2f, 0f);
     }
 }
