@@ -31,7 +31,6 @@ public class StoneMoveController : MonoBehaviour
     
     private void Awake()
     {
-        _boardInform = new Board();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         
         _audioSource = GetComponent<AudioSource>();
@@ -49,22 +48,20 @@ public class StoneMoveController : MonoBehaviour
         
         CreatePreview();
         _isBlackTurn = true;
+
+        boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
     }
 
     private void Start()
     {
+        _boardInform = GameManager.Instance.BoardInform;
+        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
+        GameManager.Instance.OnGameStart += () => MoveStone((7, 7));
+        GameManager.Instance.OnGameStart += () => enabled = true;
+        GameManager.Instance.OnGameEnd += () => enabled = false;
+        
         _mainCamera = Camera.main;
-        
-        CalcWorldValue();
-        
-#if  UNITY_EDITOR || UNITY_STANDALONE
-        boardGenerator.OnBoardScaled += async() =>
-        {
-            // 변경된 스케일이 렌더러에 적용 완료될 때까지 대기
-            await Awaitable.EndOfFrameAsync();
-            CalcWorldValue();
-        };
-#endif
+        enabled = false;
     }
 
     private void Update()
@@ -137,9 +134,11 @@ public class StoneMoveController : MonoBehaviour
         }
 #endif
     }
-
-    private void CalcWorldValue()
+    
+    private async Awaitable CalcWorldValue()
     {
+        await Awaitable.EndOfFrameAsync();
+        
         float pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
         _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * pixelToWorld;
         _firstLineWorld = boardGenerator.MarginSize * pixelToWorld;
@@ -184,11 +183,6 @@ public class StoneMoveController : MonoBehaviour
         coord = (Board.MaxCoord - Mathf.FloorToInt((localPos.y - _marginWorld) / _cellSizeWorld),
             Mathf.FloorToInt((localPos.x - _marginWorld) / _cellSizeWorld));
         
-        if (coord.row < 0 || Board.MaxCoord < coord.row || coord.col < 0 || Board.MaxCoord < coord.col)
-        {
-            Debug.LogError($"[{coord.row}, {coord.col}], localPos: {localPos}");
-        }
-        
         return true;
     }
 
@@ -204,7 +198,6 @@ public class StoneMoveController : MonoBehaviour
             _audioSource.Play();
             if (_isBlackTurn) ClearForbiddenMarks();
             _isBlackTurn = _boardInform.NowTurn % 2 == 0;
-            
             return;
         }
         
@@ -213,11 +206,28 @@ public class StoneMoveController : MonoBehaviour
         _audioSource.PlayOneShot(deniedSound);
         _forbiddenCoords.Add(coord);
     }
+
+    private async Awaitable OnBlackUnmovable()
+    {
+        enabled = false;
+        
+        for (int row = 0; row < Board.BoardSize; ++row)
+        {
+            for (int col = 0; col < Board.BoardSize; ++col)
+            {
+                if (_boardInform[row, col] == Stone.Empty)
+                {
+                    await Awaitable.WaitForSecondsAsync(0.3f);
+                    MoveStone((row, col));
+                }
+            }
+        }
+    }
     
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)
     {
-        GameObject nowPreview = _isBlackTurn ? _blackPreview :  _whitePreview;
+        GameObject nowPreview = _isBlackTurn ? _blackPreview : _whitePreview;
 
         nowPreview.transform.position = _spriteRenderer.bounds.min +
             new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
