@@ -1,4 +1,0 @@
-repository "YoungManGomoku_Client/YoungManGomoku_Client@14569691677724@cloud"
-  path "/"
-    br "/main"
-    co "/main"
