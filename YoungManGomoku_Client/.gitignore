@@ -75,3 +75,33 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # End of https://www.toptal.com/developers/gitignore/api/unity
+
+
+# Rider / IntelliJ / Pycharm (JetBrains)
+.idea/
+
+# Plastic SCM workspace data
+.plastic/
+
+# Unity temporary metadata
+.utmp/
+
+# Visual Studio Setting (But, We're Project IDE is Rider)
+.vsconfig
+
+# Plastic SCM or Unity VCS ignore Setting
+ignore.conf
+
+# macOS
+.DS_Store
+
+
+# Android Build
+
+# Unity auto-generated build backup (IL2CPP Build Data)
+*BackUpThisFolder_ButDontShipItWithYourGame/
+
+# Burst Debug info ( Burst Compiler Native Code Debugging Data)
+*BurstDebugInformation_DoNotShip/
+
+
