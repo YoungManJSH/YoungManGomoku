@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class StoneMoveController : MonoBehaviour
@@ -10,6 +10,8 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private AudioClip deniedSound;
     [SerializeField] private float previewAlpha;
     [SerializeField] private BoardGenerator boardGenerator;
+
+    public event Action<bool> OnStoneMove;
     
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
@@ -58,7 +60,12 @@ public class StoneMoveController : MonoBehaviour
         _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
         GameManager.Instance.OnGameStart += () => MoveStone((7, 7));
         GameManager.Instance.OnGameStart += () => enabled = true;
-        GameManager.Instance.OnGameEnd += () => enabled = false;
+        GameManager.Instance.OnGameEnd += () =>
+        {
+            _blackPreview.SetActive(false);
+            _whitePreview.SetActive(false);
+            enabled = false;
+        };
         
         _mainCamera = Camera.main;
         enabled = false;
@@ -198,6 +205,7 @@ public class StoneMoveController : MonoBehaviour
             _audioSource.Play();
             if (_isBlackTurn) ClearForbiddenMarks();
             _isBlackTurn = _boardInform.NowTurn % 2 == 0;
+            OnStoneMove!.Invoke(_isBlackTurn);
             return;
         }
         

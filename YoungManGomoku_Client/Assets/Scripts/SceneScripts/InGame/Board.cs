@@ -44,13 +44,7 @@ public class Board
         else
         {
             MoveWhite(row, col);
-            if (NowTurn > 6) // 흑돌이 4개 이상 있고 백돌 착수 이후
-            {
-                UpdateBlackJudges();
-            }
         }
-
-        ++NowTurn;
         
         return true;
     }
@@ -99,15 +93,18 @@ public class Board
         Debug.Assert(_nowBoard[row, col] == Stone.Empty);
 
         if (_blackJudges[row, col] == JudgeType.Forbidden)
+        {
             return false;
+        }
 
         _nowBoard[row, col] = Stone.Black;
+        ++NowTurn;
 
         if (_blackJudges[row, col] == JudgeType.Omok)
         {
             BlackWin!.Invoke();
         }
-        
+
         return true;
     }
 
@@ -118,10 +115,17 @@ public class Board
         Debug.Assert(_nowBoard[row, col] == Stone.Empty);
 
         _nowBoard[row, col] = Stone.White;
+        ++NowTurn;
 
         if (JudgeMove.JudgeWhiteOmok(this, row, col))
         {
             WhiteWin!.Invoke();
+            return;
+        }
+        
+        if (NowTurn > 7) // 흑돌이 4개 이상 있고 백돌 착수 이후
+        {
+            UpdateBlackJudges();
         }
     }
 }
