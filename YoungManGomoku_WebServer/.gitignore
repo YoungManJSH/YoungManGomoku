@@ -149,8 +149,8 @@ secrets.json
 
 # EF Core
 # Entity Framework Migrations build artifacts
-*Migrations/*.Designer.cs
-*Migrations/*ModelSnapshot.cs
+/*/*Migrations/*.Designer.cs
+/*/*Migrations/*ModelSnapshot.cs
 
 # IIS Express
 /.vs/
