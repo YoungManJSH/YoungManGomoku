@@ -10,7 +10,7 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
-/[Ll]ibrary
+/[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
@@ -36,7 +36,7 @@ ExportedObj/
 .consulo/
 *.csproj
 *.unityproj
-*.sln 
+*.sln
 *.suo
 *.tmp
 *.user
@@ -114,8 +114,10 @@ crashlytics-build.properties
 ############################################################
 
 # Build results
-/bin/
-/obj/
+bin/
+/*/bin/
+obj/
+/*/obj/
 
 # Visual Studio artifacts
 # Rider / Visual Studio Project User Files
@@ -141,7 +143,6 @@ secrets.json
 
 # ASP.NET Publishing output
 # For Release Only
-/publish/
 /**/publish/
 /**/wwwroot/dist/
 /**/wwwroot/node_modules/
