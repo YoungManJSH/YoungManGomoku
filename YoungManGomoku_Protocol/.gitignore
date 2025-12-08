@@ -10,7 +10,7 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
-/[Ll]ibrary/
+/[Ll]ibrary
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
@@ -36,7 +36,7 @@ ExportedObj/
 .consulo/
 *.csproj
 *.unityproj
-*.sln
+*.sln 
 *.suo
 *.tmp
 *.user
@@ -63,11 +63,6 @@ sysinfo.txt
 *.unitypackage
 *.app
 
-# Visual Studio cache directory
-.vs/
-
-# Gradle cache directory
-.gradle/
 
 # Android Build
 # Burst Debug info
@@ -94,12 +89,6 @@ crashlytics-build.properties
 # JetBrains Unity plugin
 /[Aa]ssets/Plugins/Editor/JetBrains*
 
-# Visual Studio cache directory
-.vs/
-
-# Gradle cache directory
-.gradle/
-
 # Plastic SCM workspace data
 .plastic/
 
@@ -114,10 +103,8 @@ crashlytics-build.properties
 ############################################################
 
 # Build results
-bin/
-/*/bin/
-obj/
-/*/obj/
+/bin/
+/obj/
 
 # Visual Studio artifacts
 # Rider / Visual Studio Project User Files
@@ -143,14 +130,15 @@ secrets.json
 
 # ASP.NET Publishing output
 # For Release Only
+/publish/
 /**/publish/
 /**/wwwroot/dist/
 /**/wwwroot/node_modules/
 
 # EF Core
 # Entity Framework Migrations build artifacts
-/*/*Migrations/*.Designer.cs
-/*/*Migrations/*ModelSnapshot.cs
+*Migrations/*.Designer.cs
+*Migrations/*ModelSnapshot.cs
 
 # IIS Express
 /.vs/
@@ -229,15 +217,15 @@ packages/
 *.userosscache
 *.userprefs
 
-# VS Configuration
-.vsconfig
-
 # Solution / project backup
 *.sln.docstates
 
 # JetBrains Rider / IntelliJ
 .idea/
 *.sln.iml
+
+# VS Configuration
+.vsconfig
 
 ############################################################
 # 6. macOS / Windows OS Junk
@@ -271,3 +259,9 @@ yarn-error.log*
 *.cache
 *.bak
 *.old
+
+
+
+
+# Protocol Ignores
+*.meta
