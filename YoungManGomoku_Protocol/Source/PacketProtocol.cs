@@ -8,5 +8,10 @@ using YoungManGomoku_Protocol.Source.TypeEnum;
 
 namespace YoungManGomoku_Protocol.Source
 {
+    public class CS_GoogleAccountRegisterDTO
+    {
+        public string UserNickname { get; set; }
+        public string IdToken { get; set; }        
+    }
 
 }

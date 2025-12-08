@@ -15,6 +15,8 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 
 		public uint LoseCount { get; set; }
 
+		public uint DisconnectCount { get; set; }
+
 		public uint BattleCount => (WinCount + DrawCount + LoseCount);
 
 		// 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
