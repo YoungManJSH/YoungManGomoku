@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private AudioClip deniedSound;
     [SerializeField] private float previewAlpha;
     [SerializeField] private BoardGenerator boardGenerator;
+
+    public event Action<bool> OnStoneMove;
     
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
@@ -20,16 +23,16 @@ public class StoneMoveController : MonoBehaviour
     private Transform _forbiddenParent;
     private HashSet<(int row, int col)> _forbiddenCoords;
     private Camera _mainCamera;
-    private float _pixelToWorld; // Board pixel to world ratio
+    
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
+    
     private (int row, int col) _prevCoord;
     private bool _isBlackTurn;
     
     private void Awake()
     {
-        _boardInform = new Board();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         
         _audioSource = GetComponent<AudioSource>();
@@ -47,15 +50,25 @@ public class StoneMoveController : MonoBehaviour
         
         CreatePreview();
         _isBlackTurn = true;
+
+        boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
     }
 
     private void Start()
     {
+        _boardInform = GameManager.Instance.BoardInform;
+        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
+        GameManager.Instance.OnGameStart += () => MoveStone((7, 7));
+        GameManager.Instance.OnGameStart += () => enabled = true;
+        GameManager.Instance.OnGameEnd += () =>
+        {
+            _blackPreview.SetActive(false);
+            _whitePreview.SetActive(false);
+            enabled = false;
+        };
+        
         _mainCamera = Camera.main;
-        _pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
-        _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * _pixelToWorld;
-        _firstLineWorld = boardGenerator.MarginSize * _pixelToWorld;
-        _cellSizeWorld = boardGenerator.CellSize * _pixelToWorld;
+        enabled = false;
     }
 
     private void Update()
@@ -128,7 +141,17 @@ public class StoneMoveController : MonoBehaviour
         }
 #endif
     }
-
+    
+    private async Awaitable CalcWorldValue()
+    {
+        await Awaitable.EndOfFrameAsync();
+        
+        float pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
+        _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * pixelToWorld;
+        _firstLineWorld = boardGenerator.MarginSize * pixelToWorld;
+        _cellSizeWorld = boardGenerator.CellSize * pixelToWorld;
+    }
+    
     private void CreatePreview()
     {
         Color previewColor = new Color(1f, 1f, 1f, previewAlpha);
@@ -166,6 +189,7 @@ public class StoneMoveController : MonoBehaviour
 
         coord = (Board.MaxCoord - Mathf.FloorToInt((localPos.y - _marginWorld) / _cellSizeWorld),
             Mathf.FloorToInt((localPos.x - _marginWorld) / _cellSizeWorld));
+        
         return true;
     }
 
@@ -181,7 +205,7 @@ public class StoneMoveController : MonoBehaviour
             _audioSource.Play();
             if (_isBlackTurn) ClearForbiddenMarks();
             _isBlackTurn = _boardInform.NowTurn % 2 == 0;
-            
+            OnStoneMove!.Invoke(_isBlackTurn);
             return;
         }
         
@@ -190,11 +214,28 @@ public class StoneMoveController : MonoBehaviour
         _audioSource.PlayOneShot(deniedSound);
         _forbiddenCoords.Add(coord);
     }
+
+    private async Awaitable OnBlackUnmovable()
+    {
+        enabled = false;
+        
+        for (int row = 0; row < Board.BoardSize; ++row)
+        {
+            for (int col = 0; col < Board.BoardSize; ++col)
+            {
+                if (_boardInform[row, col] == Stone.Empty)
+                {
+                    await Awaitable.WaitForSecondsAsync(0.3f);
+                    MoveStone((row, col));
+                }
+            }
+        }
+    }
     
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)
     {
-        GameObject nowPreview = _isBlackTurn ? _blackPreview :  _whitePreview;
+        GameObject nowPreview = _isBlackTurn ? _blackPreview : _whitePreview;
 
         nowPreview.transform.position = _spriteRenderer.bounds.min +
             new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
