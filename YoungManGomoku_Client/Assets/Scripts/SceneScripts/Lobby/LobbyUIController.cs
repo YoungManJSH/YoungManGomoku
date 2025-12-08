@@ -6,6 +6,10 @@ public class LobbyUIController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void MoveSceneToLobby()
     {
-        SceneManager.LoadScene("ShopScene");
+#if UNITY_ANDROID && !UNITY_EDITOR
+        SceneManager.LoadScene("ShopScene - Android");
+#elif UNITY_STANDALONE || UNITY_EDITOR
+        SceneManager.LoadScene("ShopScene - PC");
+#endif
     }
 }
