@@ -6,13 +6,25 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/1.Title/TitleScene.unity
+    path: Assets/Scenes/1.Title/PlatformChecker.unity
+    guid: 28d35a5b88cb5e244a1eb210e6920533
+  - enabled: 1
+    path: Assets/Scenes/1.Title/TitleScene - PC.unity
+    guid: df696314ab22da846a0f195fd3542965
+  - enabled: 1
+    path: Assets/Scenes/1.Title/TitleScene - Android.unity
     guid: 99d843f1690ab7647af28ffaafd86701
   - enabled: 1
-    path: Assets/Scenes/2.Lobby/LobbyScene.unity
+    path: Assets/Scenes/2.Lobby/LobbyScene - PC.unity
+    guid: dd8f093f171ed1149aed7f6bda005316
+  - enabled: 1
+    path: Assets/Scenes/2.Lobby/LobbyScene - Android.unity
     guid: aa5d9b1c182ac1846a996c8ef80c07b8
   - enabled: 1
-    path: Assets/Scenes/4.Shop/ShopScene.unity
+    path: Assets/Scenes/4.Shop/ShopScene - PC.unity
+    guid: 5309e9932d41be14bb7696b31c85901e
+  - enabled: 1
+    path: Assets/Scenes/4.Shop/ShopScene - Android.unity
     guid: b7752833e54b9ee44bbe8869bb84084e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

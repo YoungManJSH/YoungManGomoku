@@ -31,6 +31,10 @@ public class ShopUIController : MonoBehaviour
 
     public void MoveSceneToLobby()
     {
-        SceneManager.LoadScene("LobbyScene");
+#if UNITY_ANDROID && !UNITY_EDITOR
+        SceneManager.LoadScene("LobbyScene - Android");
+#elif UNITY_STANDALONE || UNITY_EDITOR
+        SceneManager.LoadScene("LobbyScene - PC");
+#endif
     }
 }

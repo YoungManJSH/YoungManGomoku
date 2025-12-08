@@ -11,6 +11,8 @@ public class TitleSceneManager : MonoBehaviour
     [SerializeField] private GameObject openingVideo;
     [SerializeField] private GameObject gameTitle;
     [SerializeField] private GameObject whiteEffect;
+    
+    [SerializeField] private AudioSource audioSource;
 
 
     private void OnEnable()
@@ -22,7 +24,7 @@ public class TitleSceneManager : MonoBehaviour
     {
         videoPlayer.loopPointReached -= OnVideoEnd;
     }
-
+    
     private void Start()
     {
         videoPlayer.Play();
@@ -33,5 +35,6 @@ public class TitleSceneManager : MonoBehaviour
         openingVideo.SetActive(false);
         gameTitle.SetActive(true);
         whiteEffect.GetComponent<Image>().DOFade(0f, 1.5f).SetEase(Ease.InOutSine);
+        audioSource.Play();
     }
 }
