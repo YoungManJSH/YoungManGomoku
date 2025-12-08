@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class BoardGenerator : MonoBehaviour
@@ -10,13 +11,21 @@ public class BoardGenerator : MonoBehaviour
     [SerializeField] private int lineThickness;
     [SerializeField] private int pointRadius;
     [SerializeField] private Color lineColor;
-
+    [SerializeField] private PanelMover panelMover;
+    
     private SpriteRenderer _spriteRenderer;
+    private Camera _mainCamera;
     private int _totalPixel;
     
-    public int TotalPixel => _totalPixel;
+#if UNITY_EDITOR || UNITY_STANDALONE
+    private int _lastWidth;
+    private int _lastHeight;
+#endif
+    
+    public event Action OnBoardScaled;
     public int CellSize => cellSize;
     public int MarginSize => marginSize;
+    public int TotalPixel => _totalPixel;
 
     private void Awake()
     {
@@ -28,14 +37,35 @@ public class BoardGenerator : MonoBehaviour
 
     private void Start()
     {
+        _mainCamera = Camera.main;
         // 자식 오브젝트 생성 후에 통째로 크기를 조절하기 위해 Start에서 실행 
         AdjustBoardScale();
+        OnBoardScaled!.Invoke(); // 이벤트 구조로 순서 보장
+        
+#if UNITY_EDITOR || UNITY_STANDALONE
+        _lastWidth = Screen.width;
+        _lastHeight = Screen.height;
+#endif
     }
+    
+#if  UNITY_EDITOR || UNITY_STANDALONE
+    private void Update()
+    {
+        if (Screen.width != _lastWidth || Screen.height != _lastHeight)
+        {
+            _lastWidth = Screen.width;
+            _lastHeight = Screen.height;
+            
+            AdjustBoardScale();
+            OnBoardScaled!.Invoke();
+        }
+    }
+#endif
 
     private void AdjustBoardScale()
     {
         float worldSize = _totalPixel / PPU;
-        float screenWidth = Camera.main!.orthographicSize * 2f * Camera.main.aspect;
+        float screenWidth = _mainCamera.orthographicSize * 2f * _mainCamera.aspect;
         float scale = screenWidth / worldSize;
         transform.localScale = new Vector3(scale, scale, 1f);
     }
