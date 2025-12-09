@@ -84,7 +84,7 @@ public class NetworkManager : MonoBehaviour
     // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
     // 따라서 Json으로 변환하면 string이 무지막지하게 길어질 것이다.
     // -> 꼭 필요한 데이터 string IdToken, NickName 2가지만 DTO로 빼서 넘겨주도록 하자.
-    public async Awaitable GoogleAccountRegisterRequest(CS_GoogleLoginDTO GoogleLoginUserDTO)
+    public async Awaitable GoogleAccountRegisterRequest(CS_GoogleAccountRegisterDTO GoogleLoginUserDTO)
 	{
 		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Register", "POST");
 
