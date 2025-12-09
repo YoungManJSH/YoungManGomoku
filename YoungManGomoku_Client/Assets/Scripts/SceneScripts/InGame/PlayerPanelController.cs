@@ -13,8 +13,6 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private StoneMoveController stoneMoveController;
     [SerializeField] private AudioClip useByoyomiSound;
     [SerializeField] private AudioClip byoyomiTickSound;
-    [SerializeField] private GameManager gameManager;
-    [SerializeField] private EventManager eventManager;
     [SerializeField] private bool isPlayer;
 
     private GameManager.TimeController _myTimer;
@@ -35,9 +33,16 @@ public class PlayerPanelController : MonoBehaviour
         byoyomiTimer.color = _translucent;
         byoyomiCount.color = _translucent;
         clockIcon.color = _translucent;
+        
+        GameManager gm = GameManager.Instance;
+        _isThisBlack = isPlayer == gm.IsPlayerBlack;
+        _myTimer = isPlayer ? gm.PlayerTime : gm.OppositeTime;
+        _myTimer.StartByoyomi += OnStartByoyomi;
+        _myTimer.UseByoyomi += OnUseByoyomi;
+        _myTimer.OnTimeLose += OnTimeLose;
 
         stoneMoveController.OnStoneMove += OnTurnChanged;
-        eventManager.OnGameEnd += () => enabled = false;
+        EventManager.Instance.OnGameEnd += () => enabled = false;
     }
 
     private void Start()
@@ -75,15 +80,6 @@ public class PlayerPanelController : MonoBehaviour
             byoyomiTimer.color = Color.coral;
             if (isPlayer) _audioSource?.PlayOneShot(byoyomiTickSound);
         }
-    }
-
-    public void OnBlackDecided(bool isThisBlack)
-    {
-        _isThisBlack = isThisBlack;
-        _myTimer = isPlayer ? gameManager.PlayerTime : gameManager.OppositeTime;
-        _myTimer.StartByoyomi += OnStartByoyomi;
-        _myTimer.UseByoyomi += OnUseByoyomi;
-        _myTimer.OnTimeLose += OnTimeLose;
     }
 
     private void OnTurnChanged(bool isBlackTurn)
