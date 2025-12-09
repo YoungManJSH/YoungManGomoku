@@ -4,6 +4,7 @@ public class PanelMover : MonoBehaviour
 {
     [SerializeField] private RectTransform topPanel;
     [SerializeField] private RectTransform bottomPanel;
+    [SerializeField] private RectTransform messageBoxPanel;
     [SerializeField] private RectTransform startCountDown;
     [SerializeField] private SpriteRenderer boardRenderer;
     [SerializeField] private BoardGenerator boardGenerator;
@@ -27,9 +28,11 @@ public class PanelMover : MonoBehaviour
         Vector3 minPoint = _mainCamera.WorldToScreenPoint(boardRenderer.bounds.min);
         Vector3 maxPoint = _mainCamera.WorldToScreenPoint(boardRenderer.bounds.max);
         Rect boardRect = new Rect(minPoint, maxPoint - minPoint);
-
+        
         topPanel.position = new Vector3(0f, boardRect.yMax, 0f);
         bottomPanel.position = new Vector3(0f, boardRect.yMin, 0f);
+
+        messageBoxPanel.position = new Vector3(boardRect.width / 2f, boardRect.yMin + boardRect.height / 15f, 0f);
         startCountDown.position = new Vector3(boardRect.width / 2f, boardRect.yMin + boardRect.height / 2f, 0f);
     }
 }
