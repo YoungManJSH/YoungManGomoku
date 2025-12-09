@@ -5,32 +5,32 @@ public class GameManager : MonoBehaviour
 {
     public class TimeController
     {
-        private float mainTime;
+        private float _mainTime;
         public float MainTime
         {
-            get => mainTime;
+            get => _mainTime;
             private set
             {
                 if (value <= 0f)
                 {
-                    mainTime = 0f;
+                    _mainTime = 0f;
                     Byoyomi = initByoyomiSeconds;
                     StartByoyomi!.Invoke();
                     return;
                 }
                 
-                mainTime = value;
+                _mainTime = value;
             }
         }
 
-        private int byoyomiLeft;
+        private int _byoyomiLeft;
         public int ByoyomiLeft
         {
-            get => byoyomiLeft;
+            get => _byoyomiLeft;
             private set
             {
                 Debug.Assert(value >= 0);
-                byoyomiLeft = value;
+                _byoyomiLeft = value;
                 if (value == 0f)
                 {
                     OnTimeLose?.Invoke();
@@ -43,19 +43,19 @@ public class GameManager : MonoBehaviour
         }
 
         public readonly float initByoyomiSeconds;
-        private float byoyomi;
+        private float _byoyomi;
         public float Byoyomi
         {
-            get => byoyomi;
+            get => _byoyomi;
             private set
             {
                 if (value <= 0f)
                 {
                     --ByoyomiLeft;
-                    byoyomi = initByoyomiSeconds;
+                    _byoyomi = initByoyomiSeconds;
                     return;
                 }
-                byoyomi = value;
+                _byoyomi = value;
             }
         }
         
@@ -89,20 +89,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int byoyomiCounts;
     [SerializeField] private int byoyomiSeconds;
     [SerializeField] private StoneMoveController stoneMoveController;
-    
-    public static GameManager Instance { get; private set; }
-
-    public event Action OnGameStart;
-    public event Action OnGameEnd;
-    
-    public event Action OnGameWin;
-    public event Action OnGameLose;
-    
-    public event Action OnPlayerSurrender;
-    public event Action OnOppositeSurrender;
-
-    public event Action OnOppositeDisconnected;
-    public event Action OnOppositeDisconnectedWin;
+    [SerializeField] private PlayerPanelController playerPanel;
+    [SerializeField] private PlayerPanelController oppositePanel;
+    [SerializeField] private ProgressText progressText;
     
     public Board BoardInform { get; private set; }
     public bool IsPlayerBlack { get; private set; }
@@ -110,28 +99,26 @@ public class GameManager : MonoBehaviour
     public TimeController OppositeTime { get; private set; }
     
     private TimeController _nowPlayerTime;
+    private EventManager _eventManager;
 
     private void Awake()
     {
-        Instance = this;
+        _eventManager = GetComponent<EventManager>();
+        
+        // Awake 타임에 IsPlayerBlack 정보가 정해져야 함!
+        IsPlayerBlack = true; // 테스트용 임시 초기화, 이후 서버에서 받아온 정보로 결정
+        
         BoardInform = new Board();
         PlayerTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
         OppositeTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
-
-        OnGameEnd += () => enabled = false;
         
-        OnGameWin += () => OnGameEnd!.Invoke();
-        OnGameLose += () => OnGameEnd!.Invoke();
+        playerPanel.OnBlackDecided(IsPlayerBlack);
+        oppositePanel.OnBlackDecided(!IsPlayerBlack);
+        progressText.OnBoardGenerated(BoardInform, IsPlayerBlack, PlayerTime, OppositeTime);
 
-        OnPlayerSurrender += () => OnGameLose!.Invoke();
-        OnOppositeSurrender += () => OnGameWin!.Invoke();
-
-        PlayerTime.OnTimeLose += () => OnGameLose!.Invoke();
-        OppositeTime.OnTimeLose += () => OnGameWin!.Invoke(); // 추후 수정, 상대방 시간패 처리는 서버에서 받아야 함
-
-        OnOppositeDisconnectedWin += () => OnGameWin!.Invoke();
+        _eventManager.OnGameStart += () => enabled = true;
+        _eventManager.OnGameEnd += () => enabled = false;
         
-        IsPlayerBlack = true; // 테스트용 임시 초기화, 이후 서버에서 받아온 정보로 결정
         stoneMoveController.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTime = isBlackTurn == IsPlayerBlack ? PlayerTime : OppositeTime;
@@ -141,19 +128,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        BoardInform.BlackWin += () => (IsPlayerBlack ? OnGameWin : OnGameLose)!.Invoke();
-        BoardInform.WhiteWin += () => (IsPlayerBlack ? OnGameLose : OnGameWin)!.Invoke();
         enabled = false;
     }
 
     private void Update()
     {
         _nowPlayerTime.TimeProgress(Time.deltaTime);
-    }
-
-    public void StartGame()
-    {
-        enabled = true;
-        OnGameStart!.Invoke();
     }
 }

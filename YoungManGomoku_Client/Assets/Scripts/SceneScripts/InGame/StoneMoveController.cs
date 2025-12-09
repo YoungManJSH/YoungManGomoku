@@ -10,6 +10,8 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private AudioClip deniedSound;
     [SerializeField] private float previewAlpha;
     [SerializeField] private BoardGenerator boardGenerator;
+    [SerializeField] private GameManager gameManager;
+    [SerializeField] private EventManager eventManager;
 
     public event Action<bool> OnStoneMove;
     
@@ -52,20 +54,25 @@ public class StoneMoveController : MonoBehaviour
         _isBlackTurn = true;
 
         boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
-    }
-
-    private void Start()
-    {
-        _boardInform = GameManager.Instance.BoardInform;
-        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
-        GameManager.Instance.OnGameStart += () => MoveStone((7, 7));
-        GameManager.Instance.OnGameStart += () => enabled = true;
-        GameManager.Instance.OnGameEnd += () =>
+        
+        eventManager.OnGameStart += () =>
+        {
+            MoveStone((7, 7));
+            enabled = true;
+        };
+        
+        eventManager.OnGameEnd += () =>
         {
             _blackPreview.SetActive(false);
             _whitePreview.SetActive(false);
             enabled = false;
         };
+    }
+
+    private void Start()
+    {
+        _boardInform = gameManager.BoardInform;
+        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
         
         _mainCamera = Camera.main;
         enabled = false;

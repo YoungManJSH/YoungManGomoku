@@ -3,33 +3,32 @@ using UnityEngine;
 
 public class ProgressText : MonoBehaviour
 {
-    private TextMeshProUGUI progressText;
-
+    [SerializeField] private GameManager gameManager;
+    [SerializeField] private EventManager eventManager;
+    
+    private TextMeshProUGUI _progressText;
+    
     private void Awake()
     {
-        progressText = GetComponent<TextMeshProUGUI>();
+        _progressText = GetComponent<TextMeshProUGUI>();
+
+        eventManager.OnPlayerSurrender += () => OnGameOver("기권패");
+        eventManager.OnOppositeSurrender += () => OnGameOver("기권승");
+        eventManager.OnOppositeDisconnectedWin += () => OnGameOver("접속끊김승");
     }
-    
-    private void Start()
+
+    public void OnBoardGenerated(Board board, bool isPlayerBlack, GameManager.TimeController playerTime,  GameManager.TimeController oppositeTime)
     {
-        var gm = GameManager.Instance;
-        
-        gm.BoardInform.OnTurnChanged += OnTurnChanged;
-        gm.BoardInform.BlackWin += () => OnGameOver(gm.IsPlayerBlack ? "승리" : "패배");
-        gm.BoardInform.WhiteWin += () => OnGameOver(gm.IsPlayerBlack ? "패배" : "승리");
-        gm.OnPlayerSurrender += () => OnGameOver("기권패");
-        gm.OnOppositeSurrender += () => OnGameOver("기권승");
-        gm.PlayerTime.OnTimeLose += () => OnGameOver("시간패");
-        gm.OppositeTime.OnTimeLose += () => OnGameOver("시간승"); // 추후 수정, 시간패는 서버 처리 받아야 함
-        gm.OnOppositeDisconnectedWin += () => OnGameOver("접속끊김승");
+        board.OnTurnChanged += OnTurnChanged;
+        board.BlackWin += () => OnGameOver(isPlayerBlack ? "승리" : "패배");
+        board.WhiteWin += () => OnGameOver(isPlayerBlack ? "패배" : "승리");
+        playerTime.OnTimeLose += () => OnGameOver("시간패");
+        oppositeTime.OnTimeLose += () => OnGameOver("시간승"); // 추후 수정, 시간패는 서버 처리 받아야 함
     }
     
     private void OnTurnChanged(int turn)
-        => progressText.text = $"{turn}수 진행 중";
+        => _progressText.text = $"{turn}수 진행 중";
 
-    private void OnGameOver(string gameResult)
-    {
-        var gm = GameManager.Instance;
-        progressText.text = $"{(gm.IsPlayerBlack ? "흑" : "백")} {gm.BoardInform.NowTurn}수 {gameResult}";
-    }
+    private void OnGameOver(string gameResult) 
+        => _progressText.text = $"{(gameManager.IsPlayerBlack ? "흑" : "백")} {gameManager.BoardInform.NowTurn}수 {gameResult}";
 }
