@@ -14,18 +14,21 @@ public class EventManager : MonoBehaviour
     
     public event Action OnOppositeDisconnectedWin;
 
+    public static EventManager Instance { get; private set; }
+    
     private GameManager _gameManager;
-
+    
+    // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
+    // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음.
     private void Awake()
     {
+        if (Instance != null) Destroy(gameObject);
+        Instance = this;
         _gameManager = GetComponent<GameManager>();
     }
 
     private void Start()
     {
-        // 각각의 이벤트들은 다른 곳의 Awake 단계에서 구독이 완료되어야 함.
-        // 이벤트 델리게이트는 Immutable이므로 이벤트끼리 연결하는 순서를 유의하지 않으면
-        // 최신화되지 않은 개체가 구독될 수 있음.
         OnGameWin += OnGameEnd;
         OnGameLose += OnGameEnd;
 

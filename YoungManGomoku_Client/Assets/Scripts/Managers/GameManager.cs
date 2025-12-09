@@ -89,9 +89,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int byoyomiCounts;
     [SerializeField] private int byoyomiSeconds;
     [SerializeField] private StoneMoveController stoneMoveController;
-    [SerializeField] private PlayerPanelController playerPanel;
-    [SerializeField] private PlayerPanelController oppositePanel;
-    [SerializeField] private ProgressText progressText;
+    
+    public static GameManager Instance { get; private set; }
     
     public Board BoardInform { get; private set; }
     public bool IsPlayerBlack { get; private set; }
@@ -100,9 +99,14 @@ public class GameManager : MonoBehaviour
     
     private TimeController _nowPlayerTime;
     private EventManager _eventManager;
-
+    
+    
+    // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
+    // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
     private void Awake()
     {
+        if (Instance != null) Destroy(gameObject);
+        Instance = this;
         _eventManager = GetComponent<EventManager>();
         
         // Awake 타임에 IsPlayerBlack 정보가 정해져야 함!
@@ -112,10 +116,6 @@ public class GameManager : MonoBehaviour
         PlayerTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
         OppositeTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
         
-        playerPanel.OnBlackDecided(IsPlayerBlack);
-        oppositePanel.OnBlackDecided(!IsPlayerBlack);
-        progressText.OnBoardGenerated(BoardInform, IsPlayerBlack, PlayerTime, OppositeTime);
-
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
         
