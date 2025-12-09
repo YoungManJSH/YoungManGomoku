@@ -31,14 +31,17 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Assert(value >= 0);
                 _byoyomiLeft = value;
-                if (value == 0f)
+                if (value == 0)
                 {
                     OnTimeLose?.Invoke();
+                    return;
                 }
-                else
+
+                if (value == 1 && _timePurchased is false)
                 {
-                    UseByoyomi?.Invoke();
+                    OnTimePurchaseActivate?.Invoke();
                 }
+                UseByoyomi?.Invoke();
             }
         }
 
@@ -62,12 +65,15 @@ public class GameManager : MonoBehaviour
         public event Action OnTimeLose;
         public event Action StartByoyomi;
         public event Action UseByoyomi;
+        public event Action OnTimePurchaseActivate;
+        private bool _timePurchased;
 
         public TimeController(float initMainTime, int initByoyomiCount, float byoyomiSeconds)
         {
             MainTime = initMainTime;
             ByoyomiLeft = initByoyomiCount;
             initByoyomiSeconds = byoyomiSeconds;
+            _timePurchased = false;
         }
 
         public void TimeProgress(float deltaTime)
@@ -109,7 +115,6 @@ public class GameManager : MonoBehaviour
         Instance = this;
         _eventManager = GetComponent<EventManager>();
         
-        // Awake 타임에 IsPlayerBlack 정보가 정해져야 함!
         IsPlayerBlack = true; // 테스트용 임시 초기화, 이후 서버에서 받아온 정보로 결정
         
         BoardInform = new Board();
