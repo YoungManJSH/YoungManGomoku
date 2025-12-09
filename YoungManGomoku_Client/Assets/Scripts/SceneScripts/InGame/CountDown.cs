@@ -4,6 +4,7 @@ using UnityEngine;
 public class CountDown : MonoBehaviour
 {
     [SerializeField] private float minScale;
+    [SerializeField] private EventManager eventManager;
     
     private TextMeshProUGUI countDownText;
     private RectTransform textTransform;
@@ -29,7 +30,7 @@ public class CountDown : MonoBehaviour
         await ScaleAnimating("Start!!");
         gameObject.SetActive(false);
 
-        GameManager.Instance.StartGame();
+        eventManager.StartGame();
     }
     
     private async Awaitable ScaleAnimating(string text)
