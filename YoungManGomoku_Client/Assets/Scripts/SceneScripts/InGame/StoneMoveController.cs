@@ -56,8 +56,8 @@ public class StoneMoveController : MonoBehaviour
         _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
         boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
 
-        messageBox.OnMessageBoxOpen += () => enabled = false;
-        messageBox.OnMessageBoxClose += () => enabled = true;
+        messageBox.OnOpened += () => enabled = false;
+        messageBox.TurnBackToGame += () => enabled = true;
         EventManager.Instance.OnGameStart += OnGameStart;
         EventManager.Instance.OnGameEnd += () => enabled = false;
     }
