@@ -13,11 +13,12 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private StoneMoveController stoneMoveController;
     [SerializeField] private AudioClip useByoyomiSound;
     [SerializeField] private AudioClip byoyomiTickSound;
+    [SerializeField] private AudioClip byoyomiPurchaseSound;
     [SerializeField] private bool isPlayer;
 
-    private GameManager.TimeController _myTimer;
+    private TimeController _myTimer;
     private bool _isThisBlack;
-    [CanBeNull] private AudioSource _audioSource;
+    private AudioSource _audioSource;
     private int _prevTime;
     private string _initByoyomiSecondText;
     private bool _isByoyomi;
@@ -40,9 +41,14 @@ public class PlayerPanelController : MonoBehaviour
         _myTimer.StartByoyomi += OnStartByoyomi;
         _myTimer.UseByoyomi += OnUseByoyomi;
         _myTimer.OnTimeLose += OnTimeLose;
-
+        
+        EventManager em = EventManager.Instance;
+        em.OnGameEnd += () => enabled = false;
+        
+        if (isPlayer) em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
+        else em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
+        
         stoneMoveController.OnStoneMove += OnTurnChanged;
-        EventManager.Instance.OnGameEnd += () => enabled = false;
     }
 
     private void Start()
@@ -78,7 +84,7 @@ public class PlayerPanelController : MonoBehaviour
         if (remainTime < 10)
         {
             byoyomiTimer.color = Color.coral;
-            if (isPlayer) _audioSource?.PlayOneShot(byoyomiTickSound);
+            if (isPlayer) _audioSource.PlayOneShot(byoyomiTickSound);
         }
     }
 
@@ -129,14 +135,21 @@ public class PlayerPanelController : MonoBehaviour
         byoyomiCount.color = Color.white;
         clockIcon.color = Color.white;
 
-        if (isPlayer) _audioSource?.PlayOneShot(useByoyomiSound);
+        if (isPlayer) _audioSource.PlayOneShot(useByoyomiSound);
     }
 
     private void OnUseByoyomi()
     {
         byoyomiTimer.color = Color.white;
         byoyomiCount.text = $"{_myTimer.ByoyomiLeft}회";
-        if (isPlayer) _audioSource?.PlayOneShot(useByoyomiSound);
+        if (isPlayer) _audioSource.PlayOneShot(useByoyomiSound);
+    }
+
+    private void OnByoyomiPurchase(int amount)
+    {
+        byoyomiTimer.color = Color.white;
+        byoyomiCount.text = $"{(_myTimer.IsByoyomiPurchased ? _myTimer.ByoyomiLeft : _myTimer.ByoyomiLeft + amount)}회";
+        _audioSource.PlayOneShot(byoyomiPurchaseSound);
     }
 
     private void OnTimeLose()

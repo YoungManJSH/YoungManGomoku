@@ -3,98 +3,12 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public class TimeController
-    {
-        private float _mainTime;
-        public float MainTime
-        {
-            get => _mainTime;
-            private set
-            {
-                if (value <= 0f)
-                {
-                    _mainTime = 0f;
-                    Byoyomi = initByoyomiSeconds;
-                    StartByoyomi!.Invoke();
-                    return;
-                }
-                
-                _mainTime = value;
-            }
-        }
-
-        private int _byoyomiLeft;
-        public int ByoyomiLeft
-        {
-            get => _byoyomiLeft;
-            private set
-            {
-                Debug.Assert(value >= 0);
-                _byoyomiLeft = value;
-                if (value == 0)
-                {
-                    OnTimeLose?.Invoke();
-                    return;
-                }
-
-                if (value == 1 && _timePurchased is false)
-                {
-                    OnTimePurchaseActivate?.Invoke();
-                }
-                UseByoyomi?.Invoke();
-            }
-        }
-
-        public readonly float initByoyomiSeconds;
-        private float _byoyomi;
-        public float Byoyomi
-        {
-            get => _byoyomi;
-            private set
-            {
-                if (value <= 0f)
-                {
-                    --ByoyomiLeft;
-                    _byoyomi = initByoyomiSeconds;
-                    return;
-                }
-                _byoyomi = value;
-            }
-        }
-        
-        public event Action OnTimeLose;
-        public event Action StartByoyomi;
-        public event Action UseByoyomi;
-        public event Action OnTimePurchaseActivate;
-        private bool _timePurchased;
-
-        public TimeController(float initMainTime, int initByoyomiCount, float byoyomiSeconds)
-        {
-            MainTime = initMainTime;
-            ByoyomiLeft = initByoyomiCount;
-            initByoyomiSeconds = byoyomiSeconds;
-            _timePurchased = false;
-        }
-
-        public void TimeProgress(float deltaTime)
-        {
-            if (MainTime > 0f)
-            {
-                MainTime -= deltaTime;
-                return;
-            }
-
-            Byoyomi -= deltaTime;
-        }
-
-        public void InitByoyomiSecond() 
-            => Byoyomi = initByoyomiSeconds;
-    }
-
     [SerializeField] private int mainTimeSeconds;
     [SerializeField] private int byoyomiCounts;
     [SerializeField] private int byoyomiSeconds;
     [SerializeField] private StoneMoveController stoneMoveController;
+    [SerializeField] private int byoyomiPurchaseAmount;
+    public int ByoyomiPurchaseAmount => byoyomiPurchaseAmount;
     
     public static GameManager Instance { get; private set; }
     
@@ -120,6 +34,9 @@ public class GameManager : MonoBehaviour
         BoardInform = new Board();
         PlayerTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
         OppositeTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
+
+        _eventManager.OnPlayerByoyomiPurchase += PlayerTime.ByoyomiPurchase;
+        _eventManager.OnOppositeByoyomiPurchase += OppositeTime.ByoyomiPurchase;
         
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
@@ -131,13 +48,6 @@ public class GameManager : MonoBehaviour
         };
     }
 
-    private void Start()
-    {
-        enabled = false;
-    }
-
-    private void Update()
-    {
-        _nowPlayerTime.TimeProgress(Time.deltaTime);
-    }
+    private void Start() => enabled = false;
+    private void Update() => _nowPlayerTime.TimeProgress(Time.deltaTime);
 }
