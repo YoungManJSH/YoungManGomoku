@@ -6,29 +6,24 @@ public class MessageBoxManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI messageText;
 
-    public event Action OnMessageBoxOpen;
-    public event Action OnMessageBoxClose;
+    public event Action OnOpened;
+    public event Action TurnBackToGame;
 
     private Action _requestedAction;
-    private bool _isGameEnd;
+    private bool _isGameEnded;
 
     private void Awake()
     {
-        _isGameEnd = false;
-        EventManager.Instance.OnGameEnd += () =>
-        {
-            _isGameEnd = true;
-            gameObject.SetActive(false);
-        };
+        _isGameEnded = false;
+        EventManager.Instance.OnGameEnd += OnGameEnd;
     }
 
     private void Start() => gameObject.SetActive(false);
-    private void OnEnable() => OnMessageBoxOpen!.Invoke();
+    private void OnEnable() => OnOpened!.Invoke();
 
     private void OnDisable()
     {
-        if (_isGameEnd) return;
-        OnMessageBoxClose!.Invoke();
+        if (_isGameEnded is false) TurnBackToGame!.Invoke();
     }
 
     private void Update()
@@ -51,14 +46,14 @@ public class MessageBoxManager : MonoBehaviour
         }
 #endif
     }
-
+    
     public void MessageBoxOpen(string message, Action requestedAct)
     {
         messageText.text = message;
         _requestedAction = requestedAct;
         gameObject.SetActive(true);
     }
-
+    
     public void OnConfirm()
     {
         _requestedAction?.Invoke();
@@ -67,4 +62,10 @@ public class MessageBoxManager : MonoBehaviour
 
     public void OnCancel()
         => gameObject.SetActive(false);
+
+    private void OnGameEnd()
+    {
+        _isGameEnded = true;
+        gameObject.SetActive(false);
+    }
 }

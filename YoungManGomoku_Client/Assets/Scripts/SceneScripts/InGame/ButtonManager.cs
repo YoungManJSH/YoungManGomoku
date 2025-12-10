@@ -24,10 +24,6 @@ public class ButtonManager : MonoBehaviour
     
     private HashSet<ValueTuple<Button, TextMeshProUGUI>> _activateSet; // 플레이어 턴이 올 때마다 활성화시킬 버튼 모음
     private bool _isPlayerTurn;
-#if UNITY_ANDROID
-    private bool _isGameEnded;
-    private bool _messageBoxOpened;
-#endif
     
     private void Awake()
     {
@@ -57,11 +53,8 @@ public class ButtonManager : MonoBehaviour
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
 
 #if UNITY_ANDROID
-        _isGameEnded = false;
-
-        messageBox.OnMessageBoxOpen += () =>
+        messageBox.OnOpened += () =>
         { 
-            _messageBoxOpened = true;
             ButtonInactivate(_surrenderSet);
             foreach (var buttonSet in _activateSet)
             {
@@ -69,11 +62,8 @@ public class ButtonManager : MonoBehaviour
             }
         };
 
-        messageBox.OnMessageBoxClose += () =>
+        messageBox.TurnBackToGame += () =>
         {
-            _messageBoxOpened = false;
-            if (_isGameEnded) return;
-
             ButtonActivate(_surrenderSet);
             if (_isPlayerTurn)
             {
@@ -106,9 +96,6 @@ public class ButtonManager : MonoBehaviour
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
         ButtonActivate(_exitSet);
-#if UNITY_ANDROID
-        _isGameEnded = true;
-#endif
     }
 
     private void OnTurnBackActivate()
@@ -133,7 +120,7 @@ public class ButtonManager : MonoBehaviour
         if (_isPlayerTurn)
         {
 #if UNITY_ANDROID
-            if (_messageBoxOpened is false)
+            if (messageBox.gameObject.activeSelf is false)
             {
                 foreach (var buttonSet in _activateSet)
                 {
