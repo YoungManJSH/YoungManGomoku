@@ -1139,8 +1139,9 @@ MonoBehaviour:
   whiteStone: {fileID: 5419395727140812493, guid: 00a3216d908dfe94abea5cda38ed9ad6, type: 3}
   forbiddenMark: {fileID: 5372146143770715992, guid: e768997e296529345a5406d70507e0ae, type: 3}
   deniedSound: {fileID: 8300000, guid: 799e1d12cf0c07c4fb8f0f354737d2c2, type: 3}
-  previewAlpha: 0.7
   boardGenerator: {fileID: 362371475}
+  messageBox: {fileID: 530988113}
+  previewAlpha: 0.7
 --- !u!82 &362371477
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1659,7 +1660,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &530988110
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1827,12 +1828,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonManager
   messageBox: {fileID: 530988113}
   surrenderButton: {fileID: 1120175422}
-  timePurchaseButton: {fileID: 940303152}
+  byoyomiPurchaseButton: {fileID: 940303152}
   takeBackButton: {fileID: 1068441404}
   exitButton: {fileID: 373960746}
   surrenderConfirmMsg: "\uD3EC\uAE30\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C? (\uD310
     \uC5CE\uAE30)"
-  timePurchaseConfirmMsg: "\uC2DC\uAC04 \uC5F0\uC7A5\uC744 \uAD6C\uB9E4\uD560\uAE4C\uC694?"
+  byoyomiPurchaseConfirmMsg: "\uCD08\uC77D\uAE30\uB97C \uAD6C\uB9E4\uD560\uAE4C\uC694?"
   takeBackConfirmMsg: "\uBB34\uB974\uAE30 \uC2E0\uCCAD\uC744 \uAD6C\uB9E4\uD560\uAE4C\uC694?"
 --- !u!1 &612518865
 GameObject:
@@ -2254,9 +2255,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   mainTimeSeconds: 10
-  byoyomiCounts: 3
+  byoyomiCounts: 2
   byoyomiSeconds: 15
   stoneMoveController: {fileID: 362371476}
+  byoyomiPurchaseAmount: 3
 --- !u!114 &663775706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2417,6 +2419,7 @@ GameObject:
   - component: {fileID: 686054850}
   - component: {fileID: 686054849}
   - component: {fileID: 686054851}
+  - component: {fileID: 686054852}
   m_Layer: 5
   m_Name: OppositePanel
   m_TagString: Untagged
@@ -2507,7 +2510,105 @@ MonoBehaviour:
   stoneMoveController: {fileID: 362371476}
   useByoyomiSound: {fileID: 0}
   byoyomiTickSound: {fileID: 0}
+  byoyomiPurchaseSound: {fileID: 8300000, guid: b95658f62c0589040a5569d9352254c7, type: 3}
   isPlayer: 0
+--- !u!82 &686054852
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686054847}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &702740383
 GameObject:
   m_ObjectHideFlags: 0
@@ -2611,6 +2712,7 @@ MonoBehaviour:
   stoneMoveController: {fileID: 362371476}
   useByoyomiSound: {fileID: 8300000, guid: 387e17f412be49c46ad74ed7157a26e2, type: 3}
   byoyomiTickSound: {fileID: 8300000, guid: 82af92b2ba6abea4988e27c15e4ed8cf, type: 3}
+  byoyomiPurchaseSound: {fileID: 8300000, guid: 0f59a5469204d6c41a0daa2e8b0b0e78, type: 3}
   isPlayer: 1
 --- !u!82 &702740388
 AudioSource:
@@ -2766,7 +2868,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uAC04\uC5F0\uC7A5"
+  m_text: "\uCD08\uC77D\uAE30 \uAD6C\uB9E4"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3eb5995578896594c95e3c06213505c6, type: 2}
   m_sharedMaterial: {fileID: -8723602951677602281, guid: 3eb5995578896594c95e3c06213505c6, type: 2}
@@ -2902,7 +3004,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uAC04 \uC5F0\uC7A5\uC744 \uAD6C\uB9E4\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?"
+  m_text: "\uD14C\uC2A4\uD2B8 \uBA54\uC2DC\uC9C0"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3eb5995578896594c95e3c06213505c6, type: 2}
   m_sharedMaterial: {fileID: -8723602951677602281, guid: 3eb5995578896594c95e3c06213505c6, type: 2}
@@ -3145,7 +3247,7 @@ GameObject:
   - component: {fileID: 940303153}
   - component: {fileID: 940303152}
   m_Layer: 5
-  m_Name: TimePurchaseButton
+  m_Name: ByoyomiPurchaseButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

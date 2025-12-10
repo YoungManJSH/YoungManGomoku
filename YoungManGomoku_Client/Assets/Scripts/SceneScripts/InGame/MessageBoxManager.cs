@@ -10,9 +10,26 @@ public class MessageBoxManager : MonoBehaviour
     public event Action OnMessageBoxClose;
 
     private Action _requestedAction;
+    private bool _isGameEnd;
 
+    private void Awake()
+    {
+        _isGameEnd = false;
+        EventManager.Instance.OnGameEnd += () =>
+        {
+            _isGameEnd = true;
+            gameObject.SetActive(false);
+        };
+    }
+
+    private void Start() => gameObject.SetActive(false);
     private void OnEnable() => OnMessageBoxOpen!.Invoke();
-    private void OnDisable() => OnMessageBoxClose!.Invoke();
+
+    private void OnDisable()
+    {
+        if (_isGameEnd) return;
+        OnMessageBoxClose!.Invoke();
+    }
 
     private void Update()
     {
