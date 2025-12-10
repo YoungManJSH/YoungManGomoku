@@ -6,6 +6,8 @@ using System.Text;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
+using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.Source;
 
 // 로그인할 때 인증 토큰(UID같은거)을 보냄
@@ -64,7 +66,7 @@ public class NetworkManager : MonoBehaviour
 
     // POST = Add Data
     // GET = Read Data
-    public async Awaitable GuestAccountRegisterRequest(string idToken)
+    public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken)
 	{
 		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Register", "POST");
 		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(idToken));
@@ -75,23 +77,25 @@ public class NetworkManager : MonoBehaviour
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
 			Debug.Log(uwr.error);
-			return;
+			return null;
 		}
 
-		Debug.Log($"Guest Login Success : {uwr.downloadHandler.text}");
-	}
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
 
     // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
     // 따라서 Json으로 변환하면 string이 무지막지하게 길어질 것이다.
     // -> 꼭 필요한 데이터 string IdToken, NickName 2가지만 DTO로 빼서 넘겨주도록 하자.
-    public async Awaitable GoogleAccountRegisterRequest(CS_GoogleAccountRegisterDTO GoogleLoginUserDTO)
+    public async Awaitable<PlayerData> GoogleAccountRegisterRequest(CS_GoogleAccountRegisterDTO GoogleLoginUserDTO)
 	{
 		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Register", "POST");
 
 		if (GoogleLoginUserDTO == null)
 		{
 			Debug.Log($"Unknow Google Sign User!");
-			return;
+			return null;
 		}
 		
 		string jsonStr = JsonUtility.ToJson(GoogleLoginUserDTO);
@@ -104,13 +108,15 @@ public class NetworkManager : MonoBehaviour
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
 			Debug.Log(uwr.error);
-			return;
+			return null;
 		}
 
-		Debug.Log($"Google Login Success : {uwr.downloadHandler.text}");
-	}
+        string responseJson = uwr.downloadHandler.text;
+		Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
 
-    public async Awaitable<bool> GuestLoginRequest(string idToken)
+    public async Awaitable<PlayerData> GuestLoginRequest(string idToken)
     {
         UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Login", "POST");
 
@@ -125,14 +131,15 @@ public class NetworkManager : MonoBehaviour
         if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(uwr.error);
-            return false;
+            return null;
         }
 
-        // Login 성공 시 true, 실패 시 false를 받아옴
-        return bool.Parse(uwr.downloadHandler.text);
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
     }
 
-    public async Awaitable<bool> GoogleLoginRequest(string idToken)
+    public async Awaitable<PlayerData> GoogleLoginRequest(string idToken)
 	{
         UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Login", "POST");
 
@@ -147,11 +154,12 @@ public class NetworkManager : MonoBehaviour
         if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(uwr.error);
-            return false;
+            return null;
         }
 
-        // Login 성공 시 true, 실패 시 false를 받아옴
-        return bool.Parse(uwr.downloadHandler.text);
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
     }
 
 
