@@ -24,6 +24,7 @@ public class ButtonManager : MonoBehaviour
     
     private HashSet<ValueTuple<Button, TextMeshProUGUI>> _activateSet; // 플레이어 턴이 올 때마다 활성화시킬 버튼 모음
     private bool _isPlayerTurn;
+    private bool _isTakeBackedTurn;
     
     private void Awake()
     {
@@ -42,6 +43,7 @@ public class ButtonManager : MonoBehaviour
         
         _activateSet = new HashSet<ValueTuple<Button, TextMeshProUGUI>>();
         _isPlayerTurn = GameManager.Instance.IsPlayerBlack;
+        _isTakeBackedTurn = false;
 
         EventManager em = EventManager.Instance;
         GameManager gm = GameManager.Instance;
@@ -83,7 +85,7 @@ public class ButtonManager : MonoBehaviour
         => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, EventManager.Instance.PlayerByoyomiPurchase);
 
     public void TakeBackInput()
-        => messageBox.MessageBoxOpen(takeBackConfirmMsg, null);
+        => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
     
     public void ExitInput()
         => UnityEditor.EditorApplication.isPlaying = false;
@@ -113,8 +115,21 @@ public class ButtonManager : MonoBehaviour
         _activateSet.Remove(_byoyomiPurchaseSet);
     }
 
+    private void TakeBack()
+    {
+        _isTakeBackedTurn = true;
+        ButtonInactivate(_takeBackSet);
+        GameManager.Instance.SendTakeBackRequest();
+    }
+
     private void OnTurnChanged(int turn)
     {
+        if (_isTakeBackedTurn)
+        {
+            _isTakeBackedTurn = false;
+            return;
+        }
+        
         _isPlayerTurn = (turn % 2 == 0) == GameManager.Instance.IsPlayerBlack;
         
         if (_isPlayerTurn)

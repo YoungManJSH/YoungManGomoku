@@ -11,6 +11,7 @@ public class ProgressText : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
+        
         gm.BoardInform.BlackWin += () => OnGameOver(gm.IsPlayerBlack ? "승리" : "패배");
         gm.BoardInform.WhiteWin += () => OnGameOver(gm.IsPlayerBlack ? "패배" : "승리");
         gm.PlayerTime.OnTimeLose += () => OnGameOver("시간패");
@@ -20,11 +21,12 @@ public class ProgressText : MonoBehaviour
         em.OnPlayerSurrender += () => OnGameOver("기권패");
         em.OnOppositeSurrender += () => OnGameOver("기권승");
         em.OnOppositeDisconnectedWin += () => OnGameOver("접속끊김승");
+        em.OnGameDraw += () => OnGameOver("무승부");
     }
     
     private void OnTurnChanged(int turn)
         => _progressText.text = $"{turn}수 진행 중";
 
-    private void OnGameOver(string gameResult) 
+    private void OnGameOver(string gameResult)
         => _progressText.text = $"{(GameManager.Instance.IsPlayerBlack ? "흑" : "백")} {GameManager.Instance.BoardInform.NowTurn}수 {gameResult}";
 }
