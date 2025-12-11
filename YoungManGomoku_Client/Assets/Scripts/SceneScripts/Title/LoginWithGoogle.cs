@@ -48,7 +48,7 @@ public class LoginWithGoogle : MonoBehaviour
         auth = FirebaseAuth.DefaultInstance;
     }
 
-    public void Login()
+    public async void Login()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         if (!isGoogleSignInInitialized)
@@ -103,12 +103,15 @@ public class LoginWithGoogle : MonoBehaviour
                 loginPanel.SetActive(false);
                 userPanel.SetActive(true);
 
-                StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
+                //StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
+                //var result = await GetComponent<NetworkManager>().GoogleAccountRegisterRequest(deviceId);
             });
         });
 
 #elif UNITY_STANDALONE || UNITY_EDITOR
         //Debug.Log("pc환경입니다. 익명 로그인 실행");
+        string deviceId = SystemInfo.deviceUniqueIdentifier;
+        var result = await GetComponent<NetworkManager>().GuestAccountRegisterRequest(deviceId);
 
 #endif
     }
