@@ -83,10 +83,11 @@ namespace YoungManGomoku_Protocol
 
 namespace YoungManGomoku_Protocol.ClientToServer
 {
-    public class CS_GoogleAccountRegisterDTO
+    public class CS_AccountRegisterDTO
     {
         public string UserNickname { get; set; }
         public string IdToken { get; set; }        
+        public bool IsGuest { get; set; }
     }
 }
 

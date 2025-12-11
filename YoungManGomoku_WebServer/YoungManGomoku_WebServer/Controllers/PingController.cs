@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace YoungManGomoku_WebServer.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class PingController : ControllerBase
     {
