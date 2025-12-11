@@ -42,6 +42,8 @@ namespace YoungManGomoku_WebServer.Controllers
 			_context.PlayerGomokuRecordTable.Add(playerRecord);
 
 			_context.SaveChanges();
+            ServerManager.PlayerProfiles.TryAdd(playerProfile.UID, playerProfile);
+            ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);
 
             return ServerManager.GetPlayerData(playerProfile.UID);
         }
@@ -57,8 +59,10 @@ namespace YoungManGomoku_WebServer.Controllers
             _context.PlayerGomokuRecordTable.Add(playerRecord);
 
             _context.SaveChanges();
+            ServerManager.PlayerProfiles.TryAdd(playerProfile.UID, playerProfile);
+            ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);
 
-			return ServerManager.GetPlayerData(playerProfile.UID);
+            return ServerManager.GetPlayerData(playerProfile.UID);
 		}
 
         // Login이 Get이면 토큰이 URL에 노출되서 보안상 위험하지 않을까?
