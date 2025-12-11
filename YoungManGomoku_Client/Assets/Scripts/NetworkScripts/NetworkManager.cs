@@ -6,6 +6,8 @@ using System.Text;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
+using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.Source;
 
 // 로그인할 때 인증 토큰(UID같은거)을 보냄
@@ -14,8 +16,9 @@ using YoungManGomoku_Protocol.Source;
 
 public class NetworkManager : MonoBehaviour
 {
-	[SerializeField] private const string baseURL = "https://localhost:44331/api";
-
+	// 나중에 바꿀 예정
+	[SerializeField] private const string baseURL = "https://localhost:44331";
+	
 	// static singletone class로 만들고 싶다면 awake 함수 파서 만들면 되는데 일단 상의부터
 
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -42,10 +45,13 @@ public class NetworkManager : MonoBehaviour
 
 	}
 
-	// Network Thread 따로 파서 Monobehavior와 Awaitable 없이 돌릴까 고민해봤는데,
-	// 일단 클라이언트 팀원들이 이쪽이 익숙할 것 같아서 싱글코어 Awaitable 비동기로 때림
+    // Network Thread 따로 파서 Monobehavior와 Awaitable 없이 돌릴까 고민해봤는데,
+    // 일단 클라이언트 팀원들이 이쪽이 익숙할 것 같아서 싱글코어 Awaitable 비동기로 때림
 
-	// 게스트 등록
+    // 게스트 등록
+    // 근데 우리 게스트는 PC판만 쓰기로 합의해서 파이어베이스 게스트는 안 씀
+    // 좀 더 지켜봤다가 제거할 수도 있는 코드
+    /*
 	public async Awaitable GuestRegisterRequest(string token)
 	{
 		// 파이어베이스로부터 익명 인증 받아봄
@@ -56,56 +62,115 @@ public class NetworkManager : MonoBehaviour
 		// 서버로 ID Token 전송
 		SendGuestAuthRequest(idToken).Cancel();
 	}
+	*/
 
-
-	private async Awaitable SendGuestAuthRequest(string idToken)
+    // POST = Add Data
+    // GET = Read Data
+    public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken)
 	{
-		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Register/Guest", "POST");
-		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(idToken));
+		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Register", "POST");
+
+        string jsonBody = $"\"{idToken}\"";
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(idToken));
 		uwr.downloadHandler = new DownloadHandlerBuffer();
 
-		await uwr.SendWebRequest();
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
 
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
 			Debug.Log(uwr.error);
-			return;
+			return null;
 		}
 
-		Debug.Log($"Guest Login Success : {uwr.downloadHandler.text}");
-	}
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
 
-	private async Awaitable GoogleRegisterRequest(GoogleSignInUser googleSignInUser)
+    // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
+    // 따라서 Json으로 변환하면 string이 무지막지하게 길어질 것이다.
+    // -> 꼭 필요한 데이터 string IdToken, NickName 2가지만 DTO로 빼서 넘겨주도록 하자.
+    public async Awaitable<PlayerData> GoogleAccountRegisterRequest(CS_GoogleAccountRegisterDTO GoogleLoginUserDTO)
 	{
-		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Register/Google", "POST");
+		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Register", "POST");
 
-		if (googleSignInUser == null)
+		if (GoogleLoginUserDTO == null)
 		{
 			Debug.Log($"Unknow Google Sign User!");
-			return;
+			return null;
 		}
 		
-		string jsonStr = JsonUtility.ToJson(googleSignInUser);
+		string jsonStr = JsonUtility.ToJson(GoogleLoginUserDTO);
 
 		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonStr));
 		uwr.downloadHandler = new DownloadHandlerBuffer();
 
-		await uwr.SendWebRequest();
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
 
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
 			Debug.Log(uwr.error);
-			return;
+			return null;
 		}
 
-		Debug.Log($"Google Login Success : {uwr.downloadHandler.text}");
-	}
+        string responseJson = uwr.downloadHandler.text;
+		Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
+
+    public async Awaitable<PlayerData> GuestLoginRequest(string idToken)
+    {
+        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Login", "POST");
+
+        string jsonBody = $"\"{idToken}\"";
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
+        uwr.downloadHandler = new DownloadHandlerBuffer();
+
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
+
+        if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.Log(uwr.error);
+            return null;
+        }
+
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
+
+    public async Awaitable<PlayerData> GoogleLoginRequest(string idToken)
+	{
+        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Login", "POST");
+
+        string jsonBody = $"\"{idToken}\"";
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
+        uwr.downloadHandler = new DownloadHandlerBuffer();
+
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
+
+        if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.Log(uwr.error);
+            return null;
+        }
+
+        string responseJson = uwr.downloadHandler.text;
+        Debug.Log($"Google Register Success : {responseJson}");
+        return JsonUtility.FromJson<PlayerData>(responseJson);
+    }
 
 
-
-
-	// json 형태로 표현 가능한 object 변수를 보내고, 어떤 데이터를 요청하고 받아오는 함수 템플릿
-	private async Awaitable SendRequest(string url, string method, object sendObj, Action<UnityWebRequest> callback)
+    // json 형태로 표현 가능한 object 변수를 보내고, 어떤 데이터를 요청하고 받아오는 함수 템플릿
+    private async Awaitable SendRequest(string url, string method, object sendObj, Action<UnityWebRequest> callback)
 	{
 		string sendURL = $"{baseURL}/{url}/";
 

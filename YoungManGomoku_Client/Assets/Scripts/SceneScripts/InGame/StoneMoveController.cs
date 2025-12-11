@@ -8,8 +8,9 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private GameObject whiteStone;
     [SerializeField] private GameObject forbiddenMark;
     [SerializeField] private AudioClip deniedSound;
-    [SerializeField] private float previewAlpha;
     [SerializeField] private BoardGenerator boardGenerator;
+    [SerializeField] private MessageBoxManager messageBox;
+    [SerializeField] private float previewAlpha;
 
     public event Action<bool> OnStoneMove;
     
@@ -50,23 +51,19 @@ public class StoneMoveController : MonoBehaviour
         
         CreatePreview();
         _isBlackTurn = true;
-
+        _boardInform = GameManager.Instance.BoardInform;
+        
+        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
         boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
+
+        messageBox.OnOpened += () => enabled = false;
+        messageBox.TurnBackToGame += () => enabled = true;
+        EventManager.Instance.OnGameStart += OnGameStart;
+        EventManager.Instance.OnGameEnd += () => enabled = false;
     }
 
     private void Start()
     {
-        _boardInform = GameManager.Instance.BoardInform;
-        _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
-        GameManager.Instance.OnGameStart += () => MoveStone((7, 7));
-        GameManager.Instance.OnGameStart += () => enabled = true;
-        GameManager.Instance.OnGameEnd += () =>
-        {
-            _blackPreview.SetActive(false);
-            _whitePreview.SetActive(false);
-            enabled = false;
-        };
-        
         _mainCamera = Camera.main;
         enabled = false;
     }
@@ -140,6 +137,18 @@ public class StoneMoveController : MonoBehaviour
             (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
         }
 #endif
+    }
+
+    private void OnDisable()
+    {
+        _blackPreview.SetActive(false);
+        _whitePreview.SetActive(false);
+    }
+
+    private void OnGameStart()
+    {
+        MoveStone((7, 7));
+        enabled = true;
     }
     
     private async Awaitable CalcWorldValue()

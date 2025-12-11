@@ -4,14 +4,15 @@ using UnityEngine;
 public class CountDown : MonoBehaviour
 {
     [SerializeField] private float minScale;
+    [SerializeField] private EventManager eventManager;
     
-    private TextMeshProUGUI countDownText;
-    private RectTransform textTransform;
+    private TextMeshProUGUI _countDownText;
+    private RectTransform _textTransform;
 
     private void Awake()
     {
-        countDownText = GetComponent<TextMeshProUGUI>();
-        textTransform = GetComponent<RectTransform>();
+        _countDownText = GetComponent<TextMeshProUGUI>();
+        _textTransform = GetComponent<RectTransform>();
     }
 
     private void Start()
@@ -29,12 +30,12 @@ public class CountDown : MonoBehaviour
         await ScaleAnimating("Start!!");
         gameObject.SetActive(false);
 
-        GameManager.Instance.StartGame();
+        eventManager.StartGame();
     }
     
     private async Awaitable ScaleAnimating(string text)
     {
-        countDownText.text = text;
+        _countDownText.text = text;
 
         float second = 0f;
         
@@ -42,7 +43,7 @@ public class CountDown : MonoBehaviour
         {
             second += Time.deltaTime;
             
-            textTransform.localScale = Mathf.Lerp(minScale, 1f, 1f - Mathf.Cos(second * Mathf.PI)) * Vector3.one;
+            _textTransform.localScale = Mathf.Lerp(minScale, 1f, 1f - Mathf.Cos(second * Mathf.PI)) * Vector3.one;
             await Awaitable.NextFrameAsync();
         }
     }

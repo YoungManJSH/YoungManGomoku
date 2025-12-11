@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace YoungManGomoku_WebServer.Migrations
 {
@@ -13,7 +14,8 @@ namespace YoungManGomoku_WebServer.Migrations
                     UID = table.Column<decimal>(nullable: false),
                     WinCount = table.Column<long>(nullable: false),
                     DrawCount = table.Column<long>(nullable: false),
-                    LoseCount = table.Column<long>(nullable: false)
+                    LoseCount = table.Column<long>(nullable: false),
+                    DisconnectCount = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -34,8 +36,12 @@ namespace YoungManGomoku_WebServer.Migrations
                     EquipStoneSkin = table.Column<int>(nullable: false),
                     EquipBoardSkin = table.Column<int>(nullable: false),
                     Rating = table.Column<float>(nullable: false),
+                    Level = table.Column<int>(nullable: false),
                     ExperiencePoint = table.Column<int>(nullable: false),
-                    MaxExperiencePoint = table.Column<int>(nullable: false)
+                    MaxExperiencePoint = table.Column<int>(nullable: false),
+                    RegisterDate = table.Column<DateTime>(nullable: false),
+                    LastLoginDate = table.Column<DateTime>(nullable: false),
+                    LastPlayDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {

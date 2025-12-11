@@ -21,7 +21,6 @@ namespace YoungManGomoku_WebServer.Controllers
     [ApiController]
     public class WebServerController : ControllerBase
     {
-
 		ApplicationDBContext _context;
 
 		private readonly ILogger<WebServerController> _logger;
@@ -45,26 +44,24 @@ namespace YoungManGomoku_WebServer.Controllers
         }
         */
 
-
-
-
 		// Read
 		// 서버에서 DB를 읽고 데이터를 반환
 		// 대부분의 Send-Recv는 서버 컨트롤 혹은 DB 값 변경이니까 이걸로 돌아갈 듯
 		// GET이 없으면 사이트도 안 열린다
+        /*
 		[HttpGet]
-        internal List<PlayerProfile> GetPlayerDatas()
+        public List<PlayerProfile> GetPlayerDatas()
         {
             List<PlayerProfile> results = _context.PlayerProfileTable.OrderByDescending(item => item.Nickname).ToList();
             return results;
         }
 
         [HttpGet("{id}")]
-		internal PlayerProfile GetPlayerDataByUID(ulong uid)
+		public PlayerProfile GetPlayerDataByUID(ulong uid)
         {
             return _context.PlayerProfileTable.Where(item => item.UID == uid).FirstOrDefault();
         }
-
+        */
 		/*
 		// foreach를 돌릴 수 있는 형태로 배열 return
         [HttpGet]

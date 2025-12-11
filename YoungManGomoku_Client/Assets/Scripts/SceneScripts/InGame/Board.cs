@@ -16,11 +16,13 @@ public class Board
         private set
         {
             _nowTurn = value;
+            if (value == 3) OnTurnBackActivate?.Invoke();
             OnTurnChanged?.Invoke(value);
         }
     }
 
     public event Action<int> OnTurnChanged;
+    public event Action OnTurnBackActivate;
     public event Action BlackWin;
     public event Action WhiteWin;
     public event Func<Awaitable> OnBlackUnmovable;
