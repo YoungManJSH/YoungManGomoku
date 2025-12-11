@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Firebase.Extensions;
 using Google;
 using System.Threading.Tasks;
@@ -29,6 +30,13 @@ public class LoginWithGoogle : MonoBehaviour
     [SerializeField] private GameObject loginPanel;
     [SerializeField] private GameObject userPanel;
     [SerializeField] private Image userProfilePic;
+
+    [Header("PC Register New User")] 
+    [SerializeField] private GameObject PCRegisterUI;
+
+    [SerializeField] private TMP_InputField userNicknameInputField;
+    private Regex nicknameRegex = new Regex("^[a-zA-Z0-9가-힣_-]+$");
+
 
     private string imageUrl;
     private bool isGoogleSignInInitialized;
@@ -109,11 +117,43 @@ public class LoginWithGoogle : MonoBehaviour
         });
 
 #elif UNITY_STANDALONE || UNITY_EDITOR
-        //Debug.Log("pc환경입니다. 익명 로그인 실행");
+        // PC로 접속하면, 게스트로 회원가입, 로그인을 진행함
+        // 유니티에서 제공하는 OS별 개별 데이터를 키로 사용하여 DB에 로그인하고 회원가입하도록 동작을 만듦.
         string deviceId = SystemInfo.deviceUniqueIdentifier;
-        var result = await GetComponent<NetworkManager>().GuestAccountRegisterRequest(deviceId);
 
+        var loginResult = await GetComponent<NetworkManager>().GuestLoginRequest(deviceId);
+
+        if (loginResult == null)
+        {
+            OpenUserRegisterUI();
+        }
+        else
+        {
+            Debug.Log("로그인 성공!");
+        }
 #endif
+    }
+
+    private void OpenUserRegisterUI()
+    {
+        PCRegisterUI.SetActive(true);
+    }
+
+    // pc 환경에서만 실행되는 코드
+    // 닉네임을 입력받고 해당 닉네임을 웹통신으로 보내준다.
+    // 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
+    public async void RegisterNewUser()
+    {
+        string userNickname = userNicknameInputField.text;
+        
+        if (nicknameRegex.IsMatch(userNickname) == false)
+        {
+            Debug.Log("형식에 맞지 않은 닉네임입니다.");
+            return;
+        }
+
+        string deviceId = SystemInfo.deviceUniqueIdentifier;
+        var registerResult = await GetComponent<NetworkManager>().GuestAccountRegisterRequest(deviceId);
     }
 
     private string CheckImageUrl(string url)
