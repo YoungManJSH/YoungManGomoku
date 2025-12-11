@@ -236,7 +236,7 @@ public class StoneMoveController : MonoBehaviour
             {
                 if (_boardInform[row, col] == Stone.Empty)
                 {
-                    await Awaitable.WaitForSecondsAsync(0.3f);
+                    await Awaitable.WaitForSecondsAsync(0.5f);
                     MoveStone((row, col));
                 }
             }

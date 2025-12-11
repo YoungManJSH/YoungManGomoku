@@ -154,7 +154,7 @@ public class Board
 
         if (isMovable is false)
         {
-            _ = InvokeOnBlackUnmovable();
+            InvokeOnBlackUnmovable().Cancel();
         }
     }
 
