@@ -17,12 +17,12 @@ public class GameManager : MonoBehaviour
     public TimeController PlayerTime { get; private set; }
     public TimeController OppositeTime { get; private set; }
     
+    public PlayerData player;
+    public PlayerData oppositePlayer;
+    
     private TimeController _nowPlayerTime;
     private EventManager _eventManager;
 
-    private PlayerData _player;
-    private PlayerData _oppositePlayer;
-    
     // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
     // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
     private void Awake()
@@ -43,25 +43,27 @@ public class GameManager : MonoBehaviour
         
         #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
         IsPlayerBlack = true;
-        _player = new PlayerData()
+        player = new PlayerData()
         {
-            Nickname = "황금뇽재환띠",
+            Nickname = "슈퍼뇽재환띠",
             WinCount = 80,
             DrawCount = 1,
-            LoseCount = 75
+            LoseCount = 75,
+            Rating = 1498.5f
         };
-        _oppositePlayer = new PlayerData()
+        oppositePlayer = new PlayerData()
         {
-            Nickname = "은색뇽재환띠",
+            Nickname = "허접뇽재환띠",
             WinCount = 55,
             DrawCount = 3,
             LoseCount = 43,
+            Rating = 1502.2f
         };
 
         if (IsPlayerBlack)
         {
-            var blackUser = _player;
-            var whiteUser = _oppositePlayer;
+            var blackUser = player;
+            var whiteUser = oppositePlayer;
             BoardInform.BlackWin += () => BoardInform.SaveRecord(blackUser,  whiteUser, "흑 승리");
             BoardInform.WhiteWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 패배");
             _eventManager.OnGameDraw += () => BoardInform.SaveRecord(blackUser, whiteUser, "무승부");
@@ -73,8 +75,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            var blackUser = _oppositePlayer;
-            var whiteUser = _player;
+            var blackUser = oppositePlayer;
+            var whiteUser = player;
             BoardInform.BlackWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 패배");
             BoardInform.WhiteWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 승리");
             _eventManager.OnGameDraw += () => BoardInform.SaveRecord(blackUser, whiteUser, "무승부");

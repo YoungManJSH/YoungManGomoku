@@ -2507,10 +2507,14 @@ MonoBehaviour:
   byoyomiCount: {fileID: 248473029}
   stoneImage: {fileID: 1609989}
   clockIcon: {fileID: 1943621003}
+  nicknameText: {fileID: 1246139021}
+  recordText: {fileID: 1921073174}
   stoneMoveController: {fileID: 362371476}
   useByoyomiSound: {fileID: 0}
   byoyomiTickSound: {fileID: 0}
+  byoyomiWarningSound: {fileID: 0}
   byoyomiPurchaseSound: {fileID: 8300000, guid: b95658f62c0589040a5569d9352254c7, type: 3}
+  glowFont: {fileID: 11400000, guid: 5d063449ea5cb71449e32a0000755838, type: 2}
   isPlayer: 0
 --- !u!82 &686054852
 AudioSource:
@@ -2709,10 +2713,14 @@ MonoBehaviour:
   byoyomiCount: {fileID: 2084148465}
   stoneImage: {fileID: 660715886}
   clockIcon: {fileID: 2002091781}
+  nicknameText: {fileID: 962777831}
+  recordText: {fileID: 1617508297}
   stoneMoveController: {fileID: 362371476}
   useByoyomiSound: {fileID: 8300000, guid: 387e17f412be49c46ad74ed7157a26e2, type: 3}
   byoyomiTickSound: {fileID: 8300000, guid: 82af92b2ba6abea4988e27c15e4ed8cf, type: 3}
+  byoyomiWarningSound: {fileID: 8300000, guid: 102a0c83ef638ac4582bb33f431cc41d, type: 3}
   byoyomiPurchaseSound: {fileID: 8300000, guid: 0f59a5469204d6c41a0daa2e8b0b0e78, type: 3}
+  glowFont: {fileID: 11400000, guid: 5d063449ea5cb71449e32a0000755838, type: 2}
   isPlayer: 1
 --- !u!82 &702740388
 AudioSource:
