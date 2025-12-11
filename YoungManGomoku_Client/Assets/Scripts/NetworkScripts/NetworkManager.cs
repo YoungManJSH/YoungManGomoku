@@ -71,7 +71,7 @@ public class NetworkManager : MonoBehaviour
 		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Register", "POST");
 
         string jsonBody = $"\"{idToken}\"";
-        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(idToken));
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
 		uwr.downloadHandler = new DownloadHandlerBuffer();
 
         uwr.SetRequestHeader("Content-Type", "application/json");
