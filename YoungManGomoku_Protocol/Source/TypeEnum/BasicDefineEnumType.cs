@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace YoungManGomoku_Protocol.Source.TypeEnum
+﻿namespace YoungManGomoku_Protocol.Source.TypeEnum
 {
     public enum Stone
     {

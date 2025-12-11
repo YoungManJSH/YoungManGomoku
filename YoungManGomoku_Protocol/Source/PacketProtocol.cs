@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using YoungManGomoku_Protocol.Source.TypeEnum;
 
 // Protocol의 PlayerData는 단순 서버와 통신용

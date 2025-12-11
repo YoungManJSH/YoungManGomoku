@@ -17,7 +17,7 @@ using YoungManGomoku_Protocol.Source;
 public class NetworkManager : MonoBehaviour
 {
 	// 나중에 바꿀 예정
-	[SerializeField] private const string baseURL = "https://localhost:44331/api";
+	[SerializeField] private const string baseURL = "https://localhost:44331";
 	
 	// static singletone class로 만들고 싶다면 awake 함수 파서 만들면 되는데 일단 상의부터
 
@@ -69,10 +69,14 @@ public class NetworkManager : MonoBehaviour
     public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken)
 	{
 		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Register", "POST");
-		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(idToken));
+
+        string jsonBody = $"\"{idToken}\"";
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
 		uwr.downloadHandler = new DownloadHandlerBuffer();
 
-		await uwr.SendWebRequest();
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
 
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
@@ -103,7 +107,9 @@ public class NetworkManager : MonoBehaviour
 		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonStr));
 		uwr.downloadHandler = new DownloadHandlerBuffer();
 
-		await uwr.SendWebRequest();
+        uwr.SetRequestHeader("Content-Type", "application/json");
+
+        await uwr.SendWebRequest();
 
 		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
 		{
