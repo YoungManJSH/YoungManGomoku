@@ -32,9 +32,12 @@ public class LoginWithGoogle : MonoBehaviour
     [SerializeField] private Image userProfilePic;
 
     [Header("PC Register New User")] 
+    private const int maxNicknameLength = 7;
+    
     [SerializeField] private GameObject PCRegisterUI;
 
     [SerializeField] private TMP_InputField userNicknameInputField;
+    [SerializeField] private TextMeshPro nicknameWaringText;
     private Regex nicknameRegex = new Regex("^[a-zA-Z0-9가-힣_-]+$");
 
 
@@ -141,14 +144,24 @@ public class LoginWithGoogle : MonoBehaviour
 
     // pc 환경에서만 실행되는 코드
     // 닉네임을 입력받고 해당 닉네임을 웹통신으로 보내준다.
-    // 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
+    // TODO : 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
     public async void RegisterNewUser()
     {
         string userNickname = userNicknameInputField.text;
-        
+
         if (nicknameRegex.IsMatch(userNickname) == false)
         {
             Debug.Log("형식에 맞지 않은 닉네임입니다.");
+            nicknameWaringText.gameObject.SetActive(true);
+            nicknameWaringText.text = "형식에 맞지 않은 닉네임입니다.";
+            return;
+        }
+
+        if (userNickname.Length >= maxNicknameLength)
+        {
+            Debug.Log($"닉네임 길이가 너무 깁니다. 최대 {maxNicknameLength - 1}자");
+            nicknameWaringText.gameObject.SetActive(true);
+            nicknameWaringText.text = $"닉네임 길이가 너무 깁니다. 최대 {maxNicknameLength - 1}자";
             return;
         }
 
