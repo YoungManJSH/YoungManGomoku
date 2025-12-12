@@ -34,7 +34,11 @@ public class TitleSceneManager : MonoBehaviour
     {
         openingVideo.SetActive(false);
         gameTitle.SetActive(true);
-        whiteEffect.GetComponent<Image>().DOFade(0f, 1.5f).SetEase(Ease.InOutSine);
+        whiteEffect.GetComponent<Image>().DOFade(0f, 1.5f).SetEase(Ease.InOutSine)
+            .OnComplete(() =>
+            {
+                whiteEffect.SetActive(false);
+            });
         audioSource.Play();
     }
 }
