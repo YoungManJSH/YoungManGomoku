@@ -38,7 +38,6 @@ public class NetworkManager : MonoBehaviour
     /// </returns>
     public async Awaitable<PlayerData> RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)
 	{
-
 		if (registerUserDTO == null)
 		{
 			Debug.Log($"Unknow User!");
@@ -57,6 +56,10 @@ public class NetworkManager : MonoBehaviour
 	/// </returns>
 	public async Awaitable<PlayerData> LoginRequest(string idToken) => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
 
+
+
+    // 앞으로 네트워크 매니저의 중추를 담당할 함수들. Open되어있지는 않음.
+    // API들은 전부 이 함수들을 Wrapping해 사용할 것
     private async Awaitable<RecvData> RequestPostServer<RecvData>(string serverURL, string sendJsonString, string successAnnounce = "=== Request Success! ===")
         => await RequestServer<RecvData>(serverURL, "POST", sendJsonString, successAnnounce);
     
@@ -79,4 +82,21 @@ public class NetworkManager : MonoBehaviour
         Debug.Log($"{successAnnounce}\n{responseJson}");
 		return JsonUtility.FromJson<RecvData>(responseJson);
     }
+
+    // 리팩토링 도중 소멸한 API들
+    [Obsolete("이 메서드는 제거되었습니다. RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)를 사용하세요.", true)]
+    public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken) 
+        => await RequestPostServer<PlayerData>("/Account/Register", $"\"{idToken}\"", "Register Success");
+
+    [Obsolete("이 메서드는 제거되었습니다. RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)를 사용하세요.", true)]
+    public async Awaitable<PlayerData> GoogleAccountRegisterRequest(CS_AccountRegisterDTO GoogleLoginUserDTO)
+        => await RegisterAccountRequest(GoogleLoginUserDTO);
+
+    [Obsolete("이 메서드는 제거되었습니다. LoginRequest(string idToken)를 사용하세요.", true)]
+    public async Awaitable<PlayerData> GuestLoginRequest(string idToken)
+        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
+
+    [Obsolete("이 메서드는 제거되었습니다. LoginRequest(string idToken)를 사용하세요.", true)]
+    public async Awaitable<PlayerData> GoogleLoginRequest(string idToken)
+        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
 }

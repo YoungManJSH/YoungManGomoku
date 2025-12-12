@@ -59,6 +59,5 @@ namespace YoungManGomoku_WebServer
 
             return resultData;
 		}
-
     }
 }

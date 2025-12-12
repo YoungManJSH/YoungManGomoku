@@ -66,8 +66,9 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public DateTime LastLoginDate { get; set; }
         public DateTime LastPlayDate { get; set; }
 
+        public PlayerBattleRecord BattleRecord { get; set; }
 
-		public PlayerProfile(string nickname)
+        public PlayerProfile(string nickname)
 		{
 			this.UID = ServerManager.GenerateUID64();
 			this.AuthToken = nickname;

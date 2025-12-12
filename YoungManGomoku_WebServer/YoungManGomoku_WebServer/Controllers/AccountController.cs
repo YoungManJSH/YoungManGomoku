@@ -64,7 +64,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 생성 한 후 DB Context Change로 쿼리를 날려야 해서 오래 걸린다.
             // 애초에 여기 들어오면 사실상 Assert이긴 하다.
-            // 그런데 DB측에서 독단적 테스트로 DB에 행 값을 만들다 말았을 수도 있어서 Assert는 위험
+            // 그런데 DB측에서 독단적 테스트로 DB에 행 값을 만들다 말았을 수도 있어서 Assert는 위험하니 return null로 방어적 코딩
             if (findRecord == null) return null;
 			
 
