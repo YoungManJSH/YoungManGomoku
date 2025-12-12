@@ -8,6 +8,7 @@ public class EventManager : MonoBehaviour
     
     public event Action OnGameWin;
     public event Action OnGameLose;
+    public event Action OnGameDraw;
     
     public event Action OnPlayerSurrender;
     public event Action OnOppositeSurrender;
@@ -16,6 +17,7 @@ public class EventManager : MonoBehaviour
     public event Action<int> OnOppositeByoyomiPurchase;
     
     public event Action OnOppositeDisconnectedWin;
+    public event Action OnTakeBack;
 
     public static EventManager Instance { get; private set; }
     
@@ -35,6 +37,7 @@ public class EventManager : MonoBehaviour
         // Action 개체는 Immutable이므로 구독 순서에 유의할 것!!
         OnGameWin += OnGameEnd;
         OnGameLose += OnGameEnd;
+        OnGameDraw += OnGameEnd;
 
         OnPlayerSurrender += OnGameLose;
         OnOppositeSurrender += OnGameWin;
@@ -46,6 +49,7 @@ public class EventManager : MonoBehaviour
 
         _gameManager.BoardInform.BlackWin += _gameManager.IsPlayerBlack ? OnGameWin : OnGameLose;
         _gameManager.BoardInform.WhiteWin += _gameManager.IsPlayerBlack ? OnGameLose : OnGameWin;
+        _gameManager.BoardInform.OverMaxTurn += OnGameDraw;
     }
 
     public void StartGame() => OnGameStart!.Invoke();
@@ -55,4 +59,6 @@ public class EventManager : MonoBehaviour
     public void PlayerByoyomiPurchase() => OnPlayerByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
 
     public void OppositeByoyomiPurchase() => OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
+
+    public void TakeBack() => OnTakeBack!.Invoke();
 }

@@ -17,7 +17,7 @@ public class CountDown : MonoBehaviour
 
     private void Start()
     {
-        _ = StartCountDown();
+        StartCountDown().Cancel();
     }
 
     private async Awaitable StartCountDown()
@@ -32,7 +32,7 @@ public class CountDown : MonoBehaviour
 
         eventManager.StartGame();
     }
-    
+
     private async Awaitable ScaleAnimating(string text)
     {
         _countDownText.text = text;
