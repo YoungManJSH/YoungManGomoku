@@ -7,13 +7,13 @@ public class PanelMover : MonoBehaviour
     [SerializeField] private RectTransform messageBoxPanel;
     [SerializeField] private RectTransform startCountDown;
     [SerializeField] private SpriteRenderer boardRenderer;
-    [SerializeField] private BoardGenerator boardGenerator;
+    [SerializeField] private IngameBoardManager ingameBoardManager;
     
     private Camera _mainCamera;
 
     private void Awake()
     {
-        boardGenerator.OnBoardScaled += async() => await MoveUIPanel();
+        ingameBoardManager.OnBoardScaled += async() => await MoveUIPanel();
     }
     
     private void Start()

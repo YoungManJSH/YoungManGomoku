@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using YoungManGomoku_Protocol;
 
@@ -40,7 +39,6 @@ public class Board
     public event Action BlackWin;
     public event Action WhiteWin;
     public event Action OverMaxTurn;
-    public event Action FailedSaveRecord;
     public event Func<Awaitable> OnBlackUnmovable;
     
     public Stone this[int row, int col] => _nowBoard[row, col];
@@ -92,46 +90,8 @@ public class Board
         return true;
     }
 
-    public void SaveRecord(PlayerData blackUser, PlayerData whiteUser, string result)
-    {
-        try
-        {
-            string fileName = $"{DateTime.Now:yyyyMMddHHmm}-{blackUser.Nickname},{whiteUser.Nickname}.gibo";
-        
-#if UNITY_STANDALONE || UNITY_EDITOR
-            string basePath = Environment.CurrentDirectory;
-#elif UNITY_ANDROID
-            string basePath = Application.persistentDataPath;
-#endif
-
-            string giboPath = Path.Combine(basePath, "Gibo");
-            // Gibo 폴더가 없으면 생성
-            if (Directory.Exists(giboPath) is false)
-            {
-                Directory.CreateDirectory(giboPath);
-            }
-
-            giboPath = Path.Combine(giboPath, fileName);
-
-            // finally 블럭에서 Dispose를 적는 대신 using으로 처리
-            using StreamWriter writer = new StreamWriter(giboPath);
-            
-            writer.Write($"{blackUser.Nickname}({blackUser.WinCount},{blackUser.DrawCount},{blackUser.LoseCount}),");
-            writer.WriteLine($"{whiteUser.Nickname}({whiteUser.WinCount},{whiteUser.DrawCount},{whiteUser.LoseCount})");
-            
-            writer.WriteLine($"{NowTurn},{result}");
-
-            foreach ((int row, int col) in _record)
-            {
-                writer.WriteLine($"{row},{col}");
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"기보 저장 실패! : {e}");
-            FailedSaveRecord?.Invoke();
-        }
-    }
+    public void SaveRecord(BasicPlayerData blackUser, BasicPlayerData whiteUser, string result)
+        => GiboFileManager.CreateGiboFile(_record, blackUser, whiteUser, result);
 
     private void UpdateBlackJudges()
     {

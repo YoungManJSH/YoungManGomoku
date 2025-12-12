@@ -17,8 +17,8 @@ public class GameManager : MonoBehaviour
     public TimeController PlayerTime { get; private set; }
     public TimeController OppositeTime { get; private set; }
     
-    public PlayerData player;
-    public PlayerData oppositePlayer;
+    public BasicPlayerData player;
+    public BasicPlayerData oppositePlayer;
     
     private TimeController _nowPlayerTime;
     private EventManager _eventManager;
@@ -43,22 +43,8 @@ public class GameManager : MonoBehaviour
         
         #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
         IsPlayerBlack = true;
-        player = new PlayerData()
-        {
-            Nickname = "슈퍼뇽재환띠",
-            WinCount = 80,
-            DrawCount = 1,
-            LoseCount = 75,
-            Rating = 1498.5f
-        };
-        oppositePlayer = new PlayerData()
-        {
-            Nickname = "허접뇽재환띠",
-            WinCount = 55,
-            DrawCount = 3,
-            LoseCount = 43,
-            Rating = 1502.2f
-        };
+        player = new BasicPlayerData("슈퍼뇽재환띠", 80, 1, 75, 1498.233f);
+        oppositePlayer = new BasicPlayerData("허접뇽재환띠", 55, 3, 43, 1502.943f); 
 
         if (IsPlayerBlack)
         {
@@ -87,6 +73,8 @@ public class GameManager : MonoBehaviour
             OppositeTime.OnTimeLose += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 시간승");
         }
         
+        // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
+        // 오직 착수만 의미하는 이벤트는 OnStoneMove
         stoneMoveController.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTime = isBlackTurn == IsPlayerBlack ? PlayerTime : OppositeTime;

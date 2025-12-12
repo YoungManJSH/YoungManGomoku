@@ -5,7 +5,7 @@ public class TimeController
 {
     public readonly float initByoyomiSeconds;
     private float _mainTime;
-    private int _byoyomiLeft;
+    private int _byoyomiCount;
     private float _byoyomi;
     private bool _isByoyomi;
     public bool IsByoyomiPurchased { get; private set; }
@@ -27,19 +27,19 @@ public class TimeController
             _mainTime = value;
         }
     }
-    public int ByoyomiLeft
+    public int ByoyomiCount
     {
-        get => _byoyomiLeft;
+        get => _byoyomiCount;
         private set
         {
             Debug.Assert(value >= 0);
-            if (value > _byoyomiLeft)
+            if (value > _byoyomiCount)
             {
-                _byoyomiLeft = value;
+                _byoyomiCount = value;
                 return;
             }
             
-            _byoyomiLeft = value;
+            _byoyomiCount = value;
             if (value == 0)
             {
                 OnTimeLose?.Invoke();
@@ -61,7 +61,7 @@ public class TimeController
         {
             if (value <= 0f)
             {
-                --ByoyomiLeft;
+                --ByoyomiCount;
                 _byoyomi = initByoyomiSeconds;
                 return;
             }
@@ -82,7 +82,7 @@ public class TimeController
         
         initByoyomiSeconds = byoyomiSeconds;
         MainTime = initMainTime;
-        ByoyomiLeft = initByoyomiCount;
+        ByoyomiCount = initByoyomiCount;
     }
 
     public void TimeProgress(float deltaTime)
@@ -109,6 +109,6 @@ public class TimeController
         }
         IsByoyomiPurchased = true;
         Byoyomi = initByoyomiSeconds;
-        ByoyomiLeft += amount;
+        ByoyomiCount += amount;
     }
 }

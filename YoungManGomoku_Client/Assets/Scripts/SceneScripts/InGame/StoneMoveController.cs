@@ -8,7 +8,7 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private GameObject whiteStone;
     [SerializeField] private GameObject forbiddenMark;
     [SerializeField] private AudioClip deniedSound;
-    [SerializeField] private BoardGenerator boardGenerator;
+    [SerializeField] private IngameBoardManager ingameBoardManager;
     [SerializeField] private MessageBoxManager messageBox;
     [SerializeField] private float previewAlpha;
 
@@ -55,7 +55,7 @@ public class StoneMoveController : MonoBehaviour
         _boardInform = GameManager.Instance.BoardInform;
         
         _boardInform.OnBlackUnmovable += async() => await OnBlackUnmovable();
-        boardGenerator.OnBoardScaled += async () => await CalcWorldValue();
+        ingameBoardManager.OnBoardScaled += async () => await CalcWorldValue();
 
         messageBox.OnOpened += () => enabled = false;
         messageBox.TurnBackToGame += () => enabled = true;
@@ -156,11 +156,12 @@ public class StoneMoveController : MonoBehaviour
     private async Awaitable CalcWorldValue()
     {
         await Awaitable.EndOfFrameAsync();
-        
-        float pixelToWorld = _spriteRenderer.bounds.size.x / boardGenerator.TotalPixel;
-        _marginWorld = (boardGenerator.MarginSize - boardGenerator.CellSize / 2f) * pixelToWorld;
-        _firstLineWorld = boardGenerator.MarginSize * pixelToWorld;
-        _cellSizeWorld = boardGenerator.CellSize * pixelToWorld;
+
+        var data = ingameBoardManager.BoardData;
+        float pixelToWorld = _spriteRenderer.bounds.size.x / data.TotalPixel;
+        _marginWorld = (data.MarginSize - data.CellSize / 2f) * pixelToWorld;
+        _firstLineWorld = data.MarginSize * pixelToWorld;
+        _cellSizeWorld = data.CellSize * pixelToWorld;
     }
     
     private void CreatePreview()

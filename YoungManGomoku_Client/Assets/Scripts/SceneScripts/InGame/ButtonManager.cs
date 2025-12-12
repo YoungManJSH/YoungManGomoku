@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Button = UnityEngine.UI.Button;
 
 public class ButtonManager : MonoBehaviour
@@ -88,7 +89,7 @@ public class ButtonManager : MonoBehaviour
         => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
     
     public void ExitInput()
-        => UnityEditor.EditorApplication.isPlaying = false;
+        => SceneManager.LoadScene("GiboPlayScene");
 
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     
