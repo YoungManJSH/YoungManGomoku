@@ -1377,7 +1377,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 458822869}
         m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
-        m_MethodName: MoveSceneToLobby
+        m_MethodName: MoveSceneToShop
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

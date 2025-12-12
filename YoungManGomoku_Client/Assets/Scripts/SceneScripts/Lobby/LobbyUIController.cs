@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 public class LobbyUIController : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void MoveSceneToLobby()
+    public void MoveSceneToShop()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         SceneManager.LoadScene("ShopScene - Android");
