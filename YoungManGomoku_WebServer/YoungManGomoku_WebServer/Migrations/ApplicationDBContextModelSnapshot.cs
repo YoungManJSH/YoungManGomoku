@@ -22,7 +22,6 @@ namespace YoungManGomoku_WebServer.Migrations
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerBattleRecord", b =>
                 {
                     b.Property<decimal>("UID")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(20,0)");
 
                     b.Property<long>("DisconnectCount")
@@ -52,7 +51,7 @@ namespace YoungManGomoku_WebServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AuthToken")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("CashMoney")
                         .HasColumnType("int");
@@ -95,7 +94,20 @@ namespace YoungManGomoku_WebServer.Migrations
 
                     b.HasKey("UID");
 
+                    b.HasIndex("AuthToken")
+                        .IsUnique()
+                        .HasFilter("[AuthToken] IS NOT NULL");
+
                     b.ToTable("PlayerProfileTable");
+                });
+
+            modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerBattleRecord", b =>
+                {
+                    b.HasOne("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerProfile", "PlayerProfile")
+                        .WithOne("BattleRecord")
+                        .HasForeignKey("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerBattleRecord", "UID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

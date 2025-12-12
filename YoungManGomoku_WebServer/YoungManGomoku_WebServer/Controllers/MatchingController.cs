@@ -131,7 +131,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
         private readonly ILogger<MatchingController> _logger;
 
-        ConcurrentQueue<PlayerProfile> pp;
+        ConcurrentQueue<PlayerStatus> pp;
 
         public MatchingController(ILogger<MatchingController> logger, ApplicationDBContext context)
         {

@@ -33,8 +33,6 @@
         MAXCOUNT
     }
 
-
-
     public enum AuthLevel
     {
         Ban = -1,

@@ -19,6 +19,10 @@ public class NetworkManager : MonoBehaviour
 	// 나중에 바꿀 예정
 	[SerializeField] private const string baseURL = "https://localhost:44331";
 
+    // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
+    public event Action OnRequestFailed;
+
+
     // static singletone class로 만들고 싶다면 awake 함수 파서 만들면 됨
 
     // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
@@ -54,9 +58,8 @@ public class NetworkManager : MonoBehaviour
 	/// null : 해당하는 ID Token에 맞는 계정 탐색에 실패 (계정이 없음, 회원가입 필요)
 	/// not null : 로그인 성공, 해당 계정 플레이어 데이터를 return
 	/// </returns>
-	public async Awaitable<PlayerData> LoginRequest(string idToken) => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
-
-
+	public async Awaitable<PlayerData> LoginRequest(string idToken)
+        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
 
     // 앞으로 네트워크 매니저의 중추를 담당할 함수들. Open되어있지는 않음.
     // API들은 전부 이 함수들을 Wrapping해 사용할 것
@@ -76,6 +79,7 @@ public class NetworkManager : MonoBehaviour
         if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(uwr.error);
+            OnRequestFailed?.Invoke();
             return default(RecvData);
         }
         string responseJson = uwr.downloadHandler.text;

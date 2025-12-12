@@ -9,16 +9,14 @@ namespace YoungManGomoku_WebServer
 	public static class ServerManager
 	{
 		private static UIDGenerator uidGenerator;
-
-		internal static ConcurrentDictionary<ulong, PlayerProfile> PlayerProfiles { get; set; }
-
-        internal static ConcurrentDictionary<ulong, PlayerBattleRecord> PlayerRecords { get; set; }
+        // DB에 사용되는 테이블 형태로 Concurrent Dictionary 구현해 접속중인 유저 관리
+        // PlayerData는 클라에서도 사용되기 때문에 보안 상 노출 위험이 있다고 판단
+		internal static ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
 
         static ServerManager()
 		{
 			uidGenerator = new UIDGenerator();
-            PlayerProfiles = new ConcurrentDictionary<ulong, PlayerProfile>();
-            PlayerRecords = new ConcurrentDictionary<ulong, PlayerBattleRecord>();
+            PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
         }
 
 		public static uint GenerateUID32() => uidGenerator.GenerateUID32();
@@ -29,35 +27,45 @@ namespace YoungManGomoku_WebServer
 		{
 			PlayerData resultData = new PlayerData();
 
-            PlayerProfile playerProfile = PlayerProfiles[UID];
-			PlayerBattleRecord playeRecord = PlayerRecords[UID];
+            PlayerAccount playerProfile;
 
             // 클라로 UID, AuthToken, AuthLevel을 보낼 필요는 없다.
 
-            resultData.Nickname = playerProfile.Nickname;
-            resultData.Rating = playerProfile.Rating;
+            resultData.Nickname = PlayerDatas[UID].Account.Nickname;
+            resultData.Rating = PlayerDatas[UID].Status.Rating;
 
-			resultData.Level = playerProfile.Level;
-            resultData.ExperiencePoint = playerProfile.ExperiencePoint;
-            resultData.MaxExperiencePoint = playerProfile.MaxExperiencePoint;
+			resultData.Level = PlayerDatas[UID].Status.Level;
+            resultData.ExperiencePoint = PlayerDatas[UID].Status.ExperiencePoint;
+            resultData.MaxExperiencePoint = PlayerDatas[UID].Status.MaxExperiencePoint;
 
-            resultData.GameMoney = playerProfile.GameMoney;
-            resultData.CashMoney = playerProfile.CashMoney;
+            resultData.GameMoney = PlayerDatas[UID].Money.GameMoney;
+            resultData.CashMoney = PlayerDatas[UID].Money.CashMoney;
 
-            resultData.EquipProfile = playerProfile.EquipProfile;
-			resultData.EquipBoardSkin = playerProfile.EquipBoardSkin;
-			resultData.EquipStoneSkin = playerProfile.EquipStoneSkin;
+            resultData.EquipProfile = PlayerDatas[UID].Equip.EquipProfile;
+			resultData.EquipBoardSkin = PlayerDatas[UID].Equip.EquipBoardSkin;
+			resultData.EquipStoneSkin = PlayerDatas[UID].Equip.EquipStoneSkin;
             
-            resultData.RegisterDate = playerProfile.RegisterDate;
-            resultData.LastLoginDate = playerProfile.LastLoginDate;
-            resultData.LastPlayDate = playerProfile.LastPlayDate;
+            resultData.RegisterDate = PlayerDatas[UID].Account.RegisterDate;
+            resultData.LastLoginDate = PlayerDatas[UID].Account.LastLoginDate;
+            resultData.LastPlayDate = PlayerDatas[UID].Account.LastPlayDate;
 
-            playeRecord.WinCount = 0;
-            playeRecord.DrawCount = 0;
-            playeRecord.LoseCount = 0;
-            playeRecord.DisconnectCount = 0;
+            resultData.WinCount = PlayerDatas[UID].GomokuRecord.WinCount;
+            resultData.DrawCount = PlayerDatas[UID].GomokuRecord.LoseCount;
+            resultData.LoseCount = PlayerDatas[UID].GomokuRecord.LoseCount;
+            resultData.DisconnectCount = PlayerDatas[UID].GomokuRecord.DisconnectCount;
 
             return resultData;
 		}
+    }
+
+    class PlayerSession
+    {
+        public PlayerAccount Account { get; set; }
+        public PlayerStatus Status { get; set; }
+        public PlayerMoney Money { get; set; }
+        public PlayerInventoryItem Inventory { get; set; }
+        public PlayerEquip Equip { get; set; }
+        
+        public PlayerBattleRecord GomokuRecord { get; set; }
     }
 }

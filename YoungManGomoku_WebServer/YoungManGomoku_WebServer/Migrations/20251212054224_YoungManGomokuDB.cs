@@ -8,21 +8,6 @@ namespace YoungManGomoku_WebServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "PlayerGomokuRecordTable",
-                columns: table => new
-                {
-                    UID = table.Column<decimal>(nullable: false),
-                    WinCount = table.Column<long>(nullable: false),
-                    DrawCount = table.Column<long>(nullable: false),
-                    LoseCount = table.Column<long>(nullable: false),
-                    DisconnectCount = table.Column<long>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlayerGomokuRecordTable", x => x.UID);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "PlayerProfileTable",
                 columns: table => new
                 {
@@ -47,6 +32,34 @@ namespace YoungManGomoku_WebServer.Migrations
                 {
                     table.PrimaryKey("PK_PlayerProfileTable", x => x.UID);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "PlayerGomokuRecordTable",
+                columns: table => new
+                {
+                    UID = table.Column<decimal>(nullable: false),
+                    WinCount = table.Column<long>(nullable: false),
+                    DrawCount = table.Column<long>(nullable: false),
+                    LoseCount = table.Column<long>(nullable: false),
+                    DisconnectCount = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlayerGomokuRecordTable", x => x.UID);
+                    table.ForeignKey(
+                        name: "FK_PlayerGomokuRecordTable_PlayerProfileTable_UID",
+                        column: x => x.UID,
+                        principalTable: "PlayerProfileTable",
+                        principalColumn: "UID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayerProfileTable_AuthToken",
+                table: "PlayerProfileTable",
+                column: "AuthToken",
+                unique: true,
+                filter: "[AuthToken] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

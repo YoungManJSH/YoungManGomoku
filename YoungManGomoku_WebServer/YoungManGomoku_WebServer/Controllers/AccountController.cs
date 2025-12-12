@@ -35,32 +35,32 @@ namespace YoungManGomoku_WebServer.Controllers
         public PlayerData RegisterAccountData([FromBody] CS_AccountRegisterDTO registerUserData)
 		{
             // 이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
-            if (_context.PlayerProfileTable.Where(x => x.AuthToken == registerUserData.IdToken).FirstOrDefault() == null)
+            if (_context.PlayerAccountTable.Where(x => x.AuthToken == registerUserData.IdToken).FirstOrDefault() == null)
                 return null;
             
-			PlayerProfile playerProfile = new PlayerProfile(registerUserData.UserNickname);
-            playerProfile.AuthToken = registerUserData.IdToken;
-			_context.PlayerProfileTable.Add(playerProfile);
+			PlayerAccount playerAccount = new PlayerAccount(registerUserData.IdToken, registerUserData.UserNickname);
+            playerAccount.AuthToken = registerUserData.IdToken;
+			_context.PlayerAccountTable.Add(playerAccount);
 
-			PlayerBattleRecord playerRecord = new PlayerBattleRecord(playerProfile.UID);
-            _context.PlayerGomokuRecordTable.Add(playerRecord);
+			PlayerBattleRecord playerRecord = new PlayerBattleRecord(playerAccount);
+            _context.PlayerGomokuBattleRecordTable.Add(playerRecord);
 
             _context.SaveChanges();
-            ServerManager.PlayerProfiles.TryAdd(playerProfile.UID, playerProfile);
-            ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);
+            //ServerManager.playerAccount.TryAdd(playerAccount.UID, playerAccount);
+            //ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);
 
-            return ServerManager.GetPlayerData(playerProfile.UID);
+            return ServerManager.GetPlayerData(playerAccount.UID);
 		}
 
         // Login이 Get이면 토큰이 URL에 노출되서 보안상 위험하지 않을까?
         [HttpPost("Login")] 
         public PlayerData LoginGuestAccountData([FromBody] string idToken)
         {
-            PlayerProfile findProfile = _context.PlayerProfileTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
+            PlayerAccount findProfile = _context.PlayerAccountTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
 
             if (findProfile == null || findProfile.AuthLevel == AuthLevel.Ban) return null;
 
-            PlayerBattleRecord findRecord = _context.PlayerGomokuRecordTable.Where(x => x.UID == findProfile.UID).FirstOrDefault();
+            PlayerBattleRecord findRecord = _context.PlayerGomokuBattleRecordTable.Where(x => x.UID == findProfile.UID).FirstOrDefault();
 
             // 생성 한 후 DB Context Change로 쿼리를 날려야 해서 오래 걸린다.
             // 애초에 여기 들어오면 사실상 Assert이긴 하다.
@@ -69,8 +69,8 @@ namespace YoungManGomoku_WebServer.Controllers
 			
 
             findProfile.LastLoginDate = DateTime.Now;
-            ServerManager.PlayerProfiles.TryAdd(findProfile.UID, findProfile);
-            ServerManager.PlayerRecords.TryAdd(findRecord.UID, findRecord);
+            //ServerManager.PlayerProfiles.TryAdd(findProfile.UID, findProfile);
+            //ServerManager.PlayerRecords.TryAdd(findRecord.UID, findRecord);
 
             _context.SaveChanges();
 
@@ -87,9 +87,9 @@ namespace YoungManGomoku_WebServer.Controllers
             int i = 0;
             // 안전한 스냅샷?
             // 잡히는거 size개까지 그냥 가져옴
-            foreach (PlayerProfile profile in ServerManager.PlayerProfiles.Values.Take(size).ToArray()) 
+            //foreach (PlayerAccount profile in ServerManager.PlayerDatas.Values.Take(size).ToArray()) 
             {
-                datas[i++] = ServerManager.GetPlayerData(profile.UID);
+                //datas[i++] = ServerManager.GetPlayerData(PlayerAccount.UID);
             }
 
             return datas;
