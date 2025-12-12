@@ -31,28 +31,15 @@ namespace YoungManGomoku_WebServer.Controllers
 		}
 
         // POST
-        [HttpPost("Guest/Register")]
-        public PlayerData RegisterGuestAccountData([FromBody] string idToken)
+		[HttpPost("Register")]
+        public PlayerData RegisterAccountData([FromBody] CS_AccountRegisterDTO registerUserData)
 		{
-			PlayerProfile playerProfile = new PlayerProfile("Guest");
-            playerProfile.AuthToken = idToken;
-			_context.PlayerProfileTable.Add(playerProfile);
-
-			PlayerBattleRecord playerRecord = new PlayerBattleRecord(playerProfile.UID);
-			_context.PlayerGomokuRecordTable.Add(playerRecord);
-
-			_context.SaveChanges();
-            ServerManager.PlayerProfiles.TryAdd(playerProfile.UID, playerProfile);
-            ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);
-
-            return ServerManager.GetPlayerData(playerProfile.UID);
-        }
-
-		[HttpPost("GoogleAccount/Register")]
-        public PlayerData RegisterGoogleAccountData([FromBody] CS_GoogleAccountRegisterDTO googleLoginUserData)
-		{
-			PlayerProfile playerProfile = new PlayerProfile(googleLoginUserData.UserNickname);
-            playerProfile.AuthToken = googleLoginUserData.IdToken;
+            // 이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
+            if (_context.PlayerProfileTable.Where(x => x.AuthToken == registerUserData.IdToken).FirstOrDefault() == null)
+                return null;
+            
+			PlayerProfile playerProfile = new PlayerProfile(registerUserData.UserNickname);
+            playerProfile.AuthToken = registerUserData.IdToken;
 			_context.PlayerProfileTable.Add(playerProfile);
 
 			PlayerBattleRecord playerRecord = new PlayerBattleRecord(playerProfile.UID);
@@ -66,7 +53,7 @@ namespace YoungManGomoku_WebServer.Controllers
 		}
 
         // Login이 Get이면 토큰이 URL에 노출되서 보안상 위험하지 않을까?
-        [HttpPost("Guest/Login")] 
+        [HttpPost("Login")] 
         public PlayerData LoginGuestAccountData([FromBody] string idToken)
         {
             PlayerProfile findProfile = _context.PlayerProfileTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
@@ -75,13 +62,11 @@ namespace YoungManGomoku_WebServer.Controllers
 
             PlayerBattleRecord findRecord = _context.PlayerGomokuRecordTable.Where(x => x.UID == findProfile.UID).FirstOrDefault();
 
-			if (findRecord == null)
-			{
-				// 생성 한 후 DB Context Change로 쿼리를 날려야 해서 오래 걸린다.
-				// 애초에 여기 들어오면 사실상 Assert인건데 테스트로 DB에 행 값을 만들다 말았을 수도 있음
-				// InitPlayerRecord(findProfile.UID);
-                return null;
-			}
+            // 생성 한 후 DB Context Change로 쿼리를 날려야 해서 오래 걸린다.
+            // 애초에 여기 들어오면 사실상 Assert이긴 하다.
+            // 그런데 DB측에서 독단적 테스트로 DB에 행 값을 만들다 말았을 수도 있어서 Assert는 위험하니 return null로 방어적 코딩
+            if (findRecord == null) return null;
+			
 
             findProfile.LastLoginDate = DateTime.Now;
             ServerManager.PlayerProfiles.TryAdd(findProfile.UID, findProfile);
@@ -91,32 +76,6 @@ namespace YoungManGomoku_WebServer.Controllers
 
             return ServerManager.GetPlayerData(findProfile.UID);
         }
-
-        [HttpPost("GoogleAccount/Login")]
-        public PlayerData LoginGoogleAccountData([FromBody] string IdToken)
-        {
-            PlayerProfile findProfile = _context.PlayerProfileTable.Where(x => x.AuthToken == IdToken).FirstOrDefault();
-
-            if (findProfile == null || findProfile.AuthLevel == AuthLevel.Ban) return null;
-
-            PlayerBattleRecord findRecord = _context.PlayerGomokuRecordTable.Where(x => x.UID == findProfile.UID).FirstOrDefault();
-
-            if (findRecord == null)
-            {
-                // InitPlayerRecord(findProfile.UID);
-                return null;
-            }
-
-            findProfile.LastLoginDate = DateTime.Now;
-			ServerManager.PlayerProfiles.TryAdd(findProfile.UID, findProfile);
-			ServerManager.PlayerRecords.TryAdd(findRecord.UID, findRecord);
-
-            _context.SaveChanges();
-
-            return ServerManager.GetPlayerData(findProfile.UID);
-        }
-
-
         
 		[HttpGet]
 		public IEnumerable<PlayerData> Get()

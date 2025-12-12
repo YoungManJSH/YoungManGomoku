@@ -10,10 +10,12 @@ public class MessageBoxManager : MonoBehaviour
     public event Action TurnBackToGame;
 
     private Action _requestedAction;
+    private RectTransform _rect;
     private bool _isGameEnded;
 
     private void Awake()
     {
+        _rect = GetComponent<RectTransform>();
         _isGameEnded = false;
         EventManager.Instance.OnGameEnd += OnGameEnd;
     }
@@ -38,9 +40,27 @@ public class MessageBoxManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             OnConfirm();
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(0) &&
+            RectTransformUtility.RectangleContainsScreenPoint(_rect, Input.mousePosition) is false)
+        {
+            OnCancel();
         }
 #elif UNITY_ANDROID
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Back))
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            OnCancel();
+            return;
+        }
+        
+        if (Input.touchCount == 0) return;
+        
+        Touch touch = Input.GetTouch(0);
+        
+        if (touch.phase == TouchPhase.Began &&
+            RectTransformUtility.RectangleContainsScreenPoint(_rect, touch.position) is false)
         {
             OnCancel();
         }

@@ -23,6 +23,7 @@ public class StoneMoveController : MonoBehaviour
     private GameObject _whitePreview;
     private Transform _forbiddenParent;
     private HashSet<(int row, int col)> _forbiddenCoords;
+    private (GameObject black, GameObject white) _recentStone; 
     private Camera _mainCamera;
     
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
@@ -60,6 +61,7 @@ public class StoneMoveController : MonoBehaviour
         messageBox.TurnBackToGame += () => enabled = true;
         EventManager.Instance.OnGameStart += OnGameStart;
         EventManager.Instance.OnGameEnd += () => enabled = false;
+        EventManager.Instance.OnTakeBack += TakeBack;
     }
 
     private void Start()
@@ -234,7 +236,7 @@ public class StoneMoveController : MonoBehaviour
             {
                 if (_boardInform[row, col] == Stone.Empty)
                 {
-                    await Awaitable.WaitForSecondsAsync(0.3f);
+                    await Awaitable.WaitForSecondsAsync(0.5f);
                     MoveStone((row, col));
                 }
             }
@@ -258,12 +260,19 @@ public class StoneMoveController : MonoBehaviour
     {
         if (_isBlackTurn)
         {
-            Instantiate(blackStone, position, Quaternion.identity, _blackParent);
+            _recentStone.black = Instantiate(blackStone, position, Quaternion.identity, _blackParent);
         }
         else
         {
-            Instantiate(whiteStone, position, Quaternion.identity, _whiteParent);
+            _recentStone.white = Instantiate(whiteStone, position, Quaternion.identity, _whiteParent);
         }
+    }
+
+    private void TakeBack()
+    {
+        Destroy(_recentStone.black);
+        Destroy(_recentStone.white);
+        ClearForbiddenMarks();
     }
 
     /// <summary> position에 금수 마크 생성 </summary>

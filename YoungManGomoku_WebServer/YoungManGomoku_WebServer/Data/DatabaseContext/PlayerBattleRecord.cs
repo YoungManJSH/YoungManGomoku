@@ -23,7 +23,8 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 		// 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
 		public float WinRate => BattleCount > 0 ? WinCount / BattleCount : 0;
 
-
+        public PlayerProfile PlayerProfile { get; set; }
+        
 		public PlayerBattleRecord(ulong UID)
 		{
             this.UID = UID;

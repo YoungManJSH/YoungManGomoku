@@ -1,4 +1,4 @@
-using Firebase.Auth;
+ï»¿using Firebase.Auth;
 using Google;
 using System;
 using System.Runtime.CompilerServices;
@@ -10,220 +10,93 @@ using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.Source;
 
-// ·Î±×ÀÎÇÒ ¶§ ÀÎÁõ ÅäÅ«(UID°°Àº°Å)À» º¸³¿
-// °ÔÀÓ ½ÃÀÛ ½ÃÁ¡°ú °ÔÀÓ °á°ú ½ÃÁ¡ µî ¿äÃ»ÇÒ ¶§¸¶´Ù ÅäÅ«À» °°ÀÌ º¸³»¼­ ÀÎÁõ
-// À¥¼­¹ö¶ó¼­ ¸Å ¿äÃ»¸¶´Ù ÅäÅ«ÀÌ ÇÊ¿äÇÔ
+// ë¡œê·¸ì¸í•  ë•Œ ì¸ì¦ í† í°(UIDê°™ì€ê±°)ì„ ë³´ëƒ„
+// ê²Œì„ ì‹œì‘ ì‹œì ê³¼ ê²Œì„ ê²°ê³¼ ì‹œì  ë“± ìš”ì²­í•  ë•Œë§ˆë‹¤ í† í°ì„ ê°™ì´ ë³´ë‚´ì„œ ì¸ì¦
+// ì›¹ì„œë²„ë¼ì„œ ë§¤ ìš”ì²­ë§ˆë‹¤ í† í°ì´ í•„ìš”í•¨
 
 public class NetworkManager : MonoBehaviour
 {
-	// ³ªÁß¿¡ ¹Ù²Ü ¿¹Á¤
+	// ë‚˜ì¤‘ì— ë°”ê¿€ ì˜ˆì •
 	[SerializeField] private const string baseURL = "https://localhost:44331";
-	
-	// static singletone class·Î ¸¸µé°í ½Í´Ù¸é awake ÇÔ¼ö ÆÄ¼­ ¸¸µé¸é µÇ´Âµ¥ ÀÏ´Ü »óÀÇºÎÅÍ
 
-	// Start is called once before the first execution of Update after the MonoBehaviour is created
-	void Start()
+    // static singletone classë¡œ ë§Œë“¤ê³  ì‹¶ë‹¤ë©´ awake í•¨ìˆ˜ íŒŒì„œ ë§Œë“¤ë©´ ë¨
+
+    // GoogleSignInUserëŠ” êµ¬ê¸€ ì–´ì¹´ìš´íŠ¸ ì •ë³´ê°€ ë‹¤ ë“¤ì–´ ìˆì–´ì„œ ë¬´ê²ë‹¤.
+    // ë”°ë¼ì„œ Jsonìœ¼ë¡œ ë³€í™˜í•˜ë©´ stringì´ ë¬´ì§€ë§‰ì§€í•˜ê²Œ ê¸¸ì–´ì§ˆ ê²ƒì´ë‹¤.
+    // -> ê¼­ í•„ìš”í•œ ë°ì´í„° string IdToken, NickName 2ê°€ì§€ë§Œ DTOë¡œ ë¹¼ì„œ ë„˜ê²¨ì£¼ë„ë¡ í•˜ì.
+
+    /// <summary>
+    /// CS_AccountRegisterDTO(íšŒì›ê°€ì…ì„ ìœ„í•´ í•„ìš”í•œ ë°ì´í„°)ë¥¼ ì¡°ë¦½í•´ì„œ ì›¹ ì„œë²„ë¡œ íšŒì› ê°€ì… ìš”ì²­
+    /// </summary>
+    /// <param name="registerUserDTO"> 
+    /// íšŒì› ê°€ì…ì„ ìœ„í•œ ë°ì´í„° : ìœ ì € ë‹‰ë„¤ì„, ID Token(ì¸ì¦ì„œ), guest ì—¬ë¶€. 
+    /// êµ¬ê¸€ ê³„ì •ì¸ ê²½ìš° GoogleSignInUserì˜ IdTokenê³¼ DisplayName ì‚¬ìš©
+    /// </param>
+    /// <returns>
+    /// null : ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ID Tokenì´ë¼ ê³„ì • ë“±ë¡ ì‹¤íŒ¨
+    /// not null : íšŒì›ê°€ì… ì„±ê³µ, ê³„ì • ì •ë³´ ë°›ì•„ì˜´
+    /// </returns>
+    public async Awaitable<PlayerData> RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)
 	{
-		// »ç¿ë¿¹½Ã
-		/*
-		PlayerData res = new PlayerData();
-		res.UID = 123;
-		res.Nickname = "KCG";
-
-		SendRequest("ranking", "POST", res, (uwr) =>
+		if (registerUserDTO == null)
 		{
-			// SendRequestÀÇ °á°ú¿¡ µû¶ó Ã³¸®ÇÒ ÀÏÀ» ÁöÁ¤
-			// TODO
-			// ¶÷´Ù·Î ÀÛ¼ºÇÏµç º»ÀÎÀÌ ÇÔ¼ö ÀÛ¼ºÇØ¼­ Áı¾î³Öµç ºñ¿ìµç ÇÊ¿ä¿¡ µû¶ó ¾Ë¾Æ¼­ ÇÏ½Ã¿À
-		}).Cancel();
-		*/
-	}
+			Debug.Log($"Unknow User!");
+			return null;
+		}
+        return await RequestPostServer<PlayerData>("/Account/Register", JsonUtility.ToJson(registerUserDTO), "Register Success");
+    }
 
-	// Update is called once per frame
-	void Update()
+	/// <summary>
+	/// ì›¹ ì„œë²„ë¡œ í•´ë‹¹í•˜ëŠ” ID Tokenì˜ ë°ì´í„°ì— ë”°ë¼ ë¡œê·¸ì¸ ìš”ì²­
+	/// </summary>
+	/// <param name="idToken"> ê³„ì • ì¸ì¦ìš© ID Token. êµ¬ê¸€ ê³„ì •ì¸ ê²½ìš° GoogleSignInUser.IdToken ì‚¬ìš© </param>
+	/// <returns>
+	/// null : í•´ë‹¹í•˜ëŠ” ID Tokenì— ë§ëŠ” ê³„ì • íƒìƒ‰ì— ì‹¤íŒ¨ (ê³„ì •ì´ ì—†ìŒ, íšŒì›ê°€ì… í•„ìš”)
+	/// not null : ë¡œê·¸ì¸ ì„±ê³µ, í•´ë‹¹ ê³„ì • í”Œë ˆì´ì–´ ë°ì´í„°ë¥¼ return
+	/// </returns>
+	public async Awaitable<PlayerData> LoginRequest(string idToken) => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
+
+
+
+    // ì•ìœ¼ë¡œ ë„¤íŠ¸ì›Œí¬ ë§¤ë‹ˆì €ì˜ ì¤‘ì¶”ë¥¼ ë‹´ë‹¹í•  í•¨ìˆ˜ë“¤. Openë˜ì–´ìˆì§€ëŠ” ì•ŠìŒ.
+    // APIë“¤ì€ ì „ë¶€ ì´ í•¨ìˆ˜ë“¤ì„ Wrappingí•´ ì‚¬ìš©í•  ê²ƒ
+    private async Awaitable<RecvData> RequestPostServer<RecvData>(string serverURL, string sendJsonString, string successAnnounce = "=== Request Success! ===")
+        => await RequestServer<RecvData>(serverURL, "POST", sendJsonString, successAnnounce);
+    
+    private async Awaitable<RecvData> RequestServer<RecvData>(string serverURL, string method, string sendJsonString, string successAnnounce = "=== Request Success! ===")
 	{
-
-	}
-
-    // Network Thread µû·Î ÆÄ¼­ Monobehavior¿Í Awaitable ¾øÀÌ µ¹¸±±î °í¹ÎÇØºÃ´Âµ¥,
-    // ÀÏ´Ü Å¬¶óÀÌ¾ğÆ® ÆÀ¿øµéÀÌ ÀÌÂÊÀÌ ÀÍ¼÷ÇÒ °Í °°¾Æ¼­ ½Ì±ÛÄÚ¾î Awaitable ºñµ¿±â·Î ¶§¸²
-
-    // °Ô½ºÆ® µî·Ï
-    // ±Ùµ¥ ¿ì¸® °Ô½ºÆ®´Â PCÆÇ¸¸ ¾²±â·Î ÇÕÀÇÇØ¼­ ÆÄÀÌ¾îº£ÀÌ½º °Ô½ºÆ®´Â ¾È ¾¸
-    // Á» ´õ ÁöÄÑºÃ´Ù°¡ Á¦°ÅÇÒ ¼öµµ ÀÖ´Â ÄÚµå
-    /*
-	public async Awaitable GuestRegisterRequest(string token)
-	{
-		// ÆÄÀÌ¾îº£ÀÌ½º·ÎºÎÅÍ ÀÍ¸í ÀÎÁõ ¹Ş¾Æº½
-		// ºĞ¸í ´õ·´°Ô ´À¸±Å×´Ï ½Ï´Ù await
-		AuthResult result = await FirebaseAuth.DefaultInstance.SignInAnonymouslyAsync();
-		string idToken = await result.User.TokenAsync(false);
-
-		// ¼­¹ö·Î ID Token Àü¼Û
-		SendGuestAuthRequest(idToken).Cancel();
-	}
-	*/
-
-    // POST = Add Data
-    // GET = Read Data
-    public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken)
-	{
-		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Register", "POST");
-
-        string jsonBody = $"\"{idToken}\"";
-        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
-		uwr.downloadHandler = new DownloadHandlerBuffer();
+        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/{serverURL}", method);
+        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(sendJsonString));
+        uwr.downloadHandler = new DownloadHandlerBuffer();
 
         uwr.SetRequestHeader("Content-Type", "application/json");
 
         await uwr.SendWebRequest();
 
-		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-		{
-			Debug.Log(uwr.error);
-			return null;
-		}
-
+        if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.Log(uwr.error);
+            return default(RecvData);
+        }
         string responseJson = uwr.downloadHandler.text;
-        Debug.Log($"Google Register Success : {responseJson}");
-        return JsonUtility.FromJson<PlayerData>(responseJson);
+        Debug.Log($"{successAnnounce}\n{responseJson}");
+		return JsonUtility.FromJson<RecvData>(responseJson);
     }
 
-    // GoogleSignInUser´Â ±¸±Û ¾îÄ«¿îÆ® Á¤º¸°¡ ´Ù µé¾î ÀÖ¾î¼­ ¹«°Ì´Ù.
-    // µû¶ó¼­ JsonÀ¸·Î º¯È¯ÇÏ¸é stringÀÌ ¹«Áö¸·ÁöÇÏ°Ô ±æ¾îÁú °ÍÀÌ´Ù.
-    // -> ²À ÇÊ¿äÇÑ µ¥ÀÌÅÍ string IdToken, NickName 2°¡Áö¸¸ DTO·Î »©¼­ ³Ñ°ÜÁÖµµ·Ï ÇÏÀÚ.
-    public async Awaitable<PlayerData> GoogleAccountRegisterRequest(CS_GoogleAccountRegisterDTO GoogleLoginUserDTO)
-	{
-		UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Register", "POST");
+    // ë¦¬íŒ©í† ë§ ë„ì¤‘ ì†Œë©¸í•œ APIë“¤
+    [Obsolete("ì´ ë©”ì„œë“œëŠ” ì œê±°ë˜ì—ˆìŠµë‹ˆë‹¤. RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)ë¥¼ ì‚¬ìš©í•˜ì„¸ìš”.", true)]
+    public async Awaitable<PlayerData> GuestAccountRegisterRequest(string idToken) 
+        => await RequestPostServer<PlayerData>("/Account/Register", $"\"{idToken}\"", "Register Success");
 
-		if (GoogleLoginUserDTO == null)
-		{
-			Debug.Log($"Unknow Google Sign User!");
-			return null;
-		}
-		
-		string jsonStr = JsonUtility.ToJson(GoogleLoginUserDTO);
+    [Obsolete("ì´ ë©”ì„œë“œëŠ” ì œê±°ë˜ì—ˆìŠµë‹ˆë‹¤. RegisterAccountRequest(CS_AccountRegisterDTO registerUserDTO)ë¥¼ ì‚¬ìš©í•˜ì„¸ìš”.", true)]
+    public async Awaitable<PlayerData> GoogleAccountRegisterRequest(CS_AccountRegisterDTO GoogleLoginUserDTO)
+        => await RegisterAccountRequest(GoogleLoginUserDTO);
 
-		uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonStr));
-		uwr.downloadHandler = new DownloadHandlerBuffer();
-
-        uwr.SetRequestHeader("Content-Type", "application/json");
-
-        await uwr.SendWebRequest();
-
-		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-		{
-			Debug.Log(uwr.error);
-			return null;
-		}
-
-        string responseJson = uwr.downloadHandler.text;
-		Debug.Log($"Google Register Success : {responseJson}");
-        return JsonUtility.FromJson<PlayerData>(responseJson);
-    }
-
+    [Obsolete("ì´ ë©”ì„œë“œëŠ” ì œê±°ë˜ì—ˆìŠµë‹ˆë‹¤. LoginRequest(string idToken)ë¥¼ ì‚¬ìš©í•˜ì„¸ìš”.", true)]
     public async Awaitable<PlayerData> GuestLoginRequest(string idToken)
-    {
-        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/Guest/Login", "POST");
+        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
 
-        string jsonBody = $"\"{idToken}\"";
-        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
-        uwr.downloadHandler = new DownloadHandlerBuffer();
-
-        uwr.SetRequestHeader("Content-Type", "application/json");
-
-        await uwr.SendWebRequest();
-
-        if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-        {
-            Debug.Log(uwr.error);
-            return null;
-        }
-
-        string responseJson = uwr.downloadHandler.text;
-        Debug.Log($"Google Register Success : {responseJson}");
-        return JsonUtility.FromJson<PlayerData>(responseJson);
-    }
-
+    [Obsolete("ì´ ë©”ì„œë“œëŠ” ì œê±°ë˜ì—ˆìŠµë‹ˆë‹¤. LoginRequest(string idToken)ë¥¼ ì‚¬ìš©í•˜ì„¸ìš”.", true)]
     public async Awaitable<PlayerData> GoogleLoginRequest(string idToken)
-	{
-        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/Account/GoogleAccount/Login", "POST");
-
-        string jsonBody = $"\"{idToken}\"";
-        uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
-        uwr.downloadHandler = new DownloadHandlerBuffer();
-
-        uwr.SetRequestHeader("Content-Type", "application/json");
-
-        await uwr.SendWebRequest();
-
-        if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-        {
-            Debug.Log(uwr.error);
-            return null;
-        }
-
-        string responseJson = uwr.downloadHandler.text;
-        Debug.Log($"Google Register Success : {responseJson}");
-        return JsonUtility.FromJson<PlayerData>(responseJson);
-    }
-
-
-    // json ÇüÅÂ·Î Ç¥Çö °¡´ÉÇÑ object º¯¼ö¸¦ º¸³»°í, ¾î¶² µ¥ÀÌÅÍ¸¦ ¿äÃ»ÇÏ°í ¹Ş¾Æ¿À´Â ÇÔ¼ö ÅÛÇÃ¸´
-    private async Awaitable SendRequest(string url, string method, object sendObj, Action<UnityWebRequest> callback)
-	{
-		string sendURL = $"{baseURL}/{url}/";
-
-		byte[] jsonBytes = null;
-
-		// ¹» ¿äÃ»ÇÏ°Ú´Ù´Â °Å¿ä?
-		if (sendObj != null)
-		{
-			string jsonStr = JsonUtility.ToJson(sendObj);
-			jsonBytes = Encoding.UTF8.GetBytes(jsonStr);
-		}
-
-		// À¥¼­¹ö ¿äÃ» µ¥ÀÌÅÍ Á¶¸³
-		var uwr = new UnityWebRequest(sendURL, method);
-		uwr.uploadHandler = new UploadHandlerRaw(jsonBytes); // À¥¼­¹ö·Î º¸³¾ json µ¥ÀÌÅÍ ¾÷·Îµå
-		uwr.downloadHandler = new DownloadHandlerBuffer();
-		uwr.SetRequestHeader("Content-Type", "application/json");
-
-		// À¥¼­¹ö¿¡ ¿äÃ»ÇÏ±â
-		await uwr.SendWebRequest();
-
-		if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-		{
-			Debug.Log(uwr.error);
-			return;
-		}
-
-		// À¥¼­¹öÀÇ ÀÀ´ä °á°ú
-		// ÀÌ°É Àß ½á¸Ô¾îº¸ÀÚ, ¾Æ´Ï¸é Äİ¹é¿¡¼­ °ü¸®ÇÏ´øÁö
-		Debug.Log($"Recv Text : {uwr.downloadHandler.text}");
-		callback(uwr);
-	}
-
-	// ¿¬½À¿ë
-	/*
-	private async Awaitable RecvWebTextureData(string url, string method, object obj)
-	{
-		string recvURL = $"{baseURL}/{url}/";
-
-		// ÅØ½ºÃÄ·Î ÀÌ¹ÌÁö¸¦ ¹Ş¾ÆºÃÀ½
-		UnityWebRequest request = UnityWebRequestTexture.GetTexture(recvURL);
-		await request.SendWebRequest();
-
-		if (request.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-		{
-			Debug.Log($"{recvURL}·ÎºÎÅÍ Get ½ÇÆĞ! : {request.error}");
-			return;
-		}
-
-		// µ¥ÀÌÅÍ¸¦ Á¦´ë·Î ¹Ş¾Æ¿Â °æ¿ìÀÇ Ã³¸®´Â ¿©±â¼­
-
-		// ...
-		Texture2D img = (request.downloadHandler as DownloadHandlerTexture).texture;
-	}
-	*/
+        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
 }
