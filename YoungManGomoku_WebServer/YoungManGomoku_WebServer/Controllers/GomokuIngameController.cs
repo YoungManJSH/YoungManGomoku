@@ -5,7 +5,7 @@ using YoungManGomoku_WebServer.Data;
 
 namespace YoungManGomoku_WebServer.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class GomokuIngameController : ControllerBase
     {

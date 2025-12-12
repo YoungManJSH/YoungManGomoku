@@ -5,12 +5,7 @@ namespace YoungManGomoku_WebServer.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class PingController : ControllerBase
+    public class ShopController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult Get()
-        {
-            return Ok("pong");
-        }
     }
 }

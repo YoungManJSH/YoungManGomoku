@@ -83,16 +83,26 @@ namespace YoungManGomoku_Protocol
 
 namespace YoungManGomoku_Protocol.ClientToServer
 {
-    public class CS_GoogleAccountRegisterDTO
+    public class CS_AccountRegisterDTO
     {
         public string UserNickname { get; set; }
         public string IdToken { get; set; }        
+        public bool IsGuest { get; set; }
     }
 }
 
 
 namespace YoungManGomoku_Protocol.ServerToClient
 {
+    /*
+    사실상 모든 서버의 응답은 Json 형태로 돌아올 것임
+    그럼 필요없는 네임스페이스 아니냐?
+    서버에서 조립할 때 잠시 쓸 수 있다.
+    클라이언트에서 필요한 데이터가 있으면 여기서 조립할 틀을 제공해달라.
+    서버에서 잘 조립한다음 json 형태로 보내주겠다.
+    */
+
+
 }
 
 

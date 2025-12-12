@@ -15,5 +15,29 @@ namespace YoungManGomoku_WebServer.Data
         { 
 
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // PlayerProfile PK
+            modelBuilder.Entity<PlayerProfile>()
+                .HasKey(p => p.UID);
+
+            // AuthToken은 Unique
+            modelBuilder.Entity<PlayerProfile>()
+                .HasIndex(p => p.AuthToken)
+                .IsUnique();
+
+            // PlayerBattleRecord PK
+            modelBuilder.Entity<PlayerBattleRecord>()
+                .HasKey(b => b.UID); // Shared PK
+
+            // 1:1 관계 설정
+            modelBuilder.Entity<PlayerProfile>()
+                .HasOne(p => p.BattleRecord)
+                .WithOne(b => b.PlayerProfile)
+                .HasForeignKey<PlayerBattleRecord>(b => b.UID); // FK = PK
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
