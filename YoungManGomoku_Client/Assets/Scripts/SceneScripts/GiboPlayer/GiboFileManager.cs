@@ -8,14 +8,18 @@ public static class GiboFileManager
     private const int META_LINE_COUNT = 3;
     
     public static string GiboFileName { private get; set; }
-    
-    public static event Action<string> FailedSaveRecord;
-    
     private static string GiboFolderPath { get; }
     private static string GiboFilePath => Path.Combine(GiboFolderPath, GiboFileName);
     private static bool IsGiboFolderExists => Directory.Exists(GiboFolderPath);
     private static bool IsGiboFileExists => File.Exists(GiboFilePath);
-
+    /* GiboFileName이 생성자 초기화값(String.Empty) 그대로라면?
+     * IsGiboFileExists는 File.Exists(Path.Combine(GiboFolderPath, ""))와 동일
+     * 이는 File.Exists(GiboFolderPath)와 동일하게 평가되며,
+     * GiboFolderPath의 폴더가 실제로 존재하더라도 false로 평가됨. (파일이 존재하는 게 아니므로)
+     * 따라서 GiboFileName이 따로 입력되지 않았다면 IsGiboFileExists는 false임 */
+    
+    public static event Action<string> FailedSaveRecord;
+    
     static GiboFileManager()
     {
         GiboFileName = String.Empty;
@@ -115,6 +119,7 @@ public static class GiboFileManager
             }
         }
         #endregion
+        
         return true;
         
         ReadFailed:
@@ -136,7 +141,7 @@ public static class GiboFileManager
                 Directory.CreateDirectory(GiboFolderPath);
             }
 
-            GiboFileName = $"{DateTime.Now:yyyyMMddHHmm}-{blackData.name},{whiteData.name}.gibo";
+            GiboFileName = $"{DateTime.Now:yyMMddHHmmss}-{blackData.name},{whiteData.name}.gibo";
 
             if (IsGiboFileExists)
             {
