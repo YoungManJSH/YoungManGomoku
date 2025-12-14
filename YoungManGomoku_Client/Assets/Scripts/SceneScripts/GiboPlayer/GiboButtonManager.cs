@@ -51,38 +51,78 @@ public class GiboButtonManager : MonoBehaviour
         boardManager.OnTurnChanged += OnTurnChanged;
     }
 
-    private void OnDestroy()
-    {
-        if (_autoPlayCancelToken != null)
-        {
-            // 자동 재생이 마지막까지 진행된 경우 남아있게 됨
-            _autoPlayCancelToken.Cancel();
-            _autoPlayCancelToken.Dispose();
-        }
-    }
+    private void OnDestroy() => CancelAutoPlay();
 
     public void AutoPlay()
     {
         if (_isAutoPlaying)
         {
             // 자동 재생 중일 경우 진행 중단
-            _autoPlayCancelToken.Cancel();
-            _autoPlayCancelToken.Dispose();
-            _autoPlayCancelToken = null;
-            _autoPlaySet.buttonText.text = "자동 재생";
+            CancelAutoPlay();
         }
         else
         {
             // 자동 재생 중이 아닐 경우 진행 시작
-            _autoPlayCancelToken?.Dispose();
+            CancelAutoPlay();
             _autoPlayCancelToken = new CancellationTokenSource();
-            boardManager.AutoPlay(_autoPlayCancelToken.Token).Cancel(); // 취소 아님, Fire-and-Forget
+            boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.5f).Cancel(); // 취소 아님, Fire-and-Forget
+            _isAutoPlaying = true;
             _autoPlaySet.buttonText.text = "자동 재생 취소";
         }
-        
-        _isAutoPlaying = !_isAutoPlaying;
     }
-    
+
+    public void MoveNextTurn()
+    {
+        CancelAutoPlay();
+        boardManager.MoveNextTurn();
+    }
+
+    public void MovePrevTurn()
+    {
+        CancelAutoPlay();
+        boardManager.MovePrevTurn();
+    }
+
+    public void MoveNext10Turn()
+    {
+        CancelAutoPlay();
+        _autoPlayCancelToken = new CancellationTokenSource();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, moveCount: 10, isNext: true).Cancel();
+    }
+
+    public void MovePrev10Turn()
+    {
+        CancelAutoPlay();
+        _autoPlayCancelToken = new CancellationTokenSource();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, moveCount: 10, isNext: false).Cancel();
+    }
+
+    public void MoveLastTurn()
+    {
+        CancelAutoPlay();
+        _autoPlayCancelToken = new CancellationTokenSource();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, isNext: true).Cancel();
+    }
+
+    public void MoveZeroTurn()
+    {
+        CancelAutoPlay();
+        _autoPlayCancelToken = new CancellationTokenSource();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, isNext: false).Cancel();
+    }
+
+    private void CancelAutoPlay()
+    {
+        if (_autoPlayCancelToken != null)
+        {
+            _autoPlayCancelToken.Cancel();
+            _autoPlayCancelToken.Dispose();
+            _autoPlayCancelToken = null;
+            _isAutoPlaying = false;
+            _autoPlaySet.buttonText.text = "자동 재생";
+        }
+    }
+
     private void OnReadSucceed()
     {
         ButtonActivate(_nextSet);
