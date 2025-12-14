@@ -101,11 +101,11 @@ public class LoginWithGoogle : MonoBehaviour
 
                 user = auth.CurrentUser;
 
-                username.text = user.DisplayName;
-                userEmail.text = user.Email;
+                //username.text = user.DisplayName;
+                //userEmail.text = user.Email;
 
-                loginPanel.SetActive(false);
-                userPanel.SetActive(true);
+                //loginPanel.SetActive(false);
+                //userPanel.SetActive(true);
 
                 //StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
                 //var result = await GetComponent<NetworkManager>().GoogleAccountRegisterRequest(deviceId);
