@@ -6,8 +6,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int mainTimeSeconds;
     [SerializeField] private int byoyomiCounts;
     [SerializeField] private int byoyomiSeconds;
-    [SerializeField] private StoneMoveController stoneMoveController;
     [SerializeField] private int byoyomiPurchaseAmount;
+    [SerializeField] private StoneMoveController stoneMoveController;
+    [SerializeField] private BoardSweeper oppositeSweeper;
+    [SerializeField] private AudioClip winSound;
+    [SerializeField] private AudioClip loseSound;
+    [SerializeField] private AudioClip drawSound;
+    
     public int ByoyomiPurchaseAmount => byoyomiPurchaseAmount;
     
     public static GameManager Instance { get; private set; }
@@ -22,6 +27,7 @@ public class GameManager : MonoBehaviour
     
     private TimeController _nowPlayerTime;
     private EventManager _eventManager;
+    private AudioSource _audioSource;
 
     // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
     // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
@@ -30,6 +36,7 @@ public class GameManager : MonoBehaviour
         if (Instance != null) Destroy(gameObject);
         Instance = this;
         _eventManager = GetComponent<EventManager>();
+        _audioSource = GetComponent<AudioSource>();
         
         BoardInform = new Board();
         PlayerTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
@@ -40,6 +47,10 @@ public class GameManager : MonoBehaviour
         
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
+        _eventManager.OnStartSweeping += () => enabled = false;
+        _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
+        _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
+        _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
         
         #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
         IsPlayerBlack = false;
@@ -84,6 +95,7 @@ public class GameManager : MonoBehaviour
     }
 
     private void Start() => enabled = false;
+
     private void Update() => _nowPlayerTime.TimeProgress(Time.deltaTime);
 
     // 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 

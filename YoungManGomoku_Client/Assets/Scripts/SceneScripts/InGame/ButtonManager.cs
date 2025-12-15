@@ -8,6 +8,7 @@ using Button = UnityEngine.UI.Button;
 public class ButtonManager : MonoBehaviour
 {
     [SerializeField] private MessageBoxManager messageBox;
+    [SerializeField] private BoardSweeper playerSweeper;
     
     [SerializeField] private Button surrenderButton;
     [SerializeField] private Button byoyomiPurchaseButton;
@@ -80,17 +81,23 @@ public class ButtonManager : MonoBehaviour
     }
     
     public void SurrenderInput()
-        => messageBox.MessageBoxOpen(surrenderConfirmMsg, EventManager.Instance.PlayerSurrendered);
+        => messageBox.MessageBoxOpen(surrenderConfirmMsg, Surrender);
 
     public void TimePurchaseInput()
         => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, EventManager.Instance.PlayerByoyomiPurchase);
 
     public void TakeBackInput()
         => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
-    
-    public void ExitInput()
-        => SceneManager.LoadScene("GiboPlayScene");
 
+    public void ExitInput()
+    {
+#if UNITY_STANDALONE || UNITY_EDITOR
+        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - PC");
+#elif UNITY_ANDROID
+        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - Android");
+#endif
+    }
+    
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     
     private void OnGameEnd()
@@ -114,6 +121,12 @@ public class ButtonManager : MonoBehaviour
     {
         ButtonInactivate(_byoyomiPurchaseSet);
         _activateSet.Remove(_byoyomiPurchaseSet);
+    }
+
+    private void Surrender()
+    {
+        ButtonInactivate(_surrenderSet);
+        playerSweeper.Sweeping();
     }
 
     private void TakeBack()

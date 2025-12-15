@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -32,8 +31,7 @@ public class CountDown : MonoBehaviour
         }
         
         await ScaleAnimating("Start!!", startSound);
-        _countDownText.text = String.Empty;
-        Destroy(gameObject, 2f);
+        gameObject.SetActive(false);
         
         EventManager.Instance.StartGame();
     }

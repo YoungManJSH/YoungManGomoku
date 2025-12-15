@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using UnityEngine;
 
@@ -8,23 +9,35 @@ public class BoardSweeper : MonoBehaviour
     [SerializeField] private float toMiddleDuration;
     [SerializeField] private float switchingDuration;
     [SerializeField] private float toEndDuration;
+    [SerializeField] private AudioClip stoneSound;
+    [SerializeField] private bool isPlayerHand;
     
     private Rigidbody2D _rb;
+    private AudioSource _audioSource;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
-        EventManager.Instance.OnPlayerSurrender += Sweeping;
-        EventManager.Instance.OnOppositeSurrender += Sweeping;
+        _audioSource = GetComponent<AudioSource>();
         gameObject.SetActive(false);
     }
 
-    private void Sweeping()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (collision.gameObject.CompareTag("Stone"))
+        {
+            _audioSource.PlayOneShot(stoneSound);
+        }
+    }
+    
+    public void Sweeping()
+    {
+        EventManager.Instance.StartSweeping();
+        
         gameObject.SetActive(true);
         _rb.simulated = true;
 
-        GetComponent<AudioSource>().Play();
+        _audioSource.Play();
         Sequence seq = DOTween.Sequence();
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
@@ -36,6 +49,17 @@ public class BoardSweeper : MonoBehaviour
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             Vector2.zero, toEndDuration).SetEase(Ease.InQuad));
 
-        seq.OnComplete(() => gameObject.SetActive(false));
+        seq.OnComplete(() =>
+        {
+            if (isPlayerHand)
+            {
+                EventManager.Instance.PlayerSurrendered();
+            }
+            else
+            {
+                EventManager.Instance.OppositeSurrendered();
+            }
+            gameObject.SetActive(false);
+        });
     }
 }
