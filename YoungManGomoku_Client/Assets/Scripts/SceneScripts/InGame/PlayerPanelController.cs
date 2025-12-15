@@ -20,6 +20,7 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private AudioClip byoyomiWarningSound;
     [SerializeField] private AudioClip byoyomiPurchaseSound;
     [SerializeField] private TMP_FontAsset glowFont;
+    [SerializeField] private Sprite otherColorStone;
     [SerializeField] private bool isPlayer;
 
     private TimeController _myTimer;
@@ -47,6 +48,7 @@ public class PlayerPanelController : MonoBehaviour
         
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
+        if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
         _myTimer = isPlayer ? gm.PlayerTime : gm.OppositeTime;
         _isLastByoyomi = _myTimer.ByoyomiCount == 1;
         _myTimer.StartByoyomi += OnStartByoyomi;

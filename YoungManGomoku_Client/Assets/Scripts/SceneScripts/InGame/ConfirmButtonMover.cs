@@ -40,7 +40,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _isDragging = false;
         _holdTime = 0f;
         
-        //stoneMoveController.OnStoneMove += OnStoneMove;
+        stoneMoveController.OnStoneMove += OnStoneMove;
     }
 
     private void Update()
@@ -82,6 +82,6 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _buttonImage.color = Color.white;
     }
 
-    private void OnStoneMove(bool isBlackTurn)
-        => _button.interactable = isBlackTurn == GameManager.Instance.IsPlayerBlack;
+    private void OnStoneMove(bool isBlackTurn) => _button.interactable = true;
+    // => _button.interactable = isBlackTurn == GameManager.Instance.IsPlayerBlack;
 }

@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
         _eventManager.OnGameEnd += () => enabled = false;
         
         #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
-        IsPlayerBlack = true;
+        IsPlayerBlack = false;
         player = new BasicPlayerData("슈퍼뇽재환띠", 80, 1, 75, 1498.233f);
         oppositePlayer = new BasicPlayerData("허접뇽재환띠", 55, 3, 43, 1502.943f); 
 
