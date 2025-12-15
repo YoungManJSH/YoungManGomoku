@@ -35,16 +35,12 @@ namespace YoungManGomoku_WebServer.Controllers
         public PlayerData RegisterAccountData([FromBody] CS_AccountRegisterDTO registerUserData)
 		{
             // 이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
-            if (_context.PlayerAccountTable.Where(x => x.AuthToken == registerUserData.IdToken).FirstOrDefault() == null)
+            if (_context.PlayerAccountTable.Any(x => x.AuthToken == registerUserData.IdToken))
                 return null;
             
 			PlayerAccount playerAccount = new PlayerAccount(registerUserData.IdToken, registerUserData.UserNickname);
             playerAccount.AuthToken = registerUserData.IdToken;
 			_context.PlayerAccountTable.Add(playerAccount);
-
-			PlayerBattleRecord playerRecord = new PlayerBattleRecord(playerAccount);
-            _context.PlayerGomokuBattleRecordTable.Add(playerRecord);
-
             _context.SaveChanges();
             //ServerManager.playerAccount.TryAdd(playerAccount.UID, playerAccount);
             //ServerManager.PlayerRecords.TryAdd(playerRecord.UID, playerRecord);

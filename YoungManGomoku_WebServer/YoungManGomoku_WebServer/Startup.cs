@@ -33,7 +33,9 @@ namespace YoungManGomoku_WebServer
             services.AddDbContext<ApplicationDBContext>(options => 
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-        }
+
+			services.AddSingleton<ServerManager>();
+		}
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

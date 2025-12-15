@@ -22,7 +22,7 @@ namespace YoungManGomoku_WebServer.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // PlayerProfile PK
+            // PlayerAccount PK
             modelBuilder.Entity<PlayerAccount>()
                 .HasKey(p => p.UID);
 
@@ -31,9 +31,11 @@ namespace YoungManGomoku_WebServer.Data
                 .HasIndex(p => p.AuthToken)
                 .IsUnique();
 
+            // 인벤토리 복합 키 설정
+			// modelBuilder.Entity<PlayerInventoryItem>().HasKey(i => new { i.InventoryId, i.UID });
 
-            // 공유되는 키 설정
-            modelBuilder.Entity<PlayerBattleRecord>()
+			// Shared Primary Key Setting
+			modelBuilder.Entity<PlayerBattleRecord>()
                 .HasKey(b => b.UID); // Shared PK
 
             modelBuilder.Entity<PlayerStatus>()
@@ -58,16 +60,12 @@ namespace YoungManGomoku_WebServer.Data
                 .Property(e => e.EquipStoneSkin)
                 .HasConversion<uint>();
 
-            modelBuilder.Entity<PlayerEquip>()
-                .Property(e => e.EquipStoneSkin)
-                .HasConversion<uint>();
-
             modelBuilder.Entity<PlayerInventoryItem>()
                 .Property(i => i.ItemType)
                 .HasConversion<uint>();
 
-            // 1:1 관계 설정
-            modelBuilder.Entity<PlayerAccount>()
+			// 1:1 관계 설정
+			modelBuilder.Entity<PlayerAccount>()
                 .HasOne(p => p.GomokuBattleRecord)
                 .WithOne(b => b.Account)
                 .HasForeignKey<PlayerBattleRecord>(b => b.UID) // FK = PK
@@ -91,15 +89,23 @@ namespace YoungManGomoku_WebServer.Data
                 .HasForeignKey<PlayerEquip>(e => e.UID)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 1:N 관계 설정
-            modelBuilder.Entity<PlayerAccount>()
+			// 1:N 관계 설정
+			modelBuilder.Entity<PlayerAccount>()
                 .HasMany(a => a.Inventory)
                 .WithOne(i => i.Account)
                 .HasForeignKey(i => i.UID)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // 유저가 인벤토리를 갖고 있는 거니까 아래 처럼 코딩하면 가독성이 좋지 않다
+            // 기능적으로는 동일하긴 하다
+			// modelBuilder.Entity<PlayerInventoryItem>().HasOne(i => i.Account).WithMany(a => a.Inventory).HasForeignKey(i => i.UID).OnDelete(DeleteBehavior.Cascade);
 
-            base.OnModelCreating(modelBuilder);
+			// 복합 키 대신 중복 방지 Unique Index (UID + ItemType + ItemId)
+			modelBuilder.Entity<PlayerInventoryItem>()
+				.HasIndex(i => new { i.UID, i.ItemType, i.ItemId })
+				.IsUnique();
+
+			base.OnModelCreating(modelBuilder);
         }
     }
 }

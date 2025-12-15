@@ -10,21 +10,13 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 	{
 		[Key]
 		public ulong UID { get; set; }
-
-		// Guest ID Judge
 		public string AuthToken { get; set; }
-
 		public AuthLevel AuthLevel { get; set; }
-
 		public string Nickname { get; set; }
-
-		// 인게임에서 사용할 돌 데이터... 그런데 인게임에서만 쓰지 않나? 어차피 서버가 들고있다가 요청하면 뿌리면 되겠지?
-		// 확실한건 DB에 저장할 필요는 없는 데이터다. 
-		// public Stone StoneType { get; set; }
 		public DateTime RegisterDate { get; set; }
         public DateTime LastLoginDate { get; set; }
-        public DateTime LastPlayDate { get; set; }
-
+        public DateTime LastPlayDate { get; set; }	
+		// Shared Key로 UID 제공
         public PlayerMoney Money { get; set; }
         public PlayerStatus Status { get; set; }
         public PlayerEquip Equip { get; set; }

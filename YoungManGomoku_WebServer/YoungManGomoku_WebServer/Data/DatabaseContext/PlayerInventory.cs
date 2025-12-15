@@ -13,11 +13,14 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
     }
 
     internal class PlayerInventoryItem
-    {
-        [Key]
-        public long InventoryId { get; set; } // optional
+	{
+        // 단일 Primary Key (Identity)
+		[Key]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public long InventoryId { get; set; }
 
-        public ulong UID { get; set; }
+		// FK: PlayerAccount UID
+		public ulong UID { get; set; }
 
         [ForeignKey(nameof(UID))]
         public PlayerAccount Account { get; set; }
@@ -28,11 +31,20 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 
         public DateTime AcquiredDate { get; set; } = DateTime.UtcNow;
 
+        public PlayerInventoryItem() {}
+
         public PlayerInventoryItem(PlayerAccount account)
         {
             this.Account = account;
             this.UID = account.UID;
-
         }
-    }
+
+		public PlayerInventoryItem(PlayerAccount account, ItemType type, uint itemId)
+		{
+			this.Account = account;
+			this.UID = account.UID;
+			this.ItemType = type;
+			this.ItemId = itemId;
+		}
+	}
 }
