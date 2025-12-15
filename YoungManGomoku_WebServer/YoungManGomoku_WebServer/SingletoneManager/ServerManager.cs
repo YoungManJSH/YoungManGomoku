@@ -5,8 +5,15 @@ using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.Source.TypeEnum;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
 
-namespace YoungManGomoku_WebServer
+namespace YoungManGomoku_WebServer.SingletoneManager
 {
+	/*
+	서버에서 관리하는 접속된 Player Object
+	PlayerAccount에서 Composition, 관계형 DB를 통해 외래 Key로 연결해 DB 데이터 관리
+	나머지는 비 DB 데이터, 메모리에만 올라감
+	(DB에 저장할 필요가 없고, 서버가 터져서 메모리가 날아가도 괜찮은 데이터)
+	(DB Transaction 최소화를 위한 최적화)
+	 */
 	class PlayerSession
 	{
 		// 운영 시 서버 로그나 디버깅 전용
@@ -30,6 +37,7 @@ namespace YoungManGomoku_WebServer
 		public DateTime LastHeartbeatTime { get; set; }
 
 		public bool IsConnected { get; set; }
+
 		// 게임 상태
 		public bool IsMatching { get; set; }
 		public bool IsInGame { get; set; }
@@ -50,22 +58,47 @@ namespace YoungManGomoku_WebServer
 
 		// 요청 간 임시 데이터 저장 (예: 매치 리퀘스트에 필요한 변수)
 		// public Dictionary<string, object> TempData { get; } = new Dictionary<string, object>();
+
+		public PlayerSession(ulong sessionUID, PlayerAccount account, bool isConnect = true)
+		{
+			SessionID = sessionUID;
+            Account = account;
+			AuthToken = Account.AuthToken;	// caching
+            IsConnected = isConnect;
+			IsMatching = false;
+			IsInGame = false;
+            LoginTime = DateTime.UtcNow;
+			LastRequestTime = DateTime.UtcNow;
+			LastHeartbeatTime = DateTime.UtcNow;
+            LastActionTime = DateTime.UtcNow;
+        }
 	}
 
-	public class ServerManager
-	{
+    public interface IUIDProvider
+    {
+		uint GenerateUID32();
+        ulong GenerateUID64();
+    }
+
+    public class ServerManager : IUIDProvider
+    {
 		private UIDGenerator uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
         // PlayerData는 클라에서도 사용되기 때문에 보안 상 노출 위험이 있다고 판단
 		internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
+        internal ConcurrentDictionary<string, ulong> UIDByIDToken;
+        public MatchingManager MatchingManager { get; }
+        public GameRoomManager GameRoomManager { get; }
 
-        public ServerManager()
-		{
-			uidGenerator = new UIDGenerator();
+        public ServerManager(MatchingManager matchingManager, GameRoomManager gameRoomManager)
+        {
+            uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
+            MatchingManager = matchingManager;
+            GameRoomManager = gameRoomManager;
         }
 
-		public uint GenerateUID32() => uidGenerator.GenerateUID32();
+        public uint GenerateUID32() => uidGenerator.GenerateUID32();
 		
 		public ulong GenerateUID64() => uidGenerator.GenerateUID64();
 

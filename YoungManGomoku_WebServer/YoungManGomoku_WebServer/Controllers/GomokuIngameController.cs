@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YoungManGomoku_WebServer.Data;
+using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Controllers
 {
@@ -12,11 +13,13 @@ namespace YoungManGomoku_WebServer.Controllers
         ApplicationDBContext _context;
 
         private readonly ILogger<GomokuIngameController> _logger;
+        private readonly ServerManager _serverManager;
 
-        public GomokuIngameController(ILogger<GomokuIngameController> logger, ApplicationDBContext context)
+        public GomokuIngameController(ILogger<GomokuIngameController> logger, ApplicationDBContext context, ServerManager serverManager)
         {
             _logger = logger;
             _context = context;
+            _serverManager = serverManager;
         }
     }
 }

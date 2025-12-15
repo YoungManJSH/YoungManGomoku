@@ -25,11 +25,11 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 
         public PlayerMoney(PlayerAccount account)
         {
-            this.Account = account;
-            this.UID = account.UID;
+            Account = account;
+            UID = account.UID;
 
-            this.GameMoney = 0;
-            this.CashMoney = 0;
+            GameMoney = 0;
+            CashMoney = 0;
         }
     }
 }

@@ -29,12 +29,12 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 
         public PlayerStatus(PlayerAccount account)
         {
-            this.Account = account;
-            this.UID = account.UID;
-            this.Rating = 1000;
-            this.Level = 1;
-            this.ExperiencePoint = 0;
-            this.MaxExperiencePoint = 100;
+            Account = account;
+            UID = account.UID;
+            Rating = 1000;
+            Level = 1;
+            ExperiencePoint = 0;
+            MaxExperiencePoint = 100;
         }
     }
 }
