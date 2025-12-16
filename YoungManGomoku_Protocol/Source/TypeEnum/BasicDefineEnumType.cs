@@ -33,13 +33,12 @@
         MAXCOUNT
     }
 
-
-
     public enum AuthLevel
     {
         Ban = -1,
         Common,
         QA,
-        GameMaster
+        GameMaster, // GM
+        Adminstrator
     }
 }

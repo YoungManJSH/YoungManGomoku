@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 
 using Microsoft.EntityFrameworkCore; // Use Sql Server
 using YoungManGomoku_WebServer.Data;
+using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer
 {
@@ -33,6 +34,16 @@ namespace YoungManGomoku_WebServer
             services.AddDbContext<ApplicationDBContext>(options => 
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
+
+			services.AddSingleton<ServerManager>();
+
+            // IUIDProvider를 요청하면 이미 만든 ServerManager를 써라
+            services.AddSingleton<IUIDProvider>(serviceProvider =>
+                serviceProvider.GetRequiredService<ServerManager>());
+            services.AddSingleton<IServerContext>(serverContext =>
+                serverContext.GetRequiredService<ServerManager>());
+
+            services.AddSingleton<MatchingManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
