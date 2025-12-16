@@ -13,6 +13,9 @@ public class GiboBoardManager : MonoBehaviour
     [SerializeField] private AudioClip turnBackSound;
 
     public int LastTurn => _recordData.Length;
+    public DateTime GiboDateTime => _giboDateTime;
+    public BasicPlayerData BlackData => _blackData;
+    public BasicPlayerData WhiteData => _whiteData;
     public string Result => _result;
     public event Action OnReadFailed;
     public event Action OnReadSucceed;
@@ -82,8 +85,8 @@ public class GiboBoardManager : MonoBehaviour
 
             for (int i = 0; i < iteration; ++i)
             {
-                moveTurn.Invoke();
                 await Awaitable.WaitForSecondsAsync(delay, token);
+                moveTurn.Invoke();
             }
         }
         catch (OperationCanceledException) { }

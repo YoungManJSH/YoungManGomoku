@@ -3,18 +3,17 @@ using UnityEngine.UI;
 
 public class AdjustScaler : MonoBehaviour
 {
-    [SerializeField] private Vector2Int baseResolution;
     [SerializeField] private RectTransform bottomPanel;
 
-    private float _baseRatio;
     private CanvasScaler _canvasScaler;
+    private float _baseRatio;
     private int _lastWidth;
     private int _lastHeight;
 
     private void Awake()
     {
-        _baseRatio = (float)baseResolution.x / baseResolution.y;
         _canvasScaler = GetComponent<CanvasScaler>();
+        _baseRatio = _canvasScaler.referenceResolution.x / _canvasScaler.referenceResolution.y;
         AdjustScale();
     }
 

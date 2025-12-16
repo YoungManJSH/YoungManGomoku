@@ -1257,7 +1257,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardDrawer
   boardData: {fileID: 11400000, guid: 18a2fd7eb0fa3424bb7e1faa52e4a232, type: 2}
   boardPosRatio: 0.55
-  baseResolution: {x: 1080, y: 2200}
+  canvasScaler: {fileID: 1273775194}
 --- !u!114 &362371476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5695,6 +5695,7 @@ MonoBehaviour:
   startCountDown: {fileID: 929990831}
   boardRenderer: {fileID: 362371473}
   ingameBoardManager: {fileID: 362371475}
+  mainCamera: {fileID: 519420031}
 --- !u!1 &1348904662
 GameObject:
   m_ObjectHideFlags: 0

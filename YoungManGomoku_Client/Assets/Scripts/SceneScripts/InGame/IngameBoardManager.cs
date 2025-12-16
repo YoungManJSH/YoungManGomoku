@@ -1,18 +1,15 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class IngameBoardManager : MonoBehaviour
 {
     [SerializeField] private BoardImageData boardData;
-
     [SerializeField, Tooltip("보드의 화면 기준 높이 (0 ~ 1)")]
     private float boardPosRatio;
-
-    [SerializeField, Tooltip("작업 기준 해상도 (width, height)")]
-    private Vector2Int baseResolution;
-
+    [SerializeField] private CanvasScaler canvasScaler;
+    
     public BoardImageData BoardData => boardData;
-    public bool IsWide => _mainCamera.aspect > _baseRatio;
 
     private SpriteRenderer _spriteRenderer;
     private Camera _mainCamera;
@@ -26,7 +23,7 @@ public class IngameBoardManager : MonoBehaviour
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _spriteRenderer.sprite = BoardGenerator.GenerateBoard(boardData);
-        _baseRatio = (float)baseResolution.x / baseResolution.y;
+        _baseRatio = canvasScaler.referenceResolution.x / canvasScaler.referenceResolution.y;
     }
 
     private void Start()
@@ -55,20 +52,9 @@ public class IngameBoardManager : MonoBehaviour
     private void AdjustBoardScale()
     {
         float worldSize = boardData.TotalPixel / boardData.PixelsPerUnit;
-        float boardWidth;
-
-        if (IsWide)
-        {
-            // 화면비가 기준 해상도 비율보다 가로로 더 길 때 높이에 맞춤
-            boardWidth = _mainCamera.orthographicSize * 2f * _baseRatio;
-        }
-        else
-        {
-            // 화면비가 기준 해상도 비율보다 세로로 더 길 때 너비에 맞춤
-            boardWidth = _mainCamera.orthographicSize * 2f * _mainCamera.aspect;
-        }
-
+        float boardWidth = _mainCamera.orthographicSize * 2f * Mathf.Min(_baseRatio, _mainCamera.aspect);
         float scale = boardWidth / worldSize;
+        
         transform.localScale = new Vector3(scale, scale, 1f);
         transform.position = _mainCamera.ViewportToWorldPoint(new Vector3(0.5f,
             boardPosRatio, Mathf.Abs(_mainCamera.transform.position.z)));

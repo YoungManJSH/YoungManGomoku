@@ -191,13 +191,13 @@ public class GiboButtonManager : MonoBehaviour
             _autoPlayCancelToken.Cancel();
             _autoPlayCancelToken.Dispose();
             _autoPlayCancelToken = null;
-            _isAutoPlaying = false;
-            _autoPlaySet.buttonText.text = "자동 재생";
+        }
 
-            foreach (var speedButton in _speedSets)
-            {
-                ButtonInactivate(speedButton);
-            }
+        _isAutoPlaying = false;
+        _autoPlaySet.buttonText.text = "자동 재생";
+        foreach (var speedButton in _speedSets)
+        {
+            ButtonInactivate(speedButton);
         }
     }
 
@@ -217,19 +217,6 @@ public class GiboButtonManager : MonoBehaviour
             ButtonInactivate(_prev10Set);
             ButtonInactivate(_prevSet);
         }
-        else if (turn == 1)
-        {
-            ButtonActivate(_zeroTurnSet);
-            ButtonActivate(_prev10Set);
-            ButtonActivate(_prevSet);
-        }
-        else if (turn == boardManager.LastTurn - 1)
-        {
-            ButtonActivate(_nextSet);
-            ButtonActivate(_next10Set);
-            ButtonActivate(_lastTurnSet);
-            ButtonActivate(_autoPlaySet);
-        }
         else if (turn == boardManager.LastTurn)
         {
             ButtonInactivate(_nextSet);
@@ -237,6 +224,22 @@ public class GiboButtonManager : MonoBehaviour
             ButtonInactivate(_lastTurnSet);
             ButtonInactivate(_autoPlaySet);
             CancelAutoPlay();
+        }
+        
+        // 1~3수 사이에 끝난 경우를 고려해야 함. else if 처리하면 안 됨
+        if (turn == 1)
+        {
+            ButtonActivate(_zeroTurnSet);
+            ButtonActivate(_prev10Set);
+            ButtonActivate(_prevSet);
+        }
+        
+        if (turn == boardManager.LastTurn - 1)
+        {
+            ButtonActivate(_nextSet);
+            ButtonActivate(_next10Set);
+            ButtonActivate(_lastTurnSet);
+            ButtonActivate(_autoPlaySet);
         }
     }
     
