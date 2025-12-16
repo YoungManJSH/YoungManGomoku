@@ -27,6 +27,8 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public float ExperienceRate =>
             MaxExperiencePoint != 0 ? (float)ExperiencePoint / MaxExperiencePoint : 0f;
 
+
+        public PlayerStatus() { }
         public PlayerStatus(PlayerAccount account)
         {
             Account = account;

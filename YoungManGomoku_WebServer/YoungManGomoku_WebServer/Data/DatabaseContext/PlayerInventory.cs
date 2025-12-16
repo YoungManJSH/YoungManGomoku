@@ -39,7 +39,7 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
             this.UID = account.UID;
         }
 
-		public PlayerInventoryItem(PlayerAccount account, ItemType type, uint itemId)
+        public PlayerInventoryItem(PlayerAccount account, ItemType type, uint itemId)
 		{
 			this.Account = account;
 			this.UID = account.UID;

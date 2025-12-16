@@ -21,7 +21,7 @@ public struct RequestError
 public class NetworkManager : MonoBehaviour
 {
 	// 나중에 바꿀 예정
-	[SerializeField] private const string baseURL = "https://localhost:44331";
+	[SerializeField] private const string baseURL = "http://localhost:44331";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -47,10 +47,11 @@ public class NetworkManager : MonoBehaviour
 	{
 		if (registerUserDTO == null)
 		{
-			Debug.Log($"Unknow User!");
+			Debug.Log($"CS_AccountRegisterDTO : Unknown User!");
 			return null;
 		}
-        return await RequestPostServer<PlayerData>("/Account/Register", JsonUtility.ToJson(registerUserDTO), "Register Success");
+        // Debug.Log($"Account Register User DTO : {JsonUtility.ToJson(registerUserDTO)}");
+        return await RequestPostServer<PlayerData>("Account/Register", JsonUtility.ToJson(registerUserDTO), "Register Success");
     }
 
 	/// <summary>
@@ -61,7 +62,7 @@ public class NetworkManager : MonoBehaviour
 	/// null : 서버 터짐
 	/// </returns>
 	public async Awaitable<PlayerData> LoginRequest(string idToken)
-        => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
+        => await RequestPostServer<PlayerData>("Account/Login", $"\"{idToken}\"", "Login Success");
 
     /// <summary>
 	/// 웹 서버에 ID Token으로 매칭 등록
@@ -71,7 +72,7 @@ public class NetworkManager : MonoBehaviour
 	/// null : 서버 터짐
 	/// </returns>
     public async Awaitable<PlayerData> RegisterMatchingRequest(string idToken)
-        => await RequestPostServer<PlayerData>("/Matching/Register", $"\"{idToken}\"", "Match Register");
+        => await RequestPostServer<PlayerData>("Matching/Register", $"\"{idToken}\"", "Match Register");
 
 
     /// <summary>
@@ -82,33 +83,42 @@ public class NetworkManager : MonoBehaviour
 	/// null : 서버 터짐
 	/// </returns>
     public async Awaitable<PlayerData> CancelMatchingRequest(string idToken)
-        => await RequestPostServer<PlayerData>("/Matching/Cancel", $"\"{idToken}\"", "Match Cancel");
+        => await RequestPostServer<PlayerData>("Matching/Cancel", $"\"{idToken}\"", "Match Cancel");
 
 
     // 앞으로 네트워크 매니저의 중추를 담당할 함수들. Open되어있지는 않음.
     // API들은 전부 이 함수들을 Wrapping해 사용할 것
     private async Awaitable<RecvData> RequestPostServer<RecvData>(string serverURL, string sendJsonString, string successAnnounce = "=== Request Success! ===")
         => await RequestServer<RecvData>(serverURL, "POST", sendJsonString, successAnnounce);
-    
+
+    // 서버가 살았는지 아닌지 테스트하는 용도, 핑을 그냥 던져봄. 문자열 퐁이 돌아올 거임.
+    private async Awaitable<RecvData> RequestPing<RecvData>(string successAnnounce = "=== Ping Pong Success! ===")
+        => await RequestServer<RecvData>("Ping", "GET", successAnnounce);
+
     private async Awaitable<RecvData> RequestServer<RecvData>(string serverURL, string method, string sendJsonString, string successAnnounce = "=== Request Success! ===")
 	{
         UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/{serverURL}", method);
 
-        if (string.IsNullOrEmpty(sendJsonString) == false || method == "GET")
+        //Debug.Log($"Request URL: {baseURL}/{serverURL}\nSend Json Data : {sendJsonString}");
+
+        if (string.IsNullOrEmpty(sendJsonString) || method == "GET")
         {
+            Debug.Log($"\"Get\" Or Empty Send String : {Encoding.UTF8.GetBytes(sendJsonString).ToString()}");
             uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(sendJsonString));
         }
         uwr.downloadHandler = new DownloadHandlerBuffer();
 
         uwr.SetRequestHeader("Content-Type", "application/json");
-        uwr.timeout = 10;
+
+
+        // uwr.timeout = 10;
         await uwr.SendWebRequest();
 
         if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
         {
-            Debug.LogError(
-                $"Error: {uwr.error}\nCode: {uwr.responseCode}\nBody: {uwr.downloadHandler.text}"
-            );
+            Debug.Log($"{uwr.result} URL: {baseURL}/{serverURL}\n{sendJsonString}");
+
+            Debug.LogError($"Error: {uwr.error}\nCode: {uwr.responseCode}\nBody: {uwr.downloadHandler.text}");
 
             OnRequestFailed?.Invoke(new RequestError
             {

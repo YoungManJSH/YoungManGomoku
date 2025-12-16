@@ -94,15 +94,10 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
         public ConcurrentDictionary<string, ulong> UIDByIDToken { get; set; }
 
-        public MatchingManager MatchingManager { get; }
-        public GameRoomManager GameRoomManager { get; }
-
-        public ServerManager(MatchingManager matchingManager, GameRoomManager gameRoomManager)
+        public ServerManager()
         {
             uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
-            MatchingManager = matchingManager;
-            GameRoomManager = gameRoomManager;
         }
 
         public uint GenerateUID32() => uidGenerator.GenerateUID32();

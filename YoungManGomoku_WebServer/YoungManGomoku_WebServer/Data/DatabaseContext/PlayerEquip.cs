@@ -21,6 +21,7 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         // 바둑판 스킨
         public BoardSkinType EquipBoardSkin { get; set; }
 
+        public PlayerEquip() { }
         public PlayerEquip(PlayerAccount account)
         {
             this.Account = account;

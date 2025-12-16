@@ -26,6 +26,8 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public ICollection<PlayerInventoryItem> Inventory { get; set; }
         public PlayerBattleRecord GomokuBattleRecord { get; set; }
 
+
+		public PlayerAccount() { }
         public PlayerAccount(ulong uid64, string authToken, string nickname)
 		{
 			UID = uid64;
