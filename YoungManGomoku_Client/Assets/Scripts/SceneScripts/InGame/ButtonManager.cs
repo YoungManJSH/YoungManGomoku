@@ -9,6 +9,7 @@ public class ButtonManager : MonoBehaviour
 {
     [SerializeField] private MessageBoxManager messageBox;
     [SerializeField] private BoardSweeper playerSweeper;
+    [SerializeField] private PlayerPanelController playerPanel;
     
     [SerializeField] private Button surrenderButton;
     [SerializeField] private Button byoyomiPurchaseButton;
@@ -47,14 +48,15 @@ public class ButtonManager : MonoBehaviour
         _isPlayerTurn = GameManager.Instance.IsPlayerBlack;
         _isTakeBackedTurn = false;
 
-        EventManager em = EventManager.Instance;
         GameManager gm = GameManager.Instance;
+        EventManager em = EventManager.Instance;
+        
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
         em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
-        gm.PlayerTime.OnByoyomiPurchaseActivate += OnByoyomiPurchaseActivate;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
+        playerPanel.OnLastByoyomi += OnLastByoyomi;
 
 #if UNITY_ANDROID
         messageBox.OnOpened += () =>
@@ -111,8 +113,13 @@ public class ButtonManager : MonoBehaviour
     private void OnTurnBackActivate()
         => _activateSet.Add(_takeBackSet);
 
-    private void OnByoyomiPurchaseActivate()
+    private void OnLastByoyomi()
     {
+        if (GameManager.Instance.IsByoyomiPurchased)
+        {
+            return;
+        }
+        
         ButtonActivate(_byoyomiPurchaseSet);
         _activateSet.Add(_byoyomiPurchaseSet);
     }

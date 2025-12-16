@@ -2101,6 +2101,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonManager
   messageBox: {fileID: 530988113}
   playerSweeper: {fileID: 780528804}
+  playerPanel: {fileID: 702740387}
   surrenderButton: {fileID: 1120175422}
   byoyomiPurchaseButton: {fileID: 940303152}
   takeBackButton: {fileID: 1068441404}
@@ -2651,10 +2652,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 793b18fc23dbc23468a317000dcc9f2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  mainTimeSeconds: 10
-  byoyomiCounts: 2
-  byoyomiSeconds: 15
-  byoyomiPurchaseAmount: 3
   stoneMoveController: {fileID: 362371476}
   oppositeSweeper: {fileID: 1989689724}
   winSound: {fileID: 8300000, guid: 22a7897e60a63de4ca2ccf8dc45266eb, type: 3}

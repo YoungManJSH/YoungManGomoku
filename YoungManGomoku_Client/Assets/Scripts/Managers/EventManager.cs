@@ -14,6 +14,9 @@ public class EventManager : MonoBehaviour
     public event Action OnOppositeSurrender;
     public event Action OnStartSweeping;
 
+    public event Action OnPlayerTimeOut;
+    public event Action OnOppositeTimeOut;
+
     public event Action<int> OnPlayerByoyomiPurchase;
     public event Action<int> OnOppositeByoyomiPurchase;
     
@@ -34,6 +37,8 @@ public class EventManager : MonoBehaviour
         _gameManager = GetComponent<GameManager>();
     }
 
+    private void OnDestroy() => Instance = null;
+
     private void Start()
     {
         // Action 개체는 Immutable이므로 구독 순서에 유의할 것!!
@@ -44,9 +49,11 @@ public class EventManager : MonoBehaviour
         OnPlayerSurrender += OnGameLose;
         OnOppositeSurrender += OnGameWin;
 
-        _gameManager.PlayerTime.OnTimeLose += OnGameLose;
-        _gameManager.OppositeTime.OnTimeLose += OnGameWin; // 추후 수정, 상대방 시간패 처리는 서버에서 받아야 함
-
+        _gameManager.PlayerTimer.OnTimeOut += OnPlayerTimeOut;
+        // 상대방의 시간패는 클라에서 판단하지 않으므로 이벤트 구독 X
+        OnPlayerTimeOut += OnGameLose;
+        OnOppositeTimeOut += OnGameWin;
+        
         OnOppositeDisconnectedWin += OnGameWin;
         OnPlayerDisconnectedLose += OnGameLose;
 

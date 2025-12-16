@@ -14,6 +14,7 @@ public class StoneMoveController : MonoBehaviour
     [SerializeField] private MessageBoxManager messageBox;
     [SerializeField] private float previewAlpha;
 
+    // 추후 보정되는 시간 값도 매개변수로 담아서 전달하기
     public event Action<bool> OnStoneMove;
 
     private Board _boardInform;

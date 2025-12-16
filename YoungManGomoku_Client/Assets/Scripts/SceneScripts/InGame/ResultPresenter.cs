@@ -34,8 +34,6 @@ public class ResultPresenter : MonoBehaviour
         GameManager gm = GameManager.Instance;
         gm.BoardInform.BlackWin += () => detailText.text = blackWinText;
         gm.BoardInform.WhiteWin += () => detailText.text = whiteWinText;
-        gm.OppositeTime.OnTimeLose += () => detailText.text = timeWinText;
-        gm.PlayerTime.OnTimeLose += () => detailText.text = timeLoseText;
         
         EventManager em = EventManager.Instance;
         em.OnGameEnd += OnGameEnd;
@@ -46,6 +44,8 @@ public class ResultPresenter : MonoBehaviour
         em.OnGameDraw += () => detailText.text = drawText;
         em.OnOppositeSurrender += () => detailText.text = surrenderWinText;
         em.OnPlayerSurrender += () => detailText.text = surrenderLoseText;
+        em.OnOppositeTimeOut += () => detailText.text = timeWinText;
+        em.OnPlayerTimeOut += () => detailText.text = timeLoseText;
         em.OnOppositeDisconnectedWin += () =>
         {
             _remainTime = 0f;
