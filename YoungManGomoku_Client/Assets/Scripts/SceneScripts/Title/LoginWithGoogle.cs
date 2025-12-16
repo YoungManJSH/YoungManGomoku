@@ -10,6 +10,7 @@ using TMPro;
 using Firebase.Auth;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using YoungManGomoku_Protocol.ClientToServer;
 
 public class LoginWithGoogle : MonoBehaviour
 {
@@ -22,19 +23,14 @@ public class LoginWithGoogle : MonoBehaviour
     private FirebaseAuth auth;
     private FirebaseUser user;
 
-    [Header("UI References")] 
-    [SerializeField] private TextMeshProUGUI username;
-
-    [SerializeField] private TextMeshProUGUI userEmail;
-
-    [SerializeField] private GameObject loginPanel;
-    [SerializeField] private GameObject userPanel;
-    [SerializeField] private Image userProfilePic;
-
     [Header("PC Register New User")] 
+    private const int maxNicknameLength = 7;
+    
     [SerializeField] private GameObject PCRegisterUI;
 
     [SerializeField] private TMP_InputField userNicknameInputField;
+    [SerializeField] private TextMeshProUGUI nicknameWarningText;
+    [SerializeField] private GameObject disconnectWarning;
     private Regex nicknameRegex = new Regex("^[a-zA-Z0-9가-힣_-]+$");
 
 
@@ -105,11 +101,11 @@ public class LoginWithGoogle : MonoBehaviour
 
                 user = auth.CurrentUser;
 
-                username.text = user.DisplayName;
-                userEmail.text = user.Email;
+                //username.text = user.DisplayName;
+                //userEmail.text = user.Email;
 
-                loginPanel.SetActive(false);
-                userPanel.SetActive(true);
+                //loginPanel.SetActive(false);
+                //userPanel.SetActive(true);
 
                 //StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
                 //var result = await GetComponent<NetworkManager>().GoogleAccountRegisterRequest(deviceId);
@@ -121,11 +117,11 @@ public class LoginWithGoogle : MonoBehaviour
         // 유니티에서 제공하는 OS별 개별 데이터를 키로 사용하여 DB에 로그인하고 회원가입하도록 동작을 만듦.
         string deviceId = SystemInfo.deviceUniqueIdentifier;
 
-        var loginResult = await GetComponent<NetworkManager>().GuestLoginRequest(deviceId);
+        var loginResult = await GetComponent<NetworkManager>().LoginRequest(deviceId);
 
         if (loginResult == null)
         {
-            OpenUserRegisterUI();
+            PCRegisterUI.SetActive(true);
         }
         else
         {
@@ -134,26 +130,44 @@ public class LoginWithGoogle : MonoBehaviour
 #endif
     }
 
-    private void OpenUserRegisterUI()
-    {
-        PCRegisterUI.SetActive(true);
-    }
-
     // pc 환경에서만 실행되는 코드
     // 닉네임을 입력받고 해당 닉네임을 웹통신으로 보내준다.
-    // 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
+    // TODO : 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
     public async void RegisterNewUser()
     {
         string userNickname = userNicknameInputField.text;
-        
+
+        // 닉네임 형식 체크
         if (nicknameRegex.IsMatch(userNickname) == false)
         {
-            Debug.Log("형식에 맞지 않은 닉네임입니다.");
+            nicknameWarningText.gameObject.SetActive(true);
+            nicknameWarningText.text = "형식에 맞지 않은 닉네임입니다.";
             return;
         }
 
+        // 닉네임 길이 체크
+        if (userNickname.Length >= maxNicknameLength)
+        {
+            nicknameWarningText.gameObject.SetActive(true);
+            nicknameWarningText.text = $"닉네임 길이가 너무 깁니다. 최대 {maxNicknameLength - 1}자";
+            return;
+        }
+
+        // 해피 패스
         string deviceId = SystemInfo.deviceUniqueIdentifier;
-        var registerResult = await GetComponent<NetworkManager>().GuestAccountRegisterRequest(deviceId);
+        var accountRegisterDTO = new CS_AccountRegisterDTO()
+        {
+            IdToken = deviceId,
+            IsGuest = true,
+            UserNickname = userNickname,
+        };
+        
+        var registerResult = await GetComponent<NetworkManager>().RegisterAccountRequest(accountRegisterDTO);
+
+        if (registerResult == null)
+        {
+            disconnectWarning.SetActive(true);
+        }
     }
 
     private string CheckImageUrl(string url)
@@ -164,31 +178,5 @@ public class LoginWithGoogle : MonoBehaviour
         }
 
         return imageUrl;
-    }
-
-    private IEnumerator LoadImage(string imageUri)
-    {
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUri);
-        yield return www.SendWebRequest();
-
-        if (www.result == UnityWebRequest.Result.Success)
-        {
-            Texture2D texture = DownloadHandlerTexture.GetContent(www);
-            userProfilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f));
-            Debug.Log("Image loaded successfully.");
-        }
-        else
-        {
-            Debug.LogError("Error loading profile image: " + www.error);
-        }
-    }
-
-    // User SignOut From Firebase First Then again Sign IN With Google
-    public void SignOut()
-    {
-        GoogleSignIn.DefaultInstance.SignOut();
-        loginPanel.SetActive(true);
-        userPanel.SetActive(false);
     }
 }

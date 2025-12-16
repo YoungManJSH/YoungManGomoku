@@ -14,6 +14,8 @@
     <file>Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/13.6.0/firebase-app-unity-13.6.0.pom</file>
     <file>Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/13.6.0/firebase-auth-unity-13.6.0.aar</file>
     <file>Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/13.6.0/firebase-auth-unity-13.6.0.pom</file>
+    <file>Assets/GeneratedLocalRepo/GoogleSignIn/Editor/m2repository/com/google/signin/google-signin-support/1.0.4/google-signin-support-1.0.4.aar</file>
+    <file>Assets/GeneratedLocalRepo/GoogleSignIn/Editor/m2repository/com/google/signin/google-signin-support/1.0.4/google-signin-support-1.0.4.pom</file>
   </files>
   <settings>
     <setting name="androidAbis" value="arm64-v8a" />

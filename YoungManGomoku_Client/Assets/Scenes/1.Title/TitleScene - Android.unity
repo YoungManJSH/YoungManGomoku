@@ -556,11 +556,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5530fd4c7f4653642bb2cf297d7a13c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoginWithGoogle
-  username: {fileID: 1173070089}
-  userEmail: {fileID: 843923220}
-  loginPanel: {fileID: 1216389885}
-  userPanel: {fileID: 1378113936}
-  userProfilePic: {fileID: 710723114}
+  PCRegisterUI: {fileID: 0}
+  userNicknameInputField: {fileID: 0}
+  nicknameWarningText: {fileID: 0}
+  disconnectWarning: {fileID: 0}
 --- !u!4 &240842299
 Transform:
   m_ObjectHideFlags: 0
@@ -664,6 +663,7 @@ GameObject:
   - component: {fileID: 392862699}
   - component: {fileID: 392862701}
   - component: {fileID: 392862700}
+  - component: {fileID: 392862702}
   m_Layer: 5
   m_Name: BackgroundImage
   m_TagString: Untagged
@@ -685,10 +685,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 806355790}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 9.6924}
-  m_SizeDelta: {x: 1542.6538, y: 2299.3848}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &392862700
 MonoBehaviour:
@@ -728,6 +728,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 392862698}
   m_CullTransparentMesh: 1
+--- !u!114 &392862702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 392862698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b4a095fba7ced4da18a0d1be130645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundImageScale
 --- !u!1 &435297477
 GameObject:
   m_ObjectHideFlags: 0
@@ -922,7 +934,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 68086bd20187b2e48902d68200fdcc6b, type: 3}
+  m_Sprite: {fileID: -847371190, guid: 7241c224164001846b3b74e588aa2b46, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2386,7 +2398,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 2400}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
