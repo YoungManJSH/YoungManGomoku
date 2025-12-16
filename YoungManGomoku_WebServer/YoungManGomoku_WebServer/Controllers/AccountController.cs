@@ -75,7 +75,11 @@ namespace YoungManGomoku_WebServer.Controllers
             // DB Select Where By Token
             PlayerAccount findAccount = _context.PlayerAccountTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
 
+            _logger.LogDebug("DB 토큰으로 계정 찾기 시도");
+
             if (findAccount == null) return Conflict("Can't Find ID Token. Login Failed!");
+
+            _logger.LogDebug("로그인 계정 찾기 성공");
 
             // DB Column Update
             findAccount.LastLoginDate = DateTime.Now;
@@ -83,10 +87,11 @@ namespace YoungManGomoku_WebServer.Controllers
             // DB Process
             _context.PlayerAccountTable.Update(findAccount);
             _context.SaveChanges();
+            _logger.LogDebug("로그인 DB 트랜잭션 성공");
 
             // 접속이 끊긴 유저의 로그아웃 처리가 제대로 되지 않았었던 것 같다.
             // 메모리에 그대로 남아있네...?
-            if(_serverManager.PlayerDatas.TryAdd(findAccount.UID
+            if (_serverManager.PlayerDatas.TryAdd(findAccount.UID
                 , new PlayerSession(_serverManager.GenerateUID64(), findAccount, isConnect: true)) == false)
             {
                 _logger.LogWarning($"Register : PlayerSession already exists. UID={findAccount.UID}");
@@ -104,17 +109,17 @@ namespace YoungManGomoku_WebServer.Controllers
 		public IEnumerable<PlayerData> Get()
         {
             int size = 5;
-            PlayerData[] datas = new PlayerData[size];
             
-
+            PlayerData[] datas = new PlayerData[size];
+            /*
             int i = 0;
             // 안전한 스냅샷?
             // 잡히는거 size개까지 그냥 가져옴
             foreach (PlayerSession session in _serverManager.PlayerDatas.Values.Take(size).ToArray()) 
             {
-                datas[i++] = _serverManager.ComposePlayerData(session.Account.UID);
+                //datas[i++] = _serverManager.ComposePlayerData(session.Account.UID);
             }
-
+            */
             return datas;
         }
     }

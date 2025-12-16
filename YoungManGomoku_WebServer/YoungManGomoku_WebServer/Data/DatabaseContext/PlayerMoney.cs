@@ -23,6 +23,7 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
          */
 		public int CashMoney { get; set; } // Gem
 
+        public PlayerMoney() { }
         public PlayerMoney(PlayerAccount account)
         {
             Account = account;

@@ -21,7 +21,7 @@ namespace YoungManGomoku_WebServer
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            Configuration = configuration; 
         }
 
         public IConfiguration Configuration { get; }
@@ -44,11 +44,13 @@ namespace YoungManGomoku_WebServer
                 serverContext.GetRequiredService<ServerManager>());
 
             services.AddSingleton<MatchingManager>();
+            services.AddSingleton<GameRoomManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            logger.LogInformation("Server Start!");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

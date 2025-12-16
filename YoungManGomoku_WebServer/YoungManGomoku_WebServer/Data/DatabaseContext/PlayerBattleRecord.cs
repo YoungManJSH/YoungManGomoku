@@ -27,7 +27,8 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 		// 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
 		// 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
 		public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
-
+        
+		public PlayerBattleRecord() { }
         public PlayerBattleRecord(PlayerAccount account)
 		{
             this.Account = account;
