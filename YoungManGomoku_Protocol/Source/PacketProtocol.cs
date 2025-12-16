@@ -24,19 +24,12 @@ namespace YoungManGomoku_Protocol
 
         // 프로필이미지 = 캐릭터 (상점에서 팜)
         public ProfileImageType EquipProfile { get; set; }
-        // 총 보유중인 프로필... 이건 나중에 정하자
-        // 예시 1 ) bool List. 미보유 아이템이면 해당 enum Index를 false로 하는 구조, on/off 도감 형식
-        // List<bool> ImageInventory[ProfileImageType.MAXCOUNT]; 
-        // 어차피 인벤토리를 만든다고 하면 아예 다른 DB 테이블을 새로 파지 싶다.
 
-        // 바둑돌 스킨
-        // 현재 장착중인 스킨
+        // 현재 장착중인 돌 스킨
         public StoneSkinType EquipStoneSkin { get; set; }
-        // 총 보유중인 돌 스킨 인벤토리... 나중에 정하자
 
-        // 바둑판 스킨
+        // 현재 장착중인 바둑판 스킨
         public BoardSkinType EquipBoardSkin { get; set; }
-        // 총 보유중인 판 스킨 인벤토리... 나중에 정하자
 
         // 실력 판단용 내부 지표 레이팅
         // MMR은 서버에서만 쓰고 클라이언트에서는 딱히 보여주지 않기로 합의함
@@ -79,7 +72,7 @@ namespace YoungManGomoku_Protocol
         public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
     }
 
-    class OtherPlayerData
+    public class OpponentPlayerData
     {
         public string Nickname { get; set; }
 
@@ -114,7 +107,6 @@ namespace YoungManGomoku_Protocol
     }
 }
 
-
 namespace YoungManGomoku_Protocol.ClientToServer
 {
     public class CS_AccountRegisterDTO
@@ -124,7 +116,6 @@ namespace YoungManGomoku_Protocol.ClientToServer
         public bool IsGuest { get; set; }
     }
 }
-
 
 namespace YoungManGomoku_Protocol.ServerToClient
 {
@@ -136,7 +127,19 @@ namespace YoungManGomoku_Protocol.ServerToClient
     서버에서 잘 조립한다음 json 형태로 보내주겠다.
     */
 
+    public class SC_MatchResultDTO
+    {
+        public OpponentPlayerData OpponentPlayer { get; set; }
+        public string Message { get; set; }
+        public bool MatchingSuccess { get; set; }
 
+        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess) 
+        { 
+            OpponentPlayer = opponent;
+            Message = msg;
+            MatchingSuccess = isSuccess;
+        }
+    }
 }
 
 

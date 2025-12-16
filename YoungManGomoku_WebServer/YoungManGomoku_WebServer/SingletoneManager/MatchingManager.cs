@@ -1,26 +1,26 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using YoungManGomoku_Protocol;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
+    public class MatchResult
+    {     
+        public ulong OpponentID { get; set; }
+        public ulong GameRoomID { get; set; }
+        public string Message { get; set; }
+        public bool Success { get; set; }
+    }
+
     // 매칭 큐용 DTO
     public class WaitingPlayer
     {
         public string PlayerIdToken { get; set; }
+
+        // 언제 끝났다고 할 지를 내가 결정하기 위해 사용
         public TaskCompletionSource<MatchResult> TaskCompSrc { get; set; }
         public CancellationTokenRegistration CancellationTokenRegist { get; set; }
-    }
-
-    public class MatchResult
-    {
-        public bool Success { get; set; }
-        public string OpponentIDToken { get; set; }
-        public ulong GameRoomID { get; set; }
-        public string Message { get; set; }
     }
 
     // 싱글톤 또는 서비스 레벨에서 관리되는 매칭 매니저
@@ -30,18 +30,19 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
         private readonly object _lock;
 
+        // 매칭 큐와 대기자 맵은 한 쌍(커플링)이라 Concurrent Collection으로 대체해선 안 된다
         private readonly Queue<WaitingPlayer> _matchingQueue;
         private readonly Dictionary<string, WaitingPlayer> _waitingMap;
 
-        private readonly IUIDProvider _uidGenerator;
+        private readonly IServerContext _serverManagerContext;
 
-        public MatchingManager(IUIDProvider uidGenerator)
+        public MatchingManager(IServerContext serverManagerContext)
         {
             _lock = new object();
 
             _matchingQueue = new Queue<WaitingPlayer>();
             _waitingMap = new Dictionary<string, WaitingPlayer>();
-            _uidGenerator = uidGenerator;
+            _serverManagerContext = serverManagerContext;
         }
 
         // 매칭 큐에 Player ID 등록
@@ -59,8 +60,18 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 }
 
                 if (_waitingMap.ContainsKey(playerIDToken))
-                    throw new InvalidOperationException("Already matching");
+                {
+                    //throw new InvalidOperationException("Already matching");
+                    return Task.FromResult(new MatchResult
+                    {
+                        Success = false,
+                        Message = "Already matching"
+                    });
+                }
 
+                // RunContinuationsAsynchronously 옵션
+                // await SetResult 이후 코드를 호출 스레드에서 바로 실행하지 않고 스레드 풀로 넘긴다
+                // 데드락 방지 및 성능 향상
                 TaskCompletionSource<MatchResult> tcs 
                     = new TaskCompletionSource<MatchResult>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
@@ -108,25 +119,42 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             while (_matchingQueue.Count >= 2)
             {
                 WaitingPlayer p1 = _matchingQueue.Dequeue();
-                WaitingPlayer p2 = _matchingQueue.Dequeue();
 
-                if (!_waitingMap.ContainsKey(p1.PlayerIdToken) ||
-                    !_waitingMap.ContainsKey(p2.PlayerIdToken))
-                    continue;
+                if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
+                    continue; // p1 취소 → 버림
 
-                ulong roomID = _uidGenerator.GenerateUID64();
+                WaitingPlayer p2 = null;
+                while (_matchingQueue.Count > 0)
+                {
+                    var candidate = _matchingQueue.Dequeue();
+                    if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
+                    {
+                        p2 = candidate;
+                        break;
+                    }
+                }
+
+                if (p2 == null)
+                {
+                    _matchingQueue.Enqueue(p1);
+                    break; // 매칭 가능한 상대 없음
+                }
+
+
+                // 매칭 성공, 방 배정
+                ulong roomID = _serverManagerContext.GenerateUID64();
 
                 p1.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = true,
-                    OpponentIDToken = p2.PlayerIdToken,
+                    OpponentID = _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
                     GameRoomID = roomID
                 });
 
                 p2.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = true,
-                    OpponentIDToken = p1.PlayerIdToken,
+                    OpponentID = _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
                     GameRoomID = roomID
                 });
 

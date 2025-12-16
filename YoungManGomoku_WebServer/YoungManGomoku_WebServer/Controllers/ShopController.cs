@@ -22,13 +22,14 @@ namespace YoungManGomoku_WebServer.Controllers
         }
 
         // 상점 입장함 (상점 판매 목록 요청)
-        [HttpPost("ItemList")]
+        [HttpPost("GetItemList")]
         public IActionResult ShopItemAnnounce()
         {
             return Ok("ShopItems");
         }
 
         // 물건 구매 요청
+        [HttpPost("Buy")]
         public IActionResult BuyItem()
         {
             return Ok("ShopItems");

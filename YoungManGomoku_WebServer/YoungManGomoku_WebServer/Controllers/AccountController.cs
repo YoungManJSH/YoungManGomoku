@@ -62,10 +62,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             if (_serverManager.UIDByIDToken.TryAdd(playerAccount.AuthToken, playerAccount.UID) == false)
             {
-                _logger.LogWarning($"Register : PlayerSession already exists. UID={playerAccount.UID} / {playerAccount.AuthToken}");
+                _logger.LogWarning($"Register : PlayerSession UID-Token Link already exists. UID={playerAccount.UID} / {playerAccount.AuthToken}");
             }
 
-            return Ok(_serverManager.GetPlayerData(playerAccount.UID));
+            return Ok(_serverManager.ComposePlayerData(playerAccount.UID));
 		}
 
         // Login이 Get이면 토큰이 URL에 노출되서 보안상 위험하지 않을까?
@@ -94,10 +94,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             if (_serverManager.UIDByIDToken.TryAdd(findAccount.AuthToken, findAccount.UID))
             {
-                _logger.LogWarning($"Register : PlayerSession already exists. UID={findAccount.UID} / {findAccount.AuthToken}");
+                _logger.LogWarning($"Register : PlayerSession UID-Token Link already exists. UID={findAccount.UID} / {findAccount.AuthToken}");
             }
 
-            return Ok(_serverManager.GetPlayerData(findAccount.UID));
+            return Ok(_serverManager.ComposePlayerData(findAccount.UID));
         }
         
 		[HttpGet]
@@ -112,7 +112,7 @@ namespace YoungManGomoku_WebServer.Controllers
             // 잡히는거 size개까지 그냥 가져옴
             foreach (PlayerSession session in _serverManager.PlayerDatas.Values.Take(size).ToArray()) 
             {
-                datas[i++] = _serverManager.GetPlayerData(session.Account.UID);
+                datas[i++] = _serverManager.ComposePlayerData(session.Account.UID);
             }
 
             return datas;

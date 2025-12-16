@@ -1,24 +1,17 @@
-﻿using Firebase.Auth;
-using Google;
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System;
 using System.Text;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
-using YoungManGomoku_Protocol.Source;
 
-
-
+// OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
 {
-    public long StatusCode;
+    public long StatusCode; // HTTP Error Code
     public UnityWebRequest.Result Result;
-    public string Message;
-    public string ResponseBody;
+    public string Message; // 클라에서 발생한 에러 메시지
+    public string ResponseBody; // 서버로부터 보내져온 메인 데이터
 }
 
 // 로그인할 때 인증 토큰(UID같은거)을 보냄
@@ -32,7 +25,6 @@ public class NetworkManager : MonoBehaviour
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
-
 
     // static singletone class로 만들고 싶다면 awake 함수 파서 만들면 됨
 
@@ -66,11 +58,32 @@ public class NetworkManager : MonoBehaviour
 	/// </summary>
 	/// <param name="idToken"> 계정 인증용 ID Token. 구글 계정인 경우 GoogleSignInUser.IdToken 사용 </param>
 	/// <returns>
-	/// null : 해당하는 ID Token에 맞는 계정 탐색에 실패 (계정이 없음, 회원가입 필요)
-	/// not null : 로그인 성공, 해당 계정 플레이어 데이터를 return
+	/// null : 서버 터짐
 	/// </returns>
 	public async Awaitable<PlayerData> LoginRequest(string idToken)
         => await RequestPostServer<PlayerData>("/Account/Login", $"\"{idToken}\"", "Login Success");
+
+    /// <summary>
+	/// 웹 서버에 ID Token으로 매칭 등록
+	/// </summary>
+	/// <param name="idToken"> 계정 인증용 ID Token. 구글 계정인 경우 GoogleSignInUser.IdToken 사용 </param>
+	/// <returns>
+	/// null : 서버 터짐
+	/// </returns>
+    public async Awaitable<PlayerData> RegisterMatchingRequest(string idToken)
+        => await RequestPostServer<PlayerData>("/Matching/Register", $"\"{idToken}\"", "Match Register");
+
+
+    /// <summary>
+	/// 웹 서버에 ID Token으로 등록한 매칭 취소
+	/// </summary>
+	/// <param name="idToken"> 계정 인증용 ID Token. 구글 계정인 경우 GoogleSignInUser.IdToken 사용 </param>
+	/// <returns>
+	/// null : 서버 터짐
+	/// </returns>
+    public async Awaitable<PlayerData> CancelMatchingRequest(string idToken)
+        => await RequestPostServer<PlayerData>("/Matching/Cancel", $"\"{idToken}\"", "Match Cancel");
+
 
     // 앞으로 네트워크 매니저의 중추를 담당할 함수들. Open되어있지는 않음.
     // API들은 전부 이 함수들을 Wrapping해 사용할 것

@@ -40,6 +40,8 @@ namespace YoungManGomoku_WebServer
             // IUIDProvider를 요청하면 이미 만든 ServerManager를 써라
             services.AddSingleton<IUIDProvider>(serviceProvider =>
                 serviceProvider.GetRequiredService<ServerManager>());
+            services.AddSingleton<IServerContext>(serverContext =>
+                serverContext.GetRequiredService<ServerManager>());
 
             services.AddSingleton<MatchingManager>();
         }

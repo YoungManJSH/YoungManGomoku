@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.Source.TypeEnum;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
@@ -14,7 +13,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 	(DB에 저장할 필요가 없고, 서버가 터져서 메모리가 날아가도 괜찮은 데이터)
 	(DB Transaction 최소화를 위한 최적화)
 	 */
-	class PlayerSession
+	internal class PlayerSession
 	{
 		// 운영 시 서버 로그나 디버깅 전용
 		public ulong SessionID { get; set; }  // 8바이트 정수
@@ -80,13 +79,21 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         ulong GenerateUID64();
     }
 
-    public class ServerManager : IUIDProvider
+	public interface IServerContext : IUIDProvider
+    {
+        public ulong GetPlayerUID(string id_Token);
+
+        public PlayerData ComposePlayerData(ulong UID);
+    }
+
+    public class ServerManager : IServerContext
     {
 		private UIDGenerator uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
         // PlayerData는 클라에서도 사용되기 때문에 보안 상 노출 위험이 있다고 판단
-		internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
-        internal ConcurrentDictionary<string, ulong> UIDByIDToken;
+        internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
+        public ConcurrentDictionary<string, ulong> UIDByIDToken { get; set; }
+
         public MatchingManager MatchingManager { get; }
         public GameRoomManager GameRoomManager { get; }
 
@@ -102,13 +109,18 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		
 		public ulong GenerateUID64() => uidGenerator.GenerateUID64();
 
-		/// <summary>
-		/// Player Data는 Client에서 사용하는 class
-		/// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다</summary>
-		/// 서버가 가진 데이터를 조립해 클라가 알아보기 쉬운 PlayerData로 바꿔주는 함수
-		/// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
-		/// <returns> 클라용 플레이어 데이터 </returns>
-		public PlayerData GetPlayerData(ulong UID)
+        internal PlayerSession GetPlayerSession(ulong UID)
+			=> PlayerDatas[UID];
+        public ulong GetPlayerUID(string id_Token)
+           => UIDByIDToken[id_Token];
+
+        /// <summary>
+        /// Player Data는 Client에서 사용하는 class
+        /// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다</summary>
+        /// 서버가 가진 데이터를 조립해 클라가 알아보기 쉬운 PlayerData로 바꿔주는 함수
+        /// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
+        /// <returns> 클라용 플레이어 데이터 </returns>
+        public PlayerData ComposePlayerData(ulong UID)
 		{
 			PlayerData resultData = new PlayerData();
             // 클라로 UID, AuthToken, AuthLevel을 보낼 필요는 없다.
@@ -137,5 +149,22 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
             return resultData;
 		}
+
+		// 매칭 성공 시 상대방 데이터
+        public OpponentPlayerData ComposeOpponentPlayerData(ulong otherPlayerUID)
+		{
+            OpponentPlayerData resultData = new OpponentPlayerData();
+            resultData.Nickname = PlayerDatas[otherPlayerUID].Account.Nickname;
+            resultData.EquipProfile = PlayerDatas[otherPlayerUID].Account.Equip.EquipProfile;
+            resultData.EquipStoneSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipStoneSkin;
+            resultData.EquipBoardSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipBoardSkin;
+            resultData.Rating = PlayerDatas[otherPlayerUID].Account.Status.Rating;
+            resultData.Level = PlayerDatas[otherPlayerUID].Account.Status.Level;
+            resultData.WinCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.WinCount;
+            resultData.DrawCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DrawCount;
+            resultData.LoseCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.LoseCount;
+            resultData.DisconnectCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DisconnectCount;
+            return resultData;
+        }
     }
 }
