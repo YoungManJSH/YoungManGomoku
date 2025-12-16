@@ -12,11 +12,13 @@ public class EventManager : MonoBehaviour
     
     public event Action OnPlayerSurrender;
     public event Action OnOppositeSurrender;
+    public event Action OnStartSweeping;
 
     public event Action<int> OnPlayerByoyomiPurchase;
     public event Action<int> OnOppositeByoyomiPurchase;
     
     public event Action OnOppositeDisconnectedWin;
+    public event Action OnPlayerDisconnectedLose;
     public event Action OnTakeBack;
 
     public static EventManager Instance { get; private set; }
@@ -46,6 +48,7 @@ public class EventManager : MonoBehaviour
         _gameManager.OppositeTime.OnTimeLose += OnGameWin; // 추후 수정, 상대방 시간패 처리는 서버에서 받아야 함
 
         OnOppositeDisconnectedWin += OnGameWin;
+        OnPlayerDisconnectedLose += OnGameLose;
 
         _gameManager.BoardInform.BlackWin += _gameManager.IsPlayerBlack ? OnGameWin : OnGameLose;
         _gameManager.BoardInform.WhiteWin += _gameManager.IsPlayerBlack ? OnGameLose : OnGameWin;
@@ -54,7 +57,11 @@ public class EventManager : MonoBehaviour
 
     public void StartGame() => OnGameStart!.Invoke();
 
+    public void StartSweeping() => OnStartSweeping!.Invoke();
+    
     public void PlayerSurrendered() => OnPlayerSurrender!.Invoke();
+
+    public void OppositeSurrendered() => OnOppositeSurrender!.Invoke();
 
     public void PlayerByoyomiPurchase() => OnPlayerByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
 

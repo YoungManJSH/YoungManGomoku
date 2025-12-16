@@ -18,9 +18,10 @@ public class MessageBoxManager : MonoBehaviour
         _rect = GetComponent<RectTransform>();
         _isGameEnded = false;
         EventManager.Instance.OnGameEnd += OnGameEnd;
+        EventManager.Instance.OnStartSweeping += () => _isGameEnded = true;
+        gameObject.SetActive(false);
     }
-
-    private void Start() => gameObject.SetActive(false);
+    
     private void OnEnable() => OnOpened!.Invoke();
 
     private void OnDisable()

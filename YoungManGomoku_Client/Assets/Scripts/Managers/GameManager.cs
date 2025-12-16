@@ -6,8 +6,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int mainTimeSeconds;
     [SerializeField] private int byoyomiCounts;
     [SerializeField] private int byoyomiSeconds;
-    [SerializeField] private StoneMoveController stoneMoveController;
     [SerializeField] private int byoyomiPurchaseAmount;
+    [SerializeField] private StoneMoveController stoneMoveController;
+    [SerializeField] private BoardSweeper oppositeSweeper;
+    [SerializeField] private AudioClip winSound;
+    [SerializeField] private AudioClip loseSound;
+    [SerializeField] private AudioClip drawSound;
+    
     public int ByoyomiPurchaseAmount => byoyomiPurchaseAmount;
     
     public static GameManager Instance { get; private set; }
@@ -17,11 +22,12 @@ public class GameManager : MonoBehaviour
     public TimeController PlayerTime { get; private set; }
     public TimeController OppositeTime { get; private set; }
     
-    public PlayerData player;
-    public PlayerData oppositePlayer;
+    public BasicPlayerData player;
+    public BasicPlayerData oppositePlayer;
     
     private TimeController _nowPlayerTime;
     private EventManager _eventManager;
+    private AudioSource _audioSource;
 
     // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
     // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
@@ -30,6 +36,7 @@ public class GameManager : MonoBehaviour
         if (Instance != null) Destroy(gameObject);
         Instance = this;
         _eventManager = GetComponent<EventManager>();
+        _audioSource = GetComponent<AudioSource>();
         
         BoardInform = new Board();
         PlayerTime = new TimeController(mainTimeSeconds, byoyomiCounts, byoyomiSeconds);
@@ -40,25 +47,15 @@ public class GameManager : MonoBehaviour
         
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
+        _eventManager.OnStartSweeping += () => enabled = false;
+        _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
+        _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
+        _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
         
         #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
-        IsPlayerBlack = true;
-        player = new PlayerData()
-        {
-            Nickname = "슈퍼뇽재환띠",
-            WinCount = 80,
-            DrawCount = 1,
-            LoseCount = 75,
-            Rating = 1498.5f
-        };
-        oppositePlayer = new PlayerData()
-        {
-            Nickname = "허접뇽재환띠",
-            WinCount = 55,
-            DrawCount = 3,
-            LoseCount = 43,
-            Rating = 1502.2f
-        };
+        IsPlayerBlack = false;
+        player = new BasicPlayerData("슈퍼뇽재환띠", 80, 1, 75, 1498.233f);
+        oppositePlayer = new BasicPlayerData("허접뇽재환띠", 55, 3, 43, 1502.943f); 
 
         if (IsPlayerBlack)
         {
@@ -87,6 +84,8 @@ public class GameManager : MonoBehaviour
             OppositeTime.OnTimeLose += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 시간승");
         }
         
+        // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
+        // 오직 착수만 의미하는 이벤트는 OnStoneMove
         stoneMoveController.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTime = isBlackTurn == IsPlayerBlack ? PlayerTime : OppositeTime;
@@ -96,6 +95,7 @@ public class GameManager : MonoBehaviour
     }
 
     private void Start() => enabled = false;
+
     private void Update() => _nowPlayerTime.TimeProgress(Time.deltaTime);
 
     // 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 

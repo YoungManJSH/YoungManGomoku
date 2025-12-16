@@ -1,119 +1,52 @@
-using System;
 using UnityEngine;
 
-public class BoardGenerator : MonoBehaviour
-{
-    private const float PPU = 100f; //Pixels per unit
-
-    [SerializeField] private Texture2D woodTexture;
-    [SerializeField] private int cellSize;
-    [SerializeField] private int marginSize;
-    [SerializeField] private int lineThickness;
-    [SerializeField] private int pointRadius;
-    [SerializeField] private Color lineColor;
-    [SerializeField] private PanelMover panelMover;
-    
-    private SpriteRenderer _spriteRenderer;
-    private Camera _mainCamera;
-    private int _totalPixel;
-    
-#if UNITY_EDITOR || UNITY_STANDALONE
-    private int _lastWidth;
-    private int _lastHeight;
-#endif
-    
-    public event Action OnBoardScaled;
-    public int CellSize => cellSize;
-    public int MarginSize => marginSize;
-    public int TotalPixel => _totalPixel;
-
-    private void Awake()
+public static class BoardGenerator
+{ 
+    public static Sprite GenerateBoard(BoardImageData data)
     {
-        _totalPixel = cellSize * Board.MaxCoord + marginSize * 2;
-
-        _spriteRenderer = GetComponent<SpriteRenderer>();
-        _spriteRenderer.sprite = GenerateBoard();
-    }
-
-    private void Start()
-    {
-        _mainCamera = Camera.main;
-        // 자식 오브젝트 생성 후에 통째로 크기를 조절하기 위해 Start에서 실행 
-        AdjustBoardScale();
-        OnBoardScaled!.Invoke(); // 이벤트 구조로 순서 보장
+        int endGridPos = data.TotalPixel - data.MarginSize;
         
-#if UNITY_EDITOR || UNITY_STANDALONE
-        _lastWidth = Screen.width;
-        _lastHeight = Screen.height;
-#endif
-    }
-    
-#if  UNITY_EDITOR || UNITY_STANDALONE
-    private void Update()
-    {
-        if (Screen.width != _lastWidth || Screen.height != _lastHeight)
-        {
-            _lastWidth = Screen.width;
-            _lastHeight = Screen.height;
-            
-            AdjustBoardScale();
-            OnBoardScaled!.Invoke();
-        }
-    }
-#endif
-
-    private void AdjustBoardScale()
-    {
-        float worldSize = _totalPixel / PPU;
-        float screenWidth = _mainCamera.orthographicSize * 2f * _mainCamera.aspect;
-        float scale = screenWidth / worldSize;
-        transform.localScale = new Vector3(scale, scale, 1f);
-    }
-
-    private Sprite GenerateBoard()
-    {
-        int endGridPos = _totalPixel - marginSize;
-        Texture2D boardTexture = new Texture2D(_totalPixel, _totalPixel, TextureFormat.RGBA32, false);
+        Texture2D boardTexture = new Texture2D(data.TotalPixel, data.TotalPixel, TextureFormat.RGBA32, false);
 
         // woodTexture(배경) 적용
-        for (int y = 0; y < _totalPixel; ++y)
+        for (int y = 0; y < data.TotalPixel; ++y)
         {
-            for (int x = 0; x < _totalPixel; ++x)
+            for (int x = 0; x < data.TotalPixel; ++x)
             {
-                boardTexture.SetPixel(x, y, woodTexture.GetPixel(x % woodTexture.width, y % woodTexture.height));
+                boardTexture.SetPixel(x, y, data.WoodTexture.GetPixel(x % data.WoodTexture.width, y % data.WoodTexture.height));
             }
         }
 
         // 격자선 적용
-        DrawLineHor(boardTexture, marginSize, endGridPos, marginSize, lineThickness * 2, lineColor);
-        DrawLineHor(boardTexture, marginSize, endGridPos, endGridPos, lineThickness * 2, lineColor);
-        DrawLineVer(boardTexture, marginSize, marginSize, endGridPos, lineThickness * 2, lineColor);
-        DrawLineVer(boardTexture, endGridPos, marginSize, endGridPos, lineThickness * 2, lineColor);
+        DrawLineHor(boardTexture, data.MarginSize, endGridPos, data.MarginSize, data.LineThickness * 2, data.LineColor);
+        DrawLineHor(boardTexture, data.MarginSize, endGridPos, endGridPos, data.LineThickness * 2, data.LineColor);
+        DrawLineVer(boardTexture, data.MarginSize, data.MarginSize, endGridPos, data.LineThickness * 2, data.LineColor);
+        DrawLineVer(boardTexture, endGridPos, data.MarginSize, endGridPos, data.LineThickness * 2, data.LineColor);
         for (int i = 1; i < Board.MaxCoord; ++i)
         {
-            int pos = marginSize + cellSize * i;
-            DrawLineHor(boardTexture, marginSize, endGridPos, pos, lineThickness, lineColor);
-            DrawLineVer(boardTexture, pos, marginSize, endGridPos, lineThickness, lineColor);
+            int pos = data.MarginSize + data.CellSize * i;
+            DrawLineHor(boardTexture, data.MarginSize, endGridPos, pos, data.LineThickness, data.LineColor);
+            DrawLineVer(boardTexture, pos, data.MarginSize, endGridPos, data.LineThickness, data.LineColor);
         }
 
         // 화점 적용
-        int center = marginSize + Board.MaxCoord / 2 * cellSize;
-        int point1 = marginSize + 3 * cellSize;
-        int point2 = _totalPixel - point1;
-        DrawCircle(boardTexture, center, center, pointRadius, lineColor);
-        DrawCircle(boardTexture, point1, point1, pointRadius, lineColor);
-        DrawCircle(boardTexture, point1, point2, pointRadius, lineColor);
-        DrawCircle(boardTexture, point2, point1, pointRadius, lineColor);
-        DrawCircle(boardTexture, point2, point2, pointRadius, lineColor);
+        int center = data.MarginSize + Board.MaxCoord / 2 * data.CellSize;
+        int point1 = data.MarginSize + 3 * data.CellSize;
+        int point2 = data.TotalPixel - point1;
+        DrawCircle(boardTexture, center, center, data.PointRadius, data.LineColor);
+        DrawCircle(boardTexture, point1, point1, data.PointRadius, data.LineColor);
+        DrawCircle(boardTexture, point1, point2, data.PointRadius, data.LineColor);
+        DrawCircle(boardTexture, point2, point1, data.PointRadius, data.LineColor);
+        DrawCircle(boardTexture, point2, point2, data.PointRadius, data.LineColor);
 
         boardTexture.Apply();
         boardTexture.filterMode = FilterMode.Point;
         
-        return Sprite.Create(boardTexture, new Rect(0, 0, _totalPixel, _totalPixel),
-            new Vector2(0.5f, 0.5f), PPU);
+        return Sprite.Create(boardTexture, new Rect(0, 0, data.TotalPixel, data.TotalPixel),
+            new Vector2(0.5f, 0.5f), data.PixelsPerUnit);
     }
 
-    private void DrawLineHor(Texture2D tex, int x0, int x1, int y, int thickness, Color color)
+    private static void DrawLineHor(Texture2D tex, int x0, int x1, int y, int thickness, Color color)
     {
         Debug.Assert(x0 <= x1);
 
@@ -126,7 +59,7 @@ public class BoardGenerator : MonoBehaviour
         }
     }
 
-    private void DrawLineVer(Texture2D tex, int x, int y0, int y1, int thickness, Color color)
+    private static void DrawLineVer(Texture2D tex, int x, int y0, int y1, int thickness, Color color)
     {
         Debug.Assert(y0 <= y1);
 
@@ -139,7 +72,7 @@ public class BoardGenerator : MonoBehaviour
         }
     }
 
-    private void DrawCircle(Texture2D tex, int cx, int cy, int radius, Color color)
+    private static void DrawCircle(Texture2D tex, int cx, int cy, int radius, Color color)
     {
         for (int y = -radius; y <= radius; ++y)
         {
