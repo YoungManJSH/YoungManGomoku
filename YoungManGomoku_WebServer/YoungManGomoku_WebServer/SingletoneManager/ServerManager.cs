@@ -98,7 +98,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
-        }
+			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
+		}
 
         public uint GenerateUID32() => uidGenerator.GenerateUID32();
 		

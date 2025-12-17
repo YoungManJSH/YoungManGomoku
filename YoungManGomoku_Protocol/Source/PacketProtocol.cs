@@ -1,74 +1,77 @@
 ﻿using System;
 using YoungManGomoku_Protocol.Source.TypeEnum;
-
-// Protocol의 PlayerData는 단순 서버와 통신용
-// 서버 DB 테이블과의 구조 역시 다르다
-// 클라이언트 빌드에 포함되기 때문에 보안상 중요한 코드는 Protocol에 올리지 말 것
-
-// Property는 Json 직렬화 안 되니까 무조건 public
-// [SerializeField] private도 되긴 하는데 서버 코드상에서 조립하기 불편
-
+/*
+ Protocol의 PlayerData는 단순 서버와 통신용
+ 서버 DB 테이블과의 구조 역시 다르다
+ 클라이언트 빌드에 포함되기 때문에 보안상 중요한 코드는 Protocol에 올리지 말 것
+*/
+/*
+ Unity의 JsonUtil은 public field만 직렬화 가능하고 Property는 모른다.
+ [SerializeField] private도 되긴 하는데 서버 코드상에서 조립하기 불편하다.
+ 반대로 ASP .net core는 public Property만 읽는다.
+ -> Converter 만드는건 코드 중복이 너무 심하니 JsonUtil 내다 버리고 Newtonsoft 씁시다.
+*/
 
 // 클라이언트 to 서버 / 서버 to 클라이언트 공용
 namespace YoungManGomoku_Protocol
 {
     public class PlayerData
     {
-        public string Nickname;
+        public string Nickname { get; set; }
 
-        // 인게임 재화, 상점 이용에 쓴다
-        public int GameMoney;
+		// 인게임 재화, 상점 이용에 쓴다
+		public int GameMoney { get; set; }
 
-        // 캐쉬 재화, 과금 시 쓰기 위한 재화인데 이거 구현할 일 있을까? 
-        // 세븐나이츠 루비같은 가챠겜 보석 느낌으로 만든 재화
-        // 유료결제 직빵 거래로 퉁치면 2차 현금재화가 필요할 지 모르겠다.
-        public int CashMoney;
+		// 캐쉬 재화, 과금 시 쓰기 위한 재화인데 이거 구현할 일 있을까? 
+		// 세븐나이츠 루비같은 가챠겜 보석 느낌으로 만든 재화
+		// 유료결제 직빵 거래로 퉁치면 2차 현금재화가 필요할 지 모르겠다.
+		public int CashMoney { get; set; }
 
 
-        // 프로필이미지 = 캐릭터 (상점에서 팜)
-        public ProfileImageType EquipProfile;
+		// 프로필이미지 = 캐릭터 (상점에서 팜)
+		public ProfileImageType EquipProfile { get; set; }
 
-        // 현재 장착중인 돌 스킨
-        public StoneSkinType EquipStoneSkin;
+		// 현재 장착중인 돌 스킨
+		public StoneSkinType EquipStoneSkin { get; set; }
 
-        // 현재 장착중인 바둑판 스킨
-        public BoardSkinType EquipBoardSkin;
+		// 현재 장착중인 바둑판 스킨
+		public BoardSkinType EquipBoardSkin { get; set; }
 
-        // 실력 판단용 내부 지표 레이팅
-        // MMR은 서버에서만 쓰고 클라이언트에서는 딱히 보여주지 않기로 합의함
-        public float Rating;
+		// 실력 판단용 내부 지표 레이팅
+		// MMR은 서버에서만 쓰고 클라이언트에서는 딱히 보여주지 않기로 합의함
+		public float Rating { get; set; }
 
-        // 게임을 얼마나 많이 했는지 판단하는 지표, Exp가 일정량 찰 때마다 레벨 업
-        public int Level;
-        public int ExperiencePoint;
-        public int MaxExperiencePoint;
+		// 게임을 얼마나 많이 했는지 판단하는 지표, Exp가 일정량 찰 때마다 레벨 업
+		public int Level { get; set; }
+		public int ExperiencePoint { get; set; }
+		public int MaxExperiencePoint { get; set; }
 
-        // Max Exp 초기값을 0으로 세팅해서 테스트할 수 있기 때문에 Assert 하지 않음
-        // 아니 잠깐, 웹서버가 Assert걸면 그냥 터지잖아, 안되지그건
-        // 만렙 개념이 있다면 Max Exp가 0일 수도 있는데 기획이 확정된 것이 없으므로 일단 예외처리
-        public float ExperienceRate => MaxExperiencePoint != 0 ? (float)ExperiencePoint / MaxExperiencePoint : 0f;
+		// Max Exp 초기값을 0으로 세팅해서 테스트할 수 있기 때문에 Assert 하지 않음
+		// 아니 잠깐, 웹서버가 Assert걸면 그냥 터지잖아, 안되지그건
+		// 만렙 개념이 있다면 Max Exp가 0일 수도 있는데 기획이 확정된 것이 없으므로 일단 예외처리
+		public float ExperienceRate => MaxExperiencePoint != 0 ? (float)ExperiencePoint / MaxExperiencePoint : 0f;
 
         // 회원가입시간
-        public DateTime RegisterDate;
+        public DateTime RegisterDate { get; set; }
 
-        // 마지막 로그인 시간
-        public DateTime LastLoginDate;
+		// 마지막 로그인 시간
+		public DateTime LastLoginDate { get; set; }
 
-        // 마지막 오목 플레이 시간
-        public DateTime LastPlayDate;
+		// 마지막 오목 플레이 시간
+		public DateTime LastPlayDate { get; set; }
 
 
-        // 승리 횟수
-        public uint WinCount;
+		// 승리 횟수
+		public uint WinCount { get; set; }
 
-        // 오목판이 꽉 찰 때까지 결판이 나지 않았다면 무승부 카운트
-        public uint DrawCount;
+		// 오목판이 꽉 찰 때까지 결판이 나지 않았다면 무승부 카운트
+		public uint DrawCount { get; set; }
 
-        public uint LoseCount;
+		public uint LoseCount { get; set; }
 
-        public uint DisconnectCount { get; set; }
+		public uint DisconnectCount { get; set; }
 
-        public uint BattleCount => (WinCount + DrawCount + LoseCount);
+		public uint BattleCount => (WinCount + DrawCount + LoseCount);
 
         // 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
@@ -77,32 +80,32 @@ namespace YoungManGomoku_Protocol
 
     public class OpponentPlayerData
     {
-        public string Nickname;
+        public string Nickname { get; set; }
 
-        // 장착중인 프로필 이미지
-        public ProfileImageType EquipProfile;
+		// 장착중인 프로필 이미지
+		public ProfileImageType EquipProfile { get; set; }
 
-        // 현재 장착중인 바둑돌 스킨
-        public StoneSkinType EquipStoneSkin;
+		// 현재 장착중인 바둑돌 스킨
+		public StoneSkinType EquipStoneSkin { get; set; }
 
-        // 바둑판 스킨
-        public BoardSkinType EquipBoardSkin;
+		// 바둑판 스킨
+		public BoardSkinType EquipBoardSkin { get; set; }
 
-        public float Rating;
+		public float Rating { get; set; }
 
-        public int Level;
+		public int Level { get; set; }
 
-        // 승리 횟수
-        public uint WinCount;
+		// 승리 횟수
+		public uint WinCount { get; set; }
 
-        // 오목판이 꽉 찰 때까지 결판이 나지 않았다면 무승부 카운트
-        public uint DrawCount;
+		// 오목판이 꽉 찰 때까지 결판이 나지 않았다면 무승부 카운트
+		public uint DrawCount { get; set; }
 
-        public uint LoseCount;
+		public uint LoseCount { get; set; }
 
-        public uint DisconnectCount;
+		public uint DisconnectCount { get; set; }
 
-        public uint BattleCount => (WinCount + DrawCount + LoseCount);
+		public uint BattleCount => (WinCount + DrawCount + LoseCount);
 
         // 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
@@ -114,10 +117,10 @@ namespace YoungManGomoku_Protocol.ClientToServer
 {
     public class CS_AccountRegisterDTO
     {
-        public string UserNickname;
-        public string IdToken;
-        public bool IsGuest;
-    }
+        public string UserNickname { get; set; }
+        public string IdToken { get; set; }
+		public bool IsGuest { get; set; }
+	}
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
@@ -132,11 +135,11 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
     public class SC_MatchResultDTO
     {
-        public OpponentPlayerData OpponentPlayer;
-        public string Message;
-        public bool MatchingSuccess;
+        public OpponentPlayerData OpponentPlayer { get; set; }
+		public string Message { get; set; }
+		public bool MatchingSuccess { get; set; }
 
-        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess) 
+		public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess) 
         { 
             OpponentPlayer = opponent;
             Message = msg;
