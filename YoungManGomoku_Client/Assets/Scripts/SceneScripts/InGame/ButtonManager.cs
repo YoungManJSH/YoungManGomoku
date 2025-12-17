@@ -54,6 +54,7 @@ public class ButtonManager : MonoBehaviour
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
         em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
+        em.OnStartSweeping += OnStartSweeping;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
@@ -108,6 +109,14 @@ public class ButtonManager : MonoBehaviour
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
         ButtonActivate(_exitSet);
+    }
+
+    private void OnStartSweeping()
+    {
+        ButtonInactivate(_surrenderSet);
+        ButtonInactivate(_byoyomiPurchaseSet);
+        ButtonInactivate(_takeBackSet);
+        // Sweeping이 끝날 때까지 나가기는 활성화 X
     }
 
     private void OnTurnBackActivate()

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using YoungManGomoku_Protocol;
 
 public class GameManager : MonoBehaviour
 {

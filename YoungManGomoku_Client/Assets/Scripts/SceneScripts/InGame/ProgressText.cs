@@ -9,6 +9,11 @@ public class ProgressText : MonoBehaviour
     {
         _progressText = GetComponent<TextMeshProUGUI>();
 
+        NetworkManager.Instance.OnRequestFailed += _ =>
+        {
+            _progressText.text = "-통신 오류-";
+        };
+        
         GameManager gm = GameManager.Instance;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
         

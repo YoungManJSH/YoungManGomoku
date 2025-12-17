@@ -1,4 +1,5 @@
 using TMPro;
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -20,16 +21,23 @@ public class ResultPresenter : MonoBehaviour
     [SerializeField] private string oppositeDisconnectedText;
     [SerializeField] private string playerDisconnectedText;
     [SerializeField] private string drawText;
+    [SerializeField] private string disconnectedText;
     [SerializeField] private float idlingTime;
     
-    private float _remainTime;
     private int _prevTime;
+    private long _gameEndTime;
     
     private void Awake()
     {
-        _remainTime = idlingTime;
         _prevTime = Mathf.CeilToInt(idlingTime);
         rematchTimer.text = _prevTime.ToString();
+
+        NetworkManager.Instance.OnRequestFailed += _ =>
+        {
+            mainText.text = "무효";
+            detailText.text = disconnectedText;
+            DisableRematch();
+        };
         
         GameManager gm = GameManager.Instance;
         gm.BoardInform.BlackWin += () => detailText.text = blackWinText;
@@ -48,15 +56,13 @@ public class ResultPresenter : MonoBehaviour
         em.OnPlayerTimeOut += () => detailText.text = timeLoseText;
         em.OnOppositeDisconnectedWin += () =>
         {
-            _remainTime = 0f;
-            rematchTimer.enabled = false;
             detailText.text = oppositeDisconnectedText;
+            DisableRematch();
         };
         em.OnPlayerDisconnectedLose += () =>
         {
-            _remainTime = 0f;
-            rematchTimer.enabled = false;
             detailText.text = playerDisconnectedText;
+            DisableRematch();
         };
         
         gameObject.SetActive(false);
@@ -64,21 +70,19 @@ public class ResultPresenter : MonoBehaviour
 
     private void Update()
     {
-        _remainTime -= Time.deltaTime;
+        float remainTime = idlingTime -
+                           (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _gameEndTime) / 1000f;
         
-        if (_remainTime <= 0)
+        if (remainTime <= 0f)
         {
-            _prevTime = 0;
-            rematchTimer.text = "0";
-            rematchTimer.color = new Color(1f, 1f, 1f, 0.5f);
-            rematchText.color = new Color(1f, 1f, 1f, 0.5f);
-            rematchButton.interactable = false;
+            DisableRematch();
             
             /*TODO: 추후 재대국 신청 취소 처리*/
+            
             return;
         }
         
-        int remainTimeToInt = Mathf.CeilToInt(_remainTime);
+        int remainTimeToInt = Mathf.CeilToInt(remainTime);
         
         if (remainTimeToInt != _prevTime)
         {
@@ -99,8 +103,18 @@ public class ResultPresenter : MonoBehaviour
         SceneManager.LoadScene("Scenes/3.InGame/InGameScene");
     }
 
+    private void DisableRematch()
+    {
+        _prevTime = 0;
+        rematchTimer.enabled = false;
+        rematchText.color = new Color(1f, 1f, 1f, 0.5f);
+        rematchButton.interactable = false;
+        enabled = false;
+    }
+    
     private void OnGameEnd()
     {
+        _gameEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         gameObject.SetActive(true);
         BlinkText(mainText).Cancel();
     }

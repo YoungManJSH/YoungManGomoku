@@ -64,10 +64,12 @@ public class StoneMoveController : MonoBehaviour
 
         messageBox.OnOpened += () => enabled = false;
         messageBox.TurnBackToGame += () => enabled = true;
-        EventManager.Instance.OnGameStart += OnGameStart;
-        EventManager.Instance.OnGameEnd += () => enabled = false;
-        EventManager.Instance.OnStartSweeping += () => enabled = false;
-        EventManager.Instance.OnTakeBack += TakeBack;
+        
+        EventManager em = EventManager.Instance;
+        em.OnGameStart += OnGameStart;
+        em.OnGameEnd += () => enabled = false;
+        em.OnStartSweeping += () => enabled = false;
+        em.OnTakeBack += TakeBack;
     }
 
     private void Start()
