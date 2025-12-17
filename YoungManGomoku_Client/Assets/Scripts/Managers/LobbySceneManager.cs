@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using YoungManGomoku_Protocol;
 
 public class LobbySceneManager : MonoBehaviour
@@ -27,7 +28,13 @@ public class LobbySceneManager : MonoBehaviour
             return;
         }
         
-        var data = await GetComponent<NetworkManager>().RegisterMatchingRequest(playerDataFromWebServer.IDToken);
+        var matchData = await GetComponent<NetworkManager>().RegisterMatchingRequest(playerDataFromWebServer.IDToken);
+
+        if (matchData != null)
+        {
+            PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
+            SceneManager.LoadScene("InGameScene");
+        }
     }
     
     public async void CancleMatchMaking()
@@ -39,6 +46,6 @@ public class LobbySceneManager : MonoBehaviour
             return;
         }
         
-        var data = await GetComponent<NetworkManager>().CancelMatchingRequest(playerDataFromWebServer.IDToken);
+        await GetComponent<NetworkManager>().CancelMatchingRequest(playerDataFromWebServer.IDToken);
     }
 }
