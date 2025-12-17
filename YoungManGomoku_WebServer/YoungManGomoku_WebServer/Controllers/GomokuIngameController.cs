@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.SingletoneManager;
+using YoungManGomoku_Protocol.ClientToServer;
 
 namespace YoungManGomoku_WebServer.Controllers
 {
@@ -23,11 +24,11 @@ namespace YoungManGomoku_WebServer.Controllers
             _serverManager = serverManager;
             _gameRoomManager = gameRoomManager;
         }
-
+        
 		[HttpPost("PlaceStone")]
 		public IActionResult PlaceStone([FromBody] CS_PlaceStoneDTO dto)
 		{
-			ulong uid = _serverManager.GetPlayerUID(dto.IdToken);
+			ulong uid = _serverManager.GetPlayerUID(dto.IDToken);
 
 			if (!_gameRoomManager.TryGetRoomByPlayer(uid, out GameRoom room))
 				return BadRequest("Not in game");

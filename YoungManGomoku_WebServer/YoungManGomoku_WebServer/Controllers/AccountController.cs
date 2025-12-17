@@ -77,7 +77,13 @@ namespace YoungManGomoku_WebServer.Controllers
         public IActionResult LoginGuestAccountData([FromBody] string idToken)
         {
             // DB Select Where By Token
-            PlayerAccount findAccount = _context.PlayerAccountTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
+            PlayerAccount findAccount = _context.PlayerAccountTable.Where(x => x.AuthToken == idToken)
+                                .Include(a => a.Money)
+                                .Include(a => a.Status)
+                                .Include(a => a.Equip)
+                                .Include(a => a.GomokuBattleRecord)
+                                .Include(a => a.Inventory)
+                                .FirstOrDefault();
 
             _logger.LogDebug($"DB Token By Find ID Token {idToken}");
 
@@ -115,15 +121,15 @@ namespace YoungManGomoku_WebServer.Controllers
             int size = 5;
             
             PlayerData[] datas = new PlayerData[size];
-            /*
+            
             int i = 0;
             // 안전한 스냅샷?
             // 잡히는거 size개까지 그냥 가져옴
             foreach (PlayerSession session in _serverManager.PlayerDatas.Values.Take(size).ToArray()) 
             {
-                //datas[i++] = _serverManager.ComposePlayerData(session.Account.UID);
+                datas[i++] = _serverManager.ComposePlayerData(session.Account.UID);
             }
-            */
+            
             return datas;
         }
     }
