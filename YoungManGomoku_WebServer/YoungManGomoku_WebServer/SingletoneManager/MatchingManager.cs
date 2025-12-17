@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using YoungManGomoku_Protocol;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
@@ -35,14 +35,16 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         private readonly Dictionary<string, WaitingPlayer> _waitingMap;
 
         private readonly IServerContext _serverManagerContext;
+		private readonly GameRoomManager _gameRoomManager;
 
-        public MatchingManager(IServerContext serverManagerContext)
+		public MatchingManager(IServerContext serverManagerContext, GameRoomManager gameRoomManager)
         {
             _lock = new object();
 
             _matchingQueue = new Queue<WaitingPlayer>();
             _waitingMap = new Dictionary<string, WaitingPlayer>();
             _serverManagerContext = serverManagerContext;
+            _gameRoomManager = gameRoomManager;
         }
 
         // 매칭 큐에 Player ID 등록
@@ -160,7 +162,13 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 _waitingMap.Remove(p1.PlayerIdToken);
                 _waitingMap.Remove(p2.PlayerIdToken);
-            }
+
+
+				_gameRoomManager.CreateRoom(
+					_serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
+					_serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
+				);
+			}
         }
     }
 }
