@@ -15,10 +15,20 @@ public struct RequestError
     public string ResponseBody; // 서버로부터 보내져온 메인 데이터
 }
 
+// 유니티에서 보내오는 모든 데이터를 전부 신뢰시킴
+// 당연히 보안적으로 개 쓰레기, 우리 개발할 때만 잠깐 쓰자
+class BypassCertificate : CertificateHandler
+{
+    protected override bool ValidateCertificate(byte[] certificateData)
+    {
+        return true; // 무조건 신뢰
+    }
+}
+
+
 // 로그인할 때 인증 토큰(UID같은거)을 보냄
 // 게임 시작 시점과 게임 결과 시점 등 요청할 때마다 토큰을 같이 보내서 인증
 // 웹서버라서 매 요청마다 토큰이 필요함
-
 public class NetworkManager : MonoBehaviour
 {
 	// 나중에 바꿀 예정
@@ -103,20 +113,25 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<PlayerData> CancelMatchingRequest(string idToken, int timeOutSeconds = 0)
         => await RequestPostServer<PlayerData>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
 
+    // 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
+    public async Awaitable<RecvData> RequestPing<RecvData>(int timeOutSeconds = 10, string successAnnounce = "=== Ping Pong Success! ===")
+        => await RequestServer<RecvData>("Ping", "GET", "\"\"", timeOutSeconds, successAnnounce);
+
+
 
     // 앞으로 네트워크 매니저의 중추를 담당할 함수들. Open되어있지는 않음.
     // API들은 전부 이 함수들을 Wrapping해 사용할 것
     private async Awaitable<RecvData> RequestPostServer<RecvData>(string serverURL, string sendJsonString, int timeOutSeconds = 0, string successAnnounce = "=== Request Success! ===")
         => await RequestServer<RecvData>(serverURL, "POST", sendJsonString, timeOutSeconds, successAnnounce);
 
-    // 서버가 살았는지 아닌지 테스트하는 용도, 핑을 그냥 던져봄. 문자열 퐁이 돌아올 거임.
-    private async Awaitable<RecvData> RequestPing<RecvData>(int timeOutSeconds = 10, string successAnnounce = "=== Ping Pong Success! ===")
-        => await RequestServer<RecvData>("Ping", "GET", "\"\"", timeOutSeconds, successAnnounce);
 
     private async Awaitable<RecvData> RequestServer<RecvData>(string serverURL, string method, string sendJsonString, int timeOutSeconds = 0, string successAnnounce = "=== Request Success! ===")
 	{
         UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/{serverURL}", method);
-    
+
+        // Test 단계에서만 잠깐 쓸 코드, 유니티는 전부 신뢰시켜버리는거라 서버 보안적으로 매우 위험
+        uwr.certificateHandler = new BypassCertificate();
+
         if (string.IsNullOrEmpty(sendJsonString) == false && method != "GET")
         {
 			Debug.Log($"Request URL: {baseURL}/{serverURL}\nSend Json Data : {sendJsonString}");
