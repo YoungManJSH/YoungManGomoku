@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,72 +21,106 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private AudioClip byoyomiWarningSound;
     [SerializeField] private AudioClip byoyomiPurchaseSound;
     [SerializeField] private TMP_FontAsset glowFont;
-    [SerializeField] private Sprite otherColorStone;
+    [SerializeField, Tooltip("플레이어가 백일 경우 교체할 돌 스프라이트")]
+    private Sprite otherColorStone;
     [SerializeField] private bool isPlayer;
+    
+    private static readonly Color Translucent = new (1f, 1f, 1f, 0.3f);
 
-    private TimeController _myTimer;
+    public event Action OnLastByoyomi;
+    
+    private UserTimer _myTimer;
     private bool _isThisBlack;
     private AudioSource _audioSource;
     private TMP_FontAsset _originFont;
     private TweenerCore<float, float, FloatOptions> _tween;
     private int _prevTime;
+    private int _prevByoyomiCount;
     private string _initByoyomiSecondText;
     private bool _isByoyomi;
     private bool _isLastByoyomi;
-    private Color _translucent;
 
     private void Awake()
     {
         _audioSource = GetComponent<AudioSource>();
         _originFont = byoyomiCount.font;
-        _isByoyomi = false;
         _prevTime = -1;
-
-        _translucent = new Color(1f, 1f, 1f, 0.3f);
-        byoyomiTimer.color = _translucent;
-        byoyomiCount.color = _translucent;
-        clockIcon.color = _translucent;
         
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
         if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
-        _myTimer = isPlayer ? gm.PlayerTime : gm.OppositeTime;
-        _isLastByoyomi = _myTimer.ByoyomiCount == 1;
-        _myTimer.StartByoyomi += OnStartByoyomi;
-        _myTimer.UseByoyomi += OnUseByoyomi;
-        _myTimer.OnTimeLose += OnTimeLose;
-
+        
+        _myTimer = isPlayer ? gm.PlayerTimer : gm.OppositeTimer;
+        _isByoyomi = _myTimer.MainTime == 0f;
+        _prevByoyomiCount = _myTimer.ByoyomiCount;
+        _isLastByoyomi = _prevByoyomiCount == 1;
+        
+        if (_isByoyomi)
+        {
+            mainTimer.text = "00:00";
+            mainTimer.color = Translucent;
+            byoyomiTimer.color = Color.white;
+            byoyomiCount.color = Color.white;
+            clockIcon.color = Color.white;
+        }
+        else
+        {
+            int mainTime = Mathf.CeilToInt(_myTimer.MainTime);
+            mainTimer.text = $"{mainTime / 60:D2}:{mainTime % 60:D2}";
+            mainTimer.color = Color.white;
+            byoyomiTimer.color = Translucent;
+            byoyomiCount.color = Translucent;
+            clockIcon.color = Translucent;
+        }
+        
+        if (_isLastByoyomi)
+        {
+            byoyomiCount.text = "1회";
+            byoyomiCount.font = glowFont;
+        }
+        else
+        {
+            byoyomiCount.text = $"{_myTimer.ByoyomiCount}회";
+        }
+        
+        _initByoyomiSecondText = Mathf.CeilToInt(_myTimer.initByoyomiSeconds).ToString("D2");
+        byoyomiTimer.text = _initByoyomiSecondText;
+        
         BasicPlayerData myUser = isPlayer ? gm.player : gm.oppositePlayer;
         InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating);
         
         EventManager em = EventManager.Instance;
         em.OnGameEnd += () => enabled = false;
-        
-        if (isPlayer) em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
-        else em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
+        if (isPlayer)
+        {
+            em.OnPlayerTimeOut += OnTimeOut;
+            em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
+        }
+        else
+        {
+            em.OnOppositeTimeOut += OnTimeOut;
+            em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
+        } 
         
         stoneMoveController.OnStoneMove += OnTurnChanged;
-    }
-
-    private void Start()
-    {
-        int mainTime = Mathf.CeilToInt(_myTimer.MainTime);
-        mainTimer.text = $"{mainTime / 60:D2}:{mainTime % 60:D2}";
-        _initByoyomiSecondText = Mathf.CeilToInt(_myTimer.initByoyomiSeconds).ToString("D2");
-        byoyomiTimer.text = _initByoyomiSecondText;
-        byoyomiCount.text = $"{_myTimer.ByoyomiCount}회";
-
         enabled = false;
     }
-
-    private void OnDisable() => StopGlowEffect();
     
+    private void OnDisable() => StopGlowEffect();
+
     private void Update()
     {
         int remainTime;
 
+        #region 자유시간 사용 중일 때
         if (_isByoyomi is false)
         {
+            if (_myTimer.MainTime == 0f)
+            {
+                StartByoyomi();
+                return;
+            }
+            
             remainTime = Mathf.CeilToInt(_myTimer.MainTime);
             if (remainTime == _prevTime) return;
 
@@ -93,18 +128,26 @@ public class PlayerPanelController : MonoBehaviour
             _prevTime = remainTime;
             return;
         }
+        #endregion
 
-        remainTime = Mathf.CeilToInt(_myTimer.Byoyomi);
+        #region 초읽기 중일 때
+        remainTime = Mathf.CeilToInt(_myTimer.NowByoyomiSeconds);
+        
+        if (_myTimer.ByoyomiCount < _prevByoyomiCount)
+        {
+            OnUseByoyomi(_myTimer.ByoyomiCount);
+        }
+        
         if (remainTime == _prevTime) return;
 
         byoyomiTimer.text = $"{remainTime:D2}";
         _prevTime = remainTime;
-        
-        if (remainTime == 9)
-        {
-            byoyomiTimer.font = glowFont;
-        }
 
+        if (remainTime > 9 || remainTime == 0) return;
+        
+        #region 9초 이하일 때
+        byoyomiTimer.font = glowFont;
+        
         if (isPlayer)
         {
             if (_isLastByoyomi && remainTime < 5)
@@ -112,11 +155,13 @@ public class PlayerPanelController : MonoBehaviour
                 _audioSource.PlayOneShot(byoyomiWarningSound);
                 StartGlowEffect(byoyomiTimer.fontMaterial, loops: 1);
             }
-            else if (remainTime < 10)
+            else
             {
                 _audioSource.PlayOneShot(byoyomiTickSound);
             }
         }
+        #endregion
+        #endregion
     }
 
     private void InputUserInform(string nickname, uint win, uint draw, uint lose, float rating)
@@ -146,6 +191,8 @@ public class PlayerPanelController : MonoBehaviour
     private void OnTurnChanged(bool isBlackTurn)
     {
         enabled = isBlackTurn == _isThisBlack;
+        
+        /* TODO: 추후 서버로부터 정정된 타이머 적용 로직 추가 */
 
         if (enabled)
         {
@@ -164,45 +211,54 @@ public class PlayerPanelController : MonoBehaviour
         }
         else
         {
-            stoneImage.color = _translucent;
+            stoneImage.color = Translucent;
 
             if (_isByoyomi)
             {
-                StopGlowEffect();
                 byoyomiTimer.font = _originFont;
                 byoyomiTimer.text = _initByoyomiSecondText;
-                byoyomiTimer.color = _translucent;
-                byoyomiCount.color = _translucent;
-                clockIcon.color = _translucent;
+                byoyomiTimer.color = Translucent;
+                byoyomiCount.color = Translucent;
+                clockIcon.color = Translucent;
             }
             else
             {
-                mainTimer.color = _translucent;
+                mainTimer.color = Translucent;
             }
         }
     }
 
-    private void OnStartByoyomi()
+    private void StartByoyomi()
     {
         _isByoyomi = true;
+        _prevTime = (int)_myTimer.initByoyomiSeconds;
+        
         mainTimer.text = "00:00";
-        mainTimer.color = _translucent;
+        mainTimer.color = Translucent;
 
         byoyomiTimer.color = Color.white;
         byoyomiCount.color = Color.white;
         clockIcon.color = Color.white;
 
-        if (isPlayer) _audioSource.PlayOneShot(useByoyomiSound);
+        if (isPlayer)
+        {
+            _audioSource.PlayOneShot(_isLastByoyomi ? byoyomiWarningSound: useByoyomiSound);
+        }
     }
 
-    private void OnUseByoyomi()
+    private void OnUseByoyomi(int leftCount)
     {
         StopGlowEffect();
-        byoyomiTimer.font = _originFont;
-        byoyomiCount.text = $"{_myTimer.ByoyomiCount}회";
+        _prevByoyomiCount = leftCount;
+
+        if (leftCount == 0) return;
         
-        if (_myTimer.ByoyomiCount == 1)
+        byoyomiTimer.font = _originFont;
+        byoyomiCount.text = $"{leftCount}회";
+        
+        if (leftCount == 1)
         {
+            OnLastByoyomi?.Invoke();
             _isLastByoyomi = true;
             byoyomiCount.font = glowFont;
             StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
@@ -219,12 +275,13 @@ public class PlayerPanelController : MonoBehaviour
         StopGlowEffect();
         byoyomiTimer.font = _originFont;
         byoyomiCount.font = _originFont;
-        byoyomiCount.text = $"{(_myTimer.IsByoyomiPurchased ? _myTimer.ByoyomiCount : _myTimer.ByoyomiCount + amount)}회";
+        _prevByoyomiCount = amount + 1;
+        byoyomiCount.text = $"{_prevByoyomiCount}회";
         _audioSource.PlayOneShot(byoyomiPurchaseSound);
         _isLastByoyomi = false;
     }
 
-    private void OnTimeLose()
+    private void OnTimeOut()
     {
         byoyomiTimer.text = "00";
         byoyomiCount.text = "0회";

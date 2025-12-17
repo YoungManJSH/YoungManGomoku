@@ -146,6 +146,41 @@ namespace YoungManGomoku_Protocol.ServerToClient
             MatchingSuccess = isSuccess;
         }
     }
+    
+    // 게임이 시작될 때 클라가 받을 타이머 설정 정보
+    public struct SC_TimerSettingDTO
+    {
+        public float mainTime; // 처음에 누적하여 소모되는 자유시간
+        public int byoyomiCount; // 처음에 제공되는 초읽기 개수
+        public float byoyomiSeconds; // 초읽기 시간
+        public int byoyomiPurchaseAmount; // 초읽기 구매 시 추가되는 개수
+
+        public SC_TimerSettingDTO(float mainTime, int byoyomiCount, float byoyomiSeconds, int byoyomiPurchaseAmount)
+        {
+            this.mainTime = mainTime;
+            this.byoyomiCount = byoyomiCount;
+            this.byoyomiSeconds = byoyomiSeconds;
+            this.byoyomiPurchaseAmount = byoyomiPurchaseAmount;
+        }
+    }
+
+    // 착수가 이루어질 때마다 클라가 받을 타이머 정보
+    public struct SC_TimerDTO
+    {
+        // byoyomiSeconds는 착수가 될 때마다 리셋되므로 보내줄 필요 없음
+        public float blackMainTime;
+        public int blackByoyomiCount;
+        public float whiteMainTime;
+        public int whiteByoyomiCount;
+
+        public SC_TimerDTO(float blackMainTime, int blackByoyomiCount, float whiteMainTime, int whiteByoyomiCount)
+        {
+            this.blackMainTime = blackMainTime;
+            this.blackByoyomiCount = blackByoyomiCount;
+            this.whiteMainTime = whiteMainTime;
+            this.whiteByoyomiCount = whiteByoyomiCount;
+        }
+    }
 }
 
 

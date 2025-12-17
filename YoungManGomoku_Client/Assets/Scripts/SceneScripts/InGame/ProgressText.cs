@@ -14,12 +14,12 @@ public class ProgressText : MonoBehaviour
         
         gm.BoardInform.BlackWin += () => OnGameOver(gm.IsPlayerBlack ? "승리" : "패배");
         gm.BoardInform.WhiteWin += () => OnGameOver(gm.IsPlayerBlack ? "패배" : "승리");
-        gm.PlayerTime.OnTimeLose += () => OnGameOver("시간패");
-        gm.OppositeTime.OnTimeLose += () => OnGameOver("시간승"); // 추후 수정, 시간패는 서버 처리 받아야 함
         
         EventManager em = EventManager.Instance;
         em.OnPlayerSurrender += () => OnGameOver("기권패");
         em.OnOppositeSurrender += () => OnGameOver("기권승");
+        em.OnPlayerTimeOut += () => OnGameOver("시간패");
+        em.OnOppositeTimeOut += () => OnGameOver("시간승");
         em.OnOppositeDisconnectedWin += () => OnGameOver("접속끊김승");
         em.OnGameDraw += () => OnGameOver("무승부");
     }

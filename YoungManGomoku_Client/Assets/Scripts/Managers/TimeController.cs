@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[Obsolete("UserTimer로 대체되었음")]
 public class TimeController
 {
     public readonly float initByoyomiSeconds;
