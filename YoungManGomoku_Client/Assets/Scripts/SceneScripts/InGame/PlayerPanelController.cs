@@ -39,12 +39,14 @@ public class PlayerPanelController : MonoBehaviour
     private string _initByoyomiSecondText;
     private bool _isByoyomi;
     private bool _isLastByoyomi;
+    private bool _isGameEnd;
 
     private void Awake()
     {
         _audioSource = GetComponent<AudioSource>();
         _originFont = byoyomiCount.font;
         _prevTime = -1;
+        _isGameEnd = false;
         
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
@@ -90,7 +92,12 @@ public class PlayerPanelController : MonoBehaviour
         InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating);
         
         EventManager em = EventManager.Instance;
-        em.OnGameEnd += () => enabled = false;
+        em.OnGameEnd += () =>
+        {
+            _isGameEnd = true;
+            enabled = false;
+        };
+            
         if (isPlayer)
         {
             em.OnPlayerTimeOut += OnTimeOut;
@@ -190,6 +197,8 @@ public class PlayerPanelController : MonoBehaviour
 
     private void OnTurnChanged(bool isBlackTurn)
     {
+        if (_isGameEnd) return;
+        
         enabled = isBlackTurn == _isThisBlack;
         
         /* TODO: 추후 서버로부터 정정된 타이머 적용 로직 추가

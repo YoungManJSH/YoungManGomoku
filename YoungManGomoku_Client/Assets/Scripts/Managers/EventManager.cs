@@ -35,6 +35,7 @@ public class EventManager : MonoBehaviour
         if (Instance != null) Destroy(gameObject);
         Instance = this;
         _gameManager = GetComponent<GameManager>();
+        NetworkManager.Instance.OnRequestFailed += _ => OnGameEnd!.Invoke();
     }
 
     private void OnDestroy() => Instance = null;

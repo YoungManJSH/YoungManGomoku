@@ -37,7 +37,18 @@ public class NetworkManager : MonoBehaviour
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
 
-    // static singletone class로 만들고 싶다면 awake 함수 파서 만들면 됨
+    public static NetworkManager Instance { get; private set; }
+
+    
+    // Execution Order -3 : 이 Instance는 가장 먼저 등록돼 있어야 함 
+    private void Awake()
+    {
+	    if (Instance != null) Destroy(gameObject);
+	    
+	    Instance = this;
+    }
+
+    private void OnDestroy() => Instance = null;
 
     // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
     // 따라서 Json으로 변환하면 string이 무지막지하게 길어질 것이다.
