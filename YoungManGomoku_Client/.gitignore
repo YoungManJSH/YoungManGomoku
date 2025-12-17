@@ -105,3 +105,6 @@ ignore.conf
 *BurstDebugInformation_DoNotShip/
 
 
+
+# gibo File git Ignore
+**/*.gibo
