@@ -148,11 +148,12 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
         public SC_TimerSettingDTO TimerSettingDTO { get; set; }
 
-        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess) 
+        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, in SC_TimerSettingDTO timerSettingDTO) 
         { 
             OpponentPlayer = opponent;
             Message = msg;
             MatchingSuccess = isSuccess;
+            TimerSettingDTO = timerSettingDTO;
         }
     }
     

@@ -275,10 +275,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 			_serverContext = serverContext;
 		}
 
-		public GameRoom CreateRoom(ulong playerA, ulong playerB)
+		public GameRoom CreateRoom(ulong roomID, ulong playerA, ulong playerB)
 		{
-			ulong roomID = _serverContext.GenerateUID64();
-
 			var room = new GameRoom(roomID, playerA, playerB, this);
 			_rooms[roomID] = room;
 

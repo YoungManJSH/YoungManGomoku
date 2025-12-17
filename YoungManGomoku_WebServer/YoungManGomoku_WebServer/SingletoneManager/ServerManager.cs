@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.Source.TypeEnum;
@@ -88,22 +89,25 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
     public class ServerManager : IServerContext
     {
-		private UIDGenerator uidGenerator;
+        private readonly ILogger<ServerManager> _logger;
+
+        private UIDGenerator _uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
         // PlayerData는 클라에서도 사용되기 때문에 보안 상 노출 위험이 있다고 판단
         internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
         public ConcurrentDictionary<string, ulong> UIDByIDToken { get; set; }
 
-        public ServerManager()
+        public ServerManager(ILogger<ServerManager> logger)
         {
-            uidGenerator = new UIDGenerator();
+            _logger = logger;
+            _uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
 		}
 
-        public uint GenerateUID32() => uidGenerator.GenerateUID32();
+        public uint GenerateUID32() => _uidGenerator.GenerateUID32();
 		
-		public ulong GenerateUID64() => uidGenerator.GenerateUID64();
+		public ulong GenerateUID64() => _uidGenerator.GenerateUID64();
 
         internal PlayerSession GetPlayerSession(ulong UID)
 			=> PlayerDatas[UID];
@@ -118,48 +122,52 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         /// <returns> 클라용 플레이어 데이터 </returns>
         public PlayerData ComposePlayerData(ulong UID)
 		{
-			PlayerData resultData = new PlayerData();
+            PlayerData resultData = new PlayerData()
+            {
+                Nickname = PlayerDatas[UID].Account.Nickname,
+                Rating = PlayerDatas[UID].Account.Status.Rating,
+
+                Level = PlayerDatas[UID].Account.Status.Level,
+                ExperiencePoint = PlayerDatas[UID].Account.Status.ExperiencePoint,
+                MaxExperiencePoint = PlayerDatas[UID].Account.Status.MaxExperiencePoint,
+
+                GameMoney = PlayerDatas[UID].Account.Money.GameMoney,
+                CashMoney = PlayerDatas[UID].Account.Money.CashMoney,
+
+                EquipProfile = PlayerDatas[UID].Account.Equip.EquipProfile,
+                EquipBoardSkin = PlayerDatas[UID].Account.Equip.EquipBoardSkin,
+                EquipStoneSkin = PlayerDatas[UID].Account.Equip.EquipStoneSkin,
+
+                RegisterDate = PlayerDatas[UID].Account.RegisterDate,
+                LastLoginDate = PlayerDatas[UID].Account.LastLoginDate,
+                LastPlayDate = PlayerDatas[UID].Account.LastPlayDate,
+
+                WinCount = PlayerDatas[UID].Account.GomokuBattleRecord.WinCount,
+                DrawCount = PlayerDatas[UID].Account.GomokuBattleRecord.LoseCount,
+                LoseCount = PlayerDatas[UID].Account.GomokuBattleRecord.LoseCount,
+                DisconnectCount = PlayerDatas[UID].Account.GomokuBattleRecord.DisconnectCount
+            };
+
             // 클라로 UID, AuthToken, AuthLevel을 보낼 필요는 없다.
-            resultData.Nickname = PlayerDatas[UID].Account.Nickname;
-            resultData.Rating = PlayerDatas[UID].Account.Status.Rating;
-
-			resultData.Level = PlayerDatas[UID].Account.Status.Level;
-            resultData.ExperiencePoint = PlayerDatas[UID].Account.Status.ExperiencePoint;
-            resultData.MaxExperiencePoint = PlayerDatas[UID].Account.Status.MaxExperiencePoint;
-
-            resultData.GameMoney = PlayerDatas[UID].Account.Money.GameMoney;
-            resultData.CashMoney = PlayerDatas[UID].Account.Money.CashMoney;
-
-            resultData.EquipProfile = PlayerDatas[UID].Account.Equip.EquipProfile;
-			resultData.EquipBoardSkin = PlayerDatas[UID].Account.Equip.EquipBoardSkin;
-			resultData.EquipStoneSkin = PlayerDatas[UID].Account.Equip.EquipStoneSkin;
-            
-            resultData.RegisterDate = PlayerDatas[UID].Account.RegisterDate;
-            resultData.LastLoginDate = PlayerDatas[UID].Account.LastLoginDate;
-            resultData.LastPlayDate = PlayerDatas[UID].Account.LastPlayDate;
-
-            resultData.WinCount = PlayerDatas[UID].Account.GomokuBattleRecord.WinCount;
-            resultData.DrawCount = PlayerDatas[UID].Account.GomokuBattleRecord.LoseCount;
-            resultData.LoseCount = PlayerDatas[UID].Account.GomokuBattleRecord.LoseCount;
-            resultData.DisconnectCount = PlayerDatas[UID].Account.GomokuBattleRecord.DisconnectCount;
-
             return resultData;
 		}
 
 		// 매칭 성공 시 상대방 데이터
         public OpponentPlayerData ComposeOpponentPlayerData(ulong otherPlayerUID)
 		{
-            OpponentPlayerData resultData = new OpponentPlayerData();
-            resultData.Nickname = PlayerDatas[otherPlayerUID].Account.Nickname;
-            resultData.EquipProfile = PlayerDatas[otherPlayerUID].Account.Equip.EquipProfile;
-            resultData.EquipStoneSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipStoneSkin;
-            resultData.EquipBoardSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipBoardSkin;
-            resultData.Rating = PlayerDatas[otherPlayerUID].Account.Status.Rating;
-            resultData.Level = PlayerDatas[otherPlayerUID].Account.Status.Level;
-            resultData.WinCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.WinCount;
-            resultData.DrawCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DrawCount;
-            resultData.LoseCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.LoseCount;
-            resultData.DisconnectCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DisconnectCount;
+            OpponentPlayerData resultData = new OpponentPlayerData()
+            {
+                Nickname = PlayerDatas[otherPlayerUID].Account.Nickname,
+                EquipProfile = PlayerDatas[otherPlayerUID].Account.Equip.EquipProfile,
+                EquipStoneSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipStoneSkin,
+                EquipBoardSkin = PlayerDatas[otherPlayerUID].Account.Equip.EquipBoardSkin,
+                Rating = PlayerDatas[otherPlayerUID].Account.Status.Rating,
+                Level = PlayerDatas[otherPlayerUID].Account.Status.Level,
+                WinCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.WinCount,
+                DrawCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DrawCount,
+                LoseCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.LoseCount,
+                DisconnectCount = PlayerDatas[otherPlayerUID].Account.GomokuBattleRecord.DisconnectCount
+            };
             return resultData;
         }
     }
