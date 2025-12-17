@@ -10,6 +10,8 @@ using TMPro;
 using Firebase.Auth;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
+using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 
 public class LoginWithGoogle : MonoBehaviour
@@ -125,7 +127,10 @@ public class LoginWithGoogle : MonoBehaviour
         }
         else
         {
-            Debug.Log("로그인 성공!");
+            PlayerDataFromWebServer.Instance.SetIDToken(deviceId);
+            PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(loginResult);
+            MoveToLobbyScene();
+            //Debug.Log("로그인 성공!");
         }
 #endif
     }
@@ -168,6 +173,21 @@ public class LoginWithGoogle : MonoBehaviour
         {
             disconnectWarning.SetActive(true);
         }
+        else
+        {
+            PlayerDataFromWebServer.Instance.SetIDToken(deviceId);
+            PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(registerResult);
+            MoveToLobbyScene();
+        }
+    }
+
+    private void MoveToLobbyScene()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        SceneManager.LoadScene("LobbyScene - Android");
+#elif UNITY_STANDALONE || UNITY_EDITOR
+        SceneManager.LoadScene("LobbyScene - PC");
+#endif
     }
 
     private string CheckImageUrl(string url)
