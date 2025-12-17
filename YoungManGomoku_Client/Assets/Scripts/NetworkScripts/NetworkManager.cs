@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json; // JsonUtil은 클라 안에서만 쓰세요, 통신에는 너무 구리다
+using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
-using Newtonsoft.Json; // JsonUtil은 클라 안에서만 쓰세요, 통신에는 너무 구리다
+using YoungManGomoku_Protocol.ServerToClient;
 
 // OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
@@ -31,8 +33,8 @@ class BypassCertificate : CertificateHandler
 // 웹서버라서 매 요청마다 토큰이 필요함
 public class NetworkManager : MonoBehaviour
 {
-	// 나중에 바꿀 예정
-	[SerializeField] private const string baseURL = "https://localhost:5001";
+    // 나중에 바꿀 예정
+    [SerializeField] private const string baseURL = "https://192.168.200.146:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -95,8 +97,8 @@ public class NetworkManager : MonoBehaviour
 	/// <returns>
 	/// null : 서버 터짐
 	/// </returns>
-	public async Awaitable<PlayerData> RegisterMatchingRequest(string idToken, int timeOutSeconds = 0)
-        => await RequestPostServer<PlayerData>("Matching/Register", $"\"{idToken}\"", timeOutSeconds, "Match Register");
+	public async Awaitable<SC_MatchResultDTO> RegisterMatchingRequest(string idToken, int timeOutSeconds = 0)
+        => await RequestPostServer<SC_MatchResultDTO>("Matching/Register", $"\"{idToken}\"", timeOutSeconds, "Match Register");
 
 
 	/// <summary>
@@ -110,8 +112,10 @@ public class NetworkManager : MonoBehaviour
 	/// <returns>
 	/// null : 서버 터짐
 	/// </returns>
-	public async Awaitable<PlayerData> CancelMatchingRequest(string idToken, int timeOutSeconds = 0)
-        => await RequestPostServer<PlayerData>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
+	public async Awaitable CancelMatchingRequest(string idToken, int timeOutSeconds = 0)
+        => await RequestPostServer<AsyncVoidMethodBuilder>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
+
+
 
     // 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
     public async Awaitable<RecvData> RequestPing<RecvData>(int timeOutSeconds = 10, string successAnnounce = "=== Ping Pong Success! ===")
