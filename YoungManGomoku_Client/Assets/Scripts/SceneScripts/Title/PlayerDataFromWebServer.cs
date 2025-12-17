@@ -1,5 +1,6 @@
 using UnityEngine;
 using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ServerToClient;
 
 public class PlayerDataFromWebServer : MonoBehaviour
 {
@@ -7,7 +8,8 @@ public class PlayerDataFromWebServer : MonoBehaviour
 
     public string IDToken { get; set; }
     public PlayerData PlayerData { get; set; }
-    public OpponentPlayerData OpponentPlayerData { get; set; }
+    
+    public SC_MatchResultDTO MatchResultDTO { get; set; }
 
     public void Awake()
     {
@@ -28,6 +30,6 @@ public class PlayerDataFromWebServer : MonoBehaviour
     public void CompleteLoginFromWebServer(PlayerData playerData)
         => PlayerData = playerData;
 
-    public void CompleteMatchFromWebServer(OpponentPlayerData opponentPlayerData)
-        => OpponentPlayerData = opponentPlayerData;
+    public void CompleteMatchFromWebServer(SC_MatchResultDTO matchResultDTO)
+        => MatchResultDTO = matchResultDTO;
 }

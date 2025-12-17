@@ -29,6 +29,7 @@ public class LobbyUIController : MonoBehaviour
         }
         
         playerData =  PlayerDataFromWebServer.Instance.PlayerData;
+        
         playerNicknameInMenu.text = playerData.Nickname;
         playerStatsInMenu.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
 
