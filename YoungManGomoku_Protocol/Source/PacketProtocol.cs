@@ -121,6 +121,13 @@ namespace YoungManGomoku_Protocol.ClientToServer
         public string IdToken { get; set; }
 		public bool IsGuest { get; set; }
 	}
+
+    public class CS_PlaceStoneDTO
+    {
+        public string IDToken { get; set; }
+        public byte X { get; set; }
+        public byte Y { get; set; }
+    }
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
