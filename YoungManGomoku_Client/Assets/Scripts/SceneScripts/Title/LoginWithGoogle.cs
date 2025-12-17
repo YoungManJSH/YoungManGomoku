@@ -38,10 +38,13 @@ public class LoginWithGoogle : MonoBehaviour
 
     private string imageUrl;
     private bool isGoogleSignInInitialized;
+    private bool isLoginProcessing;
+    private bool isRegisterProcessing;
 
     private void Awake()
     {
         isGoogleSignInInitialized = false;
+        isLoginProcessing = false;
     }
 
     private void Start()
@@ -117,10 +120,17 @@ public class LoginWithGoogle : MonoBehaviour
 #elif UNITY_STANDALONE || UNITY_EDITOR
         // PC로 접속하면, 게스트로 회원가입, 로그인을 진행함
         // 유니티에서 제공하는 OS별 개별 데이터를 키로 사용하여 DB에 로그인하고 회원가입하도록 동작을 만듦.
+        if (isLoginProcessing == true)
+        {
+            return;
+        }
+        
         string deviceId = SystemInfo.deviceUniqueIdentifier;
 
+        isLoginProcessing = true;
         var loginResult = await GetComponent<NetworkManager>().LoginRequest(deviceId);
-
+        isLoginProcessing = false;
+        
         if (loginResult == null)
         {
             PCRegisterUI.SetActive(true);
@@ -158,6 +168,12 @@ public class LoginWithGoogle : MonoBehaviour
             return;
         }
 
+        // 등록이 진행중인지 체크
+        if (isRegisterProcessing == true)
+        {
+            return;
+        }
+
         // 해피 패스
         string deviceId = SystemInfo.deviceUniqueIdentifier;
         var accountRegisterDTO = new CS_AccountRegisterDTO()
@@ -167,8 +183,10 @@ public class LoginWithGoogle : MonoBehaviour
             UserNickname = userNickname,
         };
         
+        isRegisterProcessing = true;
         var registerResult = await GetComponent<NetworkManager>().RegisterAccountRequest(accountRegisterDTO);
-
+        isRegisterProcessing = false;
+        
         if (registerResult == null)
         {
             disconnectWarning.SetActive(true);
@@ -188,15 +206,5 @@ public class LoginWithGoogle : MonoBehaviour
 #elif UNITY_STANDALONE || UNITY_EDITOR
         SceneManager.LoadScene("LobbyScene - PC");
 #endif
-    }
-
-    private string CheckImageUrl(string url)
-    {
-        if (!string.IsNullOrEmpty(url))
-        {
-            return url;
-        }
-
-        return imageUrl;
     }
 }
