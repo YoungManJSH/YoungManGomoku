@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
+using Newtonsoft.Json; // JsonUtil은 클라 안에서만 쓰세요, 통신에는 너무 구리다
 
 // OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
@@ -21,7 +22,7 @@ public struct RequestError
 public class NetworkManager : MonoBehaviour
 {
 	// 나중에 바꿀 예정
-	[SerializeField] private const string baseURL = "http://localhost:44331";
+	[SerializeField] private const string baseURL = "https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -54,8 +55,9 @@ public class NetworkManager : MonoBehaviour
 			Debug.Log($"CS_AccountRegisterDTO : Unknown User!");
 			return null;
 		}
-        // Debug.Log($"Account Register User DTO : {JsonUtility.ToJson(registerUserDTO)}");
-        return await RequestPostServer<PlayerData>("Account/Register", JsonUtility.ToJson(registerUserDTO), timeOutSeconds, "Account Register Success");
+		// Debug.Log($"Account Register User DTO : {JsonUtility.ToJson(registerUserDTO)}");
+		// Debug.Log($"Account Register User DTO : {JsonConvert.SerializeObject(registerUserDTO)}");
+		return await RequestPostServer<PlayerData>("Account/Register", JsonConvert.SerializeObject(registerUserDTO), timeOutSeconds, "Account Register Success");
     }
 
 	/// <summary>
@@ -114,12 +116,11 @@ public class NetworkManager : MonoBehaviour
     private async Awaitable<RecvData> RequestServer<RecvData>(string serverURL, string method, string sendJsonString, int timeOutSeconds = 0, string successAnnounce = "=== Request Success! ===")
 	{
         UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/{serverURL}", method);
-
-        //Debug.Log($"Request URL: {baseURL}/{serverURL}\nSend Json Data : {sendJsonString}");
-
+    
         if (string.IsNullOrEmpty(sendJsonString) == false && method != "GET")
         {
-            uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(sendJsonString));
+			Debug.Log($"Request URL: {baseURL}/{serverURL}\nSend Json Data : {sendJsonString}");
+			uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(sendJsonString));
         }
         else
         {
@@ -140,7 +141,7 @@ public class NetworkManager : MonoBehaviour
         {
             Debug.Log($"{uwr.result} URL: {baseURL}/{serverURL}\n{sendJsonString}");
 
-            Debug.LogError($"Error: {uwr.error}\nCode: {uwr.responseCode}\nBody: {uwr.downloadHandler.text}");
+            Debug.LogError($"Error: {uwr.error} / Code: {uwr.responseCode}\nBody: {uwr.downloadHandler.text}");
 
             OnRequestFailed?.Invoke(new RequestError
             {
@@ -153,11 +154,11 @@ public class NetworkManager : MonoBehaviour
             return default(RecvData);
         }
 
-
-        string responseJson = uwr.downloadHandler.text;
+		string responseJson = uwr.downloadHandler.text;
         Debug.Log($"{successAnnounce}\n{responseJson}");
 
-        // JsonUtility는 Dictionary와 Property 인식이 불가능하니 주의
-        return JsonUtility.FromJson<RecvData>(responseJson);
+		return JsonConvert.DeserializeObject<RecvData>(responseJson);
+		// JsonUtility는 Dictionary와 Property 인식이 불가능하니 주의
+		//return JsonUtility.FromJson<RecvData>(responseJson);
     }
 }

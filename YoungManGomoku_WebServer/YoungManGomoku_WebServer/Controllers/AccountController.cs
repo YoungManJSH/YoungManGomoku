@@ -37,15 +37,19 @@ namespace YoungManGomoku_WebServer.Controllers
 		[HttpPost("Register")]
         public IActionResult RegisterAccountData([FromBody] CS_AccountRegisterDTO registerUserData)
 		{
-            // 이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
-            // 수정/삭제 시 Tracker에 등록된 엔티티 캐싱
-            // 앞으로 수정/삭제할 의도가 아니라 테이블 단순 조회 시 AsNoTracking()으로 최적화
-            // 변경 사항을 SaveChanges에서 미반영하고 조회 속도가 상승
-            if (_context.PlayerAccountTable.AsNoTracking().Any(x => x.AuthToken == registerUserData.IdToken))
+			_logger.LogInformation($"ID Token : {registerUserData.IdToken}\nName : {registerUserData.UserNickname} / Guest : {registerUserData.IsGuest}\n");
+
+			/*
+            이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
+            수정/삭제 시 Tracker에 등록된 엔티티 캐싱
+            앞으로 수정/삭제할 의도가 아니라 테이블 단순 조회 시 AsNoTracking()으로 최적화
+            변경 사항을 SaveChanges에서 미반영하고 조회 속도가 상승
+            */
+			if (_context.PlayerAccountTable.AsNoTracking().Any(x => x.AuthToken == registerUserData.IdToken))
                 return Conflict("Already registered");
 
-            // Create Account
-            PlayerAccount playerAccount = new PlayerAccount(_serverManager.GenerateUID64(), registerUserData.IdToken, registerUserData.UserNickname);
+			// Create Account
+			PlayerAccount playerAccount = new PlayerAccount(_serverManager.GenerateUID64(), registerUserData.IdToken, registerUserData.UserNickname);
             playerAccount.AuthToken = registerUserData.IdToken;
 
             // Database Insert
@@ -75,11 +79,11 @@ namespace YoungManGomoku_WebServer.Controllers
             // DB Select Where By Token
             PlayerAccount findAccount = _context.PlayerAccountTable.Where(x => x.AuthToken == idToken).FirstOrDefault();
 
-            _logger.LogDebug("DB 토큰으로 계정 찾기 시도");
+            _logger.LogDebug($"DB Token By Find ID Token {idToken}");
 
             if (findAccount == null) return Conflict("Can't Find ID Token. Login Failed!");
 
-            _logger.LogDebug("로그인 계정 찾기 성공");
+            _logger.LogDebug($"Success - Find Login Account");
 
             // DB Column Update
             findAccount.LastLoginDate = DateTime.Now;
