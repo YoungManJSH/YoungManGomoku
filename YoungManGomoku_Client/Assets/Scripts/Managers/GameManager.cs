@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using YoungManGomoku_Protocol;
 
@@ -24,6 +25,7 @@ public class GameManager : MonoBehaviour
     private UserTimer _nowPlayerTimer;
     private EventManager _eventManager;
     private AudioSource _audioSource;
+    private long _lastTime;
 
     // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
     // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
@@ -90,12 +92,13 @@ public class GameManager : MonoBehaviour
         stoneMoveController.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTimer = isBlackTurn == IsPlayerBlack ? PlayerTimer : OppositeTimer;
+            _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             
             /* TODO: 서버에서 받은 타이머 정보로 양쪽 ReviseTimer 실행하기
              내 돌 착수 정보 전송 시점에 OnStoneMove 이벤트를 바로 발생시켜서 내 시간이 안 가도록 해야 함*/
             // 임시 코드, 초읽기 시간 복구용
             PlayerTimer.ReviseTimer(PlayerTimer.MainTime, PlayerTimer.ByoyomiCount);
-            OppositeTimer.ReviseTimer(OppositeTimer.MainTime, OppositeTimer.ByoyomiCount);
+            OppositeTimer.ReviseTimer(OppositeTimer.MainTime, Math.Max(OppositeTimer.ByoyomiCount, 1));
         };
         #endregion
     }
@@ -103,11 +106,12 @@ public class GameManager : MonoBehaviour
     private void OnDestroy() => Instance = null;
 
     private void Start() => enabled = false;
-
+    
     private void Update()
     {
-        /*TODO: 기기 시간 참조로 바꿔놓기*/
-        _nowPlayerTimer.Progress(Time.deltaTime);
+        long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _nowPlayerTimer.Progress((nowTime - _lastTime) / 1000f);
+        _lastTime = nowTime;
     }
 
     // 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 
