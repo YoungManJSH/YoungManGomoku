@@ -31,7 +31,7 @@ namespace YoungManGomoku_WebServer.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterMatching([FromBody] string idToken, CancellationToken ct)
         {
-            _logger.LogInformation($"Match Register By [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}");
+            _logger.LogTrace($"[Controller]Match Register By [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}");
             // _serverManager.PlayerDatas
             MatchResult mr = await _matchingManager.EnqueueAsync(idToken, ct);
             SC_MatchResultDTO scDTO = new SC_MatchResultDTO(
@@ -40,7 +40,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 mr.Success,
                 new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount:3, byoyomiSeconds:30f, byoyomiPurchaseAmount: 2)
                 );
-            _logger.LogInformation($"Match Register Response : [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}\nVerSus\n[{mr.OpponentID}]{_serverManager.GetPlayerSession(mr.OpponentID).Account.Nickname}\n{mr.Message},{mr.Success}");
+            _logger.LogTrace($"[Controller]Match Register Response : [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}\nVerSus\n[{mr.OpponentID}]{_serverManager.GetPlayerSession(mr.OpponentID).Account.Nickname}\n{mr.Message},{mr.Success}");
 
 
             return Ok(scDTO);
@@ -49,7 +49,7 @@ namespace YoungManGomoku_WebServer.Controllers
         [HttpPost("Cancel")]
         public IActionResult CancelMatching([FromBody] string idToken)
         {
-            _logger.LogInformation($"Match Cancel Request By {_serverManager.GetPlayerUID(idToken)}");
+            _logger.LogTrace($"[Controller]Match Cancel Request By {_serverManager.GetPlayerUID(idToken)}");
             _matchingManager.Cancel(idToken);
             return Ok();
         }
