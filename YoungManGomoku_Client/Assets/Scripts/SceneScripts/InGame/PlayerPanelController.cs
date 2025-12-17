@@ -192,7 +192,8 @@ public class PlayerPanelController : MonoBehaviour
     {
         enabled = isBlackTurn == _isThisBlack;
         
-        /* TODO: 추후 서버로부터 정정된 타이머 적용 로직 추가 */
+        /* TODO: 추후 서버로부터 정정된 타이머 적용 로직 추가
+         isLastByoyomi 상태에서 2회로 정정될 경우 해제 로직 빼먹지 말기!*/
 
         if (enabled)
         {
@@ -261,8 +262,11 @@ public class PlayerPanelController : MonoBehaviour
             OnLastByoyomi?.Invoke();
             _isLastByoyomi = true;
             byoyomiCount.font = glowFont;
-            StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
-            if (isPlayer) _audioSource.PlayOneShot(byoyomiWarningSound);
+            if (isPlayer)
+            {
+                StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
+                _audioSource.PlayOneShot(byoyomiWarningSound);
+            }
         }
         else if (isPlayer)
         {

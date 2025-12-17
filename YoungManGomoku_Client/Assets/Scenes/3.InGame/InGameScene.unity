@@ -2615,9 +2615,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 663775704}
+  - component: {fileID: 663775707}
   - component: {fileID: 663775705}
   - component: {fileID: 663775706}
-  - component: {fileID: 663775707}
+  - component: {fileID: 663775708}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2766,6 +2767,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &663775708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663775703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 859d3f11af3e1754f96c2862a619fef8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkManager
 --- !u!1 &666724553
 GameObject:
   m_ObjectHideFlags: 0

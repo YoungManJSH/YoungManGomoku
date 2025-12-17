@@ -10,6 +10,7 @@ public class UserTimer
     public float NowByoyomiSeconds { get; private set; }
 
     public event Action OnTimeOut;
+    private bool _isTimeOut;
 
     public UserTimer(float initMainTime, int initByoyomiCount, float byoyomiSeconds)
     {
@@ -17,6 +18,7 @@ public class UserTimer
         ByoyomiCount = initByoyomiCount;
         initByoyomiSeconds = byoyomiSeconds;
         NowByoyomiSeconds = byoyomiSeconds;
+        _isTimeOut = false;
     }
 
     /// <summary> 경과된 시간(deltaTime)에 따라 타이머 갱신 </summary>
@@ -28,6 +30,8 @@ public class UserTimer
         
         // 라이브 버전에서 예외처리는 생략함
         // deltaTime이 너무 커서 타이머가 꼬이더라도 접속끊김패 처리가 될 것이기 때문
+
+        if (_isTimeOut) return;
         
         if (MainTime > deltaTime)
         {
@@ -44,6 +48,7 @@ public class UserTimer
             if (ByoyomiCount == 0)
             {
                 OnTimeOut?.Invoke();
+                _isTimeOut = true;
                 NowByoyomiSeconds = 0f;
                 return;
             }
@@ -57,6 +62,7 @@ public class UserTimer
     {
         MainTime = mainTime;
         ByoyomiCount = byoyomiCount;
+        NowByoyomiSeconds = initByoyomiSeconds;
     }
 
     public void ByoyomiPurchased(int amount)
