@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public static class JudgeMove
+﻿public static class JudgeMove
 {
     /// <summary> 3의 종류: Solid, Ic(Indirect Closed), Broken(틈 3) </summary>
     private enum CaseOf3
@@ -166,7 +164,6 @@ public static class JudgeMove
                 coord.col = col;
                 return true;
             default:
-                Debug.LogError($"Unknown dir : {dir}");
                 return false;
         }
     }
@@ -182,9 +179,6 @@ public static class JudgeMove
     /// <returns>[row, col] 위치를 포함해서 연속된 돌의 개수</returns>
     private static int LineCount(Board board, int row, int col, Stone stone, LineDir dir)
     {
-        Debug.Assert(stone != Stone.Empty);
-        Debug.Assert(0 <= dir && dir < LineDir.Max);
-
         var startCoord = (row, col);
         var endCoord = (row, col);
 
@@ -242,8 +236,6 @@ public static class JudgeMove
     /// </returns>
     private static bool Is44(Board board, int row, int col, LineDir passing)
     {
-        Debug.Assert(0 <= passing && passing < LineDir.Max);
-
         for (LineDir dir = 0; dir < LineDir.Max; ++dir)
         {
             if (dir == passing) continue;
@@ -259,8 +251,6 @@ public static class JudgeMove
     /// <returns> 0 or 1 or 2 </returns>
     private static int Count4(Board board, int row, int col, LineDir dir)
     {
-        Debug.Assert(0 <= dir && dir < LineDir.Max);
-
         var startCoord = (row, col);
         var endCoord = (row, col);
 
@@ -285,8 +275,7 @@ public static class JudgeMove
         int lineCount = dir == LineDir.Vertical
             ? endCoord.row - startCoord.row + 1
             : endCoord.col - startCoord.col + 1;
-        Debug.Assert(0 < lineCount && lineCount < 5);
-
+        
         if (lineCount == 4)
         {
             // 둘 중 한쪽 이상 열려 있는지
@@ -425,8 +414,6 @@ public static class JudgeMove
     /// <param name="passing">열린 4가 이어지는 방향(해당 방향은 탐색 제외)</param>
     private static bool IsForbidden(Board board, int row, int col, LineDir passing)
     {
-        Debug.Assert(0 <= passing && passing < LineDir.Max);
-
         JudgeType omokJudge = JudgeBlackOmok(board, row, col, passing);
         if (omokJudge == JudgeType.Omok) return false;
         return omokJudge == JudgeType.Forbidden || Is44(board, row, col, passing) || Is33(board, row, col, passing);
@@ -442,9 +429,6 @@ public static class JudgeMove
     /// <param name="dir">만들어지는 3의 방향</param>
     private static Open4Place SearchOpen4Place(Board board, int row, int col, CaseOf3 caseOf3, LineDir dir)
     {
-        Debug.Assert(caseOf3 != CaseOf3.Not);
-        Debug.Assert(0 <= dir && dir < LineDir.Max);
-
         Open4Place open4Place = new Open4Place(dir, caseOf3);
         var coord = (row, col);
 

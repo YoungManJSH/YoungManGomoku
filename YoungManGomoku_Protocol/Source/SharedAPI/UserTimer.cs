@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 public class UserTimer : IComparable<UserTimer>
 {
@@ -35,10 +34,8 @@ public class UserTimer : IComparable<UserTimer>
     /// <param name="nowTime"> 착수 정보를 받은 시각 </param>
     public void ProgressExcludingTol(long startTime, long nowTime)
     {
-        Debug.Assert(startTime <= nowTime);
+        float interval = Math.Max(nowTime - startTime - TOLERANCE, 0f) / 1000f;
         
-        float interval = Mathf.Max(nowTime - startTime - TOLERANCE, 0f) / 1000f;
-
         if (MainTime > interval)
         {
             MainTime -= interval;
@@ -49,7 +46,7 @@ public class UserTimer : IComparable<UserTimer>
         interval -= MainTime;
         MainTime = 0f;
 
-        ByoyomiCount -= Mathf.FloorToInt(interval / initByoyomiSeconds);
+        ByoyomiCount -= (int)Math.Floor(interval / initByoyomiSeconds);
     }
 
     /// <summary> 경과된 시간(deltaTime)에 따라 타이머 갱신 </summary>
@@ -57,7 +54,6 @@ public class UserTimer : IComparable<UserTimer>
     {
         // 서버와 클라 사이에 접속끊김을 판정하는 HeartBeat 간격은 초읽기 시간 이하임을 전제함.
         // 즉, 초읽기 시간을 초과하는 deltaTime은 입력될 수 없음
-        Debug.Assert(deltaTime <= initByoyomiSeconds);
         
         // 라이브 버전에서 예외처리는 생략함
         // deltaTime이 너무 커서 타이머가 꼬이더라도 접속끊김패 처리가 될 것이기 때문
