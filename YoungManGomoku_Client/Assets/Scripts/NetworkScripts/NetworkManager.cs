@@ -123,8 +123,8 @@ public class NetworkManager : MonoBehaviour
 	/// <returns>
 	/// null : 서버 터짐
 	/// </returns>
-	public async Awaitable CancelMatchingRequest(string idToken, int timeOutSeconds = 0)
-        => await RequestPostServer<AsyncVoidMethodBuilder>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
+	public async Awaitable<SC_ResponseStringDTO> CancelMatchingRequest(string idToken, int timeOutSeconds = 0)
+        => await RequestPostServer<SC_ResponseStringDTO>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
 
 
 
@@ -187,7 +187,16 @@ public class NetworkManager : MonoBehaviour
 		string responseJson = uwr.downloadHandler.text;
         Debug.Log($"{successAnnounce}\n{responseJson}");
 
-		return JsonConvert.DeserializeObject<RecvData>(responseJson);
+        // Server에서 Ok() 때리고 빈 응답만 보내져 왔을 때
+        // Server 작업 자체는 성공해서 반환해줬지만 온 데이터가 비어있는 상황
+        // 이러면 성공 실패 여부를 Http Code로만 판단해야 한다
+        // 어지간해선 안 들어 오는 쪽이 좋다.
+        if (string.IsNullOrEmpty(responseJson))
+        {
+            return default(RecvData);
+        }
+
+        return JsonConvert.DeserializeObject<RecvData>(responseJson);
 		// JsonUtility는 Dictionary와 Property 인식이 불가능하니 주의
 		//return JsonUtility.FromJson<RecvData>(responseJson);
     }
