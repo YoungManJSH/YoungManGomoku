@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Policy;
+//using System.Security.Policy;
 using YoungManGomoku_Protocol.Source.TypeEnum;
-using YoungManGomoku_WebServer.SingletoneManager;
+//using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {

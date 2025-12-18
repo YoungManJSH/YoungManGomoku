@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Principal;
+// using System.Security.Principal;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {
