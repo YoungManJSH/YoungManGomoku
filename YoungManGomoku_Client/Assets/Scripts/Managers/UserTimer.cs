@@ -1,14 +1,16 @@
 using System;
 using UnityEngine;
 
-public class UserTimer
+public class UserTimer : IComparable<UserTimer>
 {
+    private const int TOLERANCE = 400; // ms 단위
+    
     public readonly float initByoyomiSeconds; 
     
     public float MainTime { get; private set; } // 처음에 누적하여 소모되는 자유시간
     public int ByoyomiCount { get; private set; } // 남아있는 초읽기 개수
     public float NowByoyomiSeconds { get; private set; }
-
+    
     public event Action OnTimeOut;
     private bool _isTimeOut;
 
@@ -19,6 +21,35 @@ public class UserTimer
         initByoyomiSeconds = byoyomiSeconds;
         NowByoyomiSeconds = byoyomiSeconds;
         _isTimeOut = false;
+    }
+
+    /// <summary> [서버용] startTime 기준으로 시간패 판정을 할 시각 계산 </summary>
+    /// <param name="startTime"> 턴을 시작한 시각 </param>
+    /// <return> 시간패가 되는 시각 (허용 오차 합산된 값) </return>
+    public long DeadLine(long startTime)
+        => startTime + TOLERANCE +
+           (long)((MainTime + ByoyomiCount * initByoyomiSeconds) * 1000f);
+    
+    /// <summary> [서버용] 허용 오차(400ms)를 제외하고 타이머 갱신 </summary>
+    /// <param name="startTime"> 턴을 시작했던 시각 </param>
+    /// <param name="nowTime"> 착수 정보를 받은 시각 </param>
+    public void ProgressExcludingTol(long startTime, long nowTime)
+    {
+        Debug.Assert(startTime <= nowTime);
+        
+        float interval = Mathf.Max(nowTime - startTime - TOLERANCE, 0f) / 1000f;
+
+        if (MainTime > interval)
+        {
+            MainTime -= interval;
+            return;
+        }
+
+        // 남아있는 MainTime을 제외한 값으로 초읽기 계산 
+        interval -= MainTime;
+        MainTime = 0f;
+
+        ByoyomiCount -= Mathf.FloorToInt(interval / initByoyomiSeconds);
     }
 
     /// <summary> 경과된 시간(deltaTime)에 따라 타이머 갱신 </summary>
@@ -57,7 +88,7 @@ public class UserTimer
         }
     }
 
-    /// <summary> 착수 시 서버에서 받은 정보로 타이머 수정 </summary>
+    /// <summary> [서버,클라이언트] 타이머 동기화 함수 </summary>
     public void ReviseTimer(float mainTime, int byoyomiCount)
     {
         MainTime = mainTime;
@@ -71,4 +102,33 @@ public class UserTimer
         ByoyomiCount = amount + 1;
         NowByoyomiSeconds = initByoyomiSeconds;
     }
+
+    public int CompareTo(UserTimer other)
+    {
+        if (ReferenceEquals(other, null)) return 1;
+
+        // 내 자유시간 남아있으면 자유시간으로 비교
+        if (MainTime > 0f) return MainTime.CompareTo(other.MainTime);
+        
+        // other만 자유시간이 있는 경우 내가 더 적음
+        if (other.MainTime > 0f) return -1;
+
+        // 둘 다 자유시간 없으면 남은 초읽기 개수로 비교
+        return ByoyomiCount.CompareTo(other.ByoyomiCount);
+    }
+
+    // Comparer<UserTimer>.Default 대신 이쪽으로 구현
+    // Why? 우리 프로그램에서 null과 비교하는 상황이 나오면 명백한 코딩 실수
+    // 따라서 터뜨리는 게 바람직하므로 CompareTo로 직접 구현
+    public static bool operator <(UserTimer a, UserTimer b)
+        => a.CompareTo(b) < 0;
+    
+    public static bool operator >(UserTimer a, UserTimer b)
+        => a.CompareTo(b) > 0;
+    
+    public static bool operator <=(UserTimer a, UserTimer b)
+        => a.CompareTo(b) <= 0;
+
+    public static bool operator >=(UserTimer a, UserTimer b)
+        => a.CompareTo(b) >= 0;
 }

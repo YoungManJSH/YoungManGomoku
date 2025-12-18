@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,7 +25,8 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField, Tooltip("플레이어가 백일 경우 교체할 돌 스프라이트")]
     private Sprite otherColorStone;
     [SerializeField] private bool isPlayer;
-    
+
+    private const float TOLERANCE = 0.7f;
     private static readonly Color Translucent = new (1f, 1f, 1f, 0.3f);
 
     public event Action OnLastByoyomi;
@@ -40,6 +42,7 @@ public class PlayerPanelController : MonoBehaviour
     private bool _isByoyomi;
     private bool _isLastByoyomi;
     private bool _isGameEnd;
+    private CancellationTokenSource _byoyomiUseCts;
 
     private void Awake()
     {
@@ -96,6 +99,7 @@ public class PlayerPanelController : MonoBehaviour
         {
             _isGameEnd = true;
             enabled = false;
+            CancelByoyomiUse();
         };
             
         if (isPlayer)
@@ -142,7 +146,9 @@ public class PlayerPanelController : MonoBehaviour
         
         if (_myTimer.ByoyomiCount < _prevByoyomiCount)
         {
-            OnUseByoyomi(_myTimer.ByoyomiCount);
+            CancelByoyomiUse();
+            _byoyomiUseCts = new CancellationTokenSource();
+            OnUseByoyomi(_myTimer.ByoyomiCount, _byoyomiUseCts.Token).Cancel();
         }
         
         if (remainTime == _prevTime) return;
@@ -169,6 +175,16 @@ public class PlayerPanelController : MonoBehaviour
         }
         #endregion
         #endregion
+    }
+
+    public void CancelByoyomiUse()
+    {
+        if (_byoyomiUseCts != null)
+        {
+            _byoyomiUseCts.Cancel();
+            _byoyomiUseCts.Dispose();
+            _byoyomiUseCts = null;
+        }
     }
 
     private void InputUserInform(string nickname, uint win, uint draw, uint lose, float rating)
@@ -256,31 +272,40 @@ public class PlayerPanelController : MonoBehaviour
         }
     }
 
-    private void OnUseByoyomi(int leftCount)
+    private async Awaitable OnUseByoyomi(int leftCount, CancellationToken cts)
     {
         StopGlowEffect();
         _prevByoyomiCount = leftCount;
-
         if (leftCount == 0) return;
         
-        byoyomiTimer.font = _originFont;
-        byoyomiCount.text = $"{leftCount}회";
-        
-        if (leftCount == 1)
+        try
         {
-            OnLastByoyomi?.Invoke();
-            _isLastByoyomi = true;
-            byoyomiCount.font = glowFont;
-            if (isPlayer)
+            byoyomiTimer.font = _originFont;
+            
+            if (isPlayer is false)
             {
-                StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
-                _audioSource.PlayOneShot(byoyomiWarningSound);
+                await Awaitable.WaitForSecondsAsync(TOLERANCE, cts);
+            }
+
+            byoyomiCount.text = $"{leftCount}회";
+
+            if (leftCount == 1)
+            {
+                OnLastByoyomi?.Invoke();
+                _isLastByoyomi = true;
+                byoyomiCount.font = glowFont;
+                if (isPlayer)
+                {
+                    StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
+                    _audioSource.PlayOneShot(byoyomiWarningSound);
+                }
+            }
+            else if (isPlayer)
+            {
+                _audioSource.PlayOneShot(useByoyomiSound);
             }
         }
-        else if (isPlayer)
-        {
-            _audioSource.PlayOneShot(useByoyomiSound);
-        }
+        catch (OperationCanceledException) { }
     }
 
     private void OnByoyomiPurchase(int amount)
