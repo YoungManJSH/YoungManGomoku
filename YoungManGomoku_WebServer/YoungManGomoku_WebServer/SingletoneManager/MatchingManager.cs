@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,11 +55,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
                 
                 if (_waitingMap.Count >= MAX_WAITING)
                 {
-                    _logger.LogDebug($"Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
+                    _logger.LogDebug($"[{DateTime.UtcNow}] Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
                     return Task.FromResult(new MatchResult
                     {
                         Success = false,
@@ -70,7 +69,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (_waitingMap.ContainsKey(playerIDToken))
                 {
-                    _logger.LogDebug($"Already Matching: {_waitingMap[playerIDToken]}");
+                    _logger.LogDebug($"[{DateTime.UtcNow}] Already Matching: {_waitingMap[playerIDToken]}");
                     //throw new InvalidOperationException("Already matching");
                     return Task.FromResult(new MatchResult
                     {
@@ -107,18 +106,18 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"Matching Cancel: {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Cancel: {playerIDToken}");
                 if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer wp) == false)
                     return;
-                _logger.LogTrace($"Matching Cancel - Has WaitingMap {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Cancel - Has WaitingMap {playerIDToken}");
                 wp.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = false,
-                    Message = "Cancelled"
+                    Message = "Matching Register Cancelled"
                 });
-                _logger.LogTrace($"Matching Cancel - Match Result Setting Success");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Match Result Setting Success");
                 _waitingMap.Remove(playerIDToken);
-                _logger.LogTrace($"Matching Cancel - Remove WatingMap");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Remove WatingMap");
                 // Queue에서 제거는 lazy (매칭 시 스킵)
             }
         }
@@ -126,18 +125,18 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         // 항상 lock 안에서 실행되어야 하는 함수
         private void TryMatch()
         {
-            _logger.LogTrace($"Matching Try");
+            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try");
             // 아직 레이팅이고 뭐고 신경쓰기 싫다는 코드
             // 동시다발적 접속이 있으면 3 이상일 수 있다
             while (_matchingQueue.Count >= 2)
             {
-                _logger.LogTrace($"Matching Game : {_matchingQueue.Count}");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Game : {_matchingQueue.Count}");
                 WaitingPlayer p1 = _matchingQueue.Dequeue();
 
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
 
-                _logger.LogTrace($"Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
 
                 WaitingPlayer p2 = null;
                 while (_matchingQueue.Count > 0)
@@ -145,12 +144,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
                     if (p1.PlayerIdToken == candidate.PlayerIdToken)
                     {
-                        _logger.LogWarning($"Matching Queue에 자기 자신과 매칭됨 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogWarning($"[{DateTime.UtcNow}] Matching Queue에 자기 자신과 매칭됨 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
                         continue;
                     }
                     if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
-                        _logger.LogTrace($"Matching - discover other player [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogTrace($"[{DateTime.UtcNow}] Matching - discover other player [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
                         p2 = candidate;
                         break;
                     }
@@ -158,7 +157,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (p2 == null)
                 {
-                    _logger.LogTrace($"Matching Fail - Matching Opponent is not Exist");
+                    _logger.LogTrace($"[{DateTime.UtcNow}] Matching Fail - Matching Opponent is not Exist");
                     _matchingQueue.Enqueue(p1);
                     break; // 매칭 가능한 상대 없음
                 }
@@ -166,7 +165,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
-                _logger.LogTrace($"Matching Success : Room ID {roomID}");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Success : Room ID {roomID}");
                 p1.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = true,
@@ -184,7 +183,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 _waitingMap.Remove(p1.PlayerIdToken);
                 _waitingMap.Remove(p2.PlayerIdToken);
 
-                _logger.LogTrace($"Try Match : Create Room");
+                _logger.LogTrace($"[{DateTime.UtcNow}] Try Match : Create Room");
                 _gameRoomManager.CreateRoom(
                     roomID,
                     _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
@@ -192,7 +191,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 				);
 			}
 
-            _logger.LogTrace($"Matching End");
+            _logger.LogTrace($"[{DateTime.UtcNow}] Matching End");
         }
     }
 }
