@@ -264,4 +264,4 @@ yarn-error.log*
 
 
 # Protocol Ignores
-*.meta
+**/*.meta
