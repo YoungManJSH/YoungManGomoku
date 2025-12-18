@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
-using YoungManGomoku_Protocol;
 
 public class Board
 {
@@ -39,7 +37,7 @@ public class Board
     public event Action BlackWin;
     public event Action WhiteWin;
     public event Action OverMaxTurn;
-    public event Func<Awaitable> OnBlackUnmovable;
+    public event Action OnBlackUnmovable;
     
     public Stone this[int row, int col] => _nowBoard[row, col];
 
@@ -57,7 +55,6 @@ public class Board
             col < 0 || MaxCoord < col ||
             _nowBoard[row, col] != Stone.Empty)
         {
-            Debug.LogError("잘못된 Board 좌표 입력");
             return false;
         }
         
@@ -114,28 +111,25 @@ public class Board
 
         if (isMovable is false)
         {
-            InvokeOnBlackUnmovable().Cancel();
+            InvokeOnBlackUnmovable();
         }
     }
 
-    private async Awaitable InvokeOnBlackUnmovable()
+    private void InvokeOnBlackUnmovable()
     {
-        Delegate[] invokeList = OnBlackUnmovable!.GetInvocationList();
-        foreach (Delegate del in invokeList)
-        {
-            Func<Awaitable> subscriber = (Func<Awaitable>)del;
-            await subscriber();
-        }
-        
+        OnBlackUnmovable?.Invoke();
         WhiteWin!.Invoke();
+        
+        //Delegate[] invokeList = OnBlackUnmovable.GetInvocationList();
+        //foreach (Delegate del in invokeList)
+        //{
+        //    Func<Awaitable> subscriber = (Func<Awaitable>)del;
+        //    await subscriber();
+        //}
     }
 
     private bool MoveBlack(int row, int col)
     {
-        Debug.Assert(0 <= row && row < BoardSize);
-        Debug.Assert(0 <= col && col < BoardSize);
-        Debug.Assert(_nowBoard[row, col] == Stone.Empty);
-
         if (_blackJudges[row, col] == JudgeType.Forbidden)
         {
             return false;
@@ -155,10 +149,6 @@ public class Board
 
     private void MoveWhite(int row, int col)
     {
-        Debug.Assert(0 <= row && row < BoardSize);
-        Debug.Assert(0 <= col && col < BoardSize);
-        Debug.Assert(_nowBoard[row, col] == Stone.Empty);
-
         _nowBoard[row, col] = Stone.White;
         _record.Add((row, col));
         ++NowTurn;
