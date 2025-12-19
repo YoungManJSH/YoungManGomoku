@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ServerToClient;
 
 public class GameManager : MonoBehaviour
 {
@@ -45,14 +47,19 @@ public class GameManager : MonoBehaviour
         _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true; 
         
-        #region 테스트용 임시 초기화 영역, 이후 서버에서 받아온 정보로 수정
-        IsPlayerBlack = false;
-        player = new BasicPlayerData("슈퍼뇽재환띠", 80, 1, 75, 1498.233f);
-        oppositePlayer = new BasicPlayerData("허접뇽재환띠", 55, 3, 43, 1502.943f);
+        #region 서버에서 받아온 매칭 정보로 초기화
+        SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
+        // IsPlayerBlack = matchResult.어쩌고저쩌고;
+        
+        PlayerData myPlayer = PlayerDataFromWebServer.Instance.PlayerData;
+        OpponentPlayerData opponent = matchResult.OpponentPlayer;
+        player = new BasicPlayerData(myPlayer.Nickname, myPlayer.WinCount, myPlayer.DrawCount, myPlayer.LoseCount, myPlayer.Rating);
+        oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
 
-        PlayerTimer = new UserTimer(10f, 2, 15f);
+        SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
+        PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
         OppositeTimer = new UserTimer(10f, 2, 15f);
-        ByoyomiPurchaseAmount = 3;
+        ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
         _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
         _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
         

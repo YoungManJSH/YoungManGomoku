@@ -4,13 +4,13 @@ using YoungManGomoku_Protocol.ServerToClient;
 
 public class PlayerDataFromWebServer : MonoBehaviour
 {
-    public static PlayerDataFromWebServer Instance;
+    public static PlayerDataFromWebServer Instance { get; private set; }
 
-    public string IDToken { get; set; }
-    public PlayerData PlayerData { get; set; }
+    public string IDToken { get; private set; }
+    public PlayerData PlayerData { get; private set; }
     
-    public SC_MatchResultDTO MatchResultDTO { get; set; }
-
+    public SC_MatchResultDTO MatchResultDTO { get; private set; }
+    
     public void Awake()
     {
         if (Instance == null)
