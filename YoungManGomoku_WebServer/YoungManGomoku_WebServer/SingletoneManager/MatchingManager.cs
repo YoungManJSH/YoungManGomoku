@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
@@ -11,6 +12,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         public ulong OpponentID { get; set; }
         public ulong GameRoomID { get; set; }
         public string Message { get; set; }
+        public StoneColorType StoneColor { get; set; }
         public bool Success { get; set; }
     }
 
@@ -166,10 +168,15 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Success : Room ID {roomID}");
+
+
+                Random random = new Random();              
+                int color = random.Next(0, 2);
                 p1.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = true,
                     OpponentID = _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
+                    StoneColor = (StoneColorType)(color) + 1,
                     GameRoomID = roomID
                 });
 
@@ -177,6 +184,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 {
                     Success = true,
                     OpponentID = _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
+                    StoneColor = (StoneColorType)(2-color),
                     GameRoomID = roomID
                 });
 

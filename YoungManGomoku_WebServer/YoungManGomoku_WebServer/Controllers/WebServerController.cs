@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using YoungManGomoku_Protocol.Source;
+using YoungManGomoku_Protocol;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Data.DatabaseContext;    // DB Context
 

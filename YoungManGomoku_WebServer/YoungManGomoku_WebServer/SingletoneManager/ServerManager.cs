@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using YoungManGomoku_Protocol;
-using YoungManGomoku_Protocol.Source.TypeEnum;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
 
 namespace YoungManGomoku_WebServer.SingletoneManager

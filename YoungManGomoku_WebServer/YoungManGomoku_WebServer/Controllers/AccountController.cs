@@ -11,9 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
 using YoungManGomoku_Protocol;
-using YoungManGomoku_Protocol.Source;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.ClientToServer;
-using YoungManGomoku_Protocol.Source.TypeEnum;
 using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Controllers

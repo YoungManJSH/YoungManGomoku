@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using YoungManGomoku_Protocol.Source.TypeEnum;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {

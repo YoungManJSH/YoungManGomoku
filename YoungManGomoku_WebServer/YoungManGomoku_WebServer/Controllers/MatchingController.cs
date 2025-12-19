@@ -39,7 +39,8 @@ namespace YoungManGomoku_WebServer.Controllers
                 _serverManager.ComposeOpponentPlayerData(mr.OpponentID),
                 mr.Message,
                 mr.Success,
-                new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount:3, byoyomiSeconds:30f, byoyomiPurchaseAmount: 2)
+                mr.StoneColor,
+                new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount: 3, byoyomiSeconds: 30f, byoyomiPurchaseAmount: 2)
                 );
             _logger.LogTrace($"[{DateTime.UtcNow}] [Matching Controller]Match Register Response : [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}\nVerSus\n[{mr.OpponentID}]{_serverManager.GetPlayerSession(mr.OpponentID).Account.Nickname}\n{mr.Message},{mr.Success}");
 
