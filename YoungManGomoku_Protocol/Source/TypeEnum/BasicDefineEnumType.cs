@@ -1,12 +1,5 @@
-﻿namespace YoungManGomoku_Protocol.Source.TypeEnum
+﻿namespace YoungManGomoku_Protocol.TypeEnum.PlayerData
 {
-    public enum Stone
-    {
-        Empty,
-        Black,
-        White
-    }
-
     public enum ProfileImageType
     {
         None,

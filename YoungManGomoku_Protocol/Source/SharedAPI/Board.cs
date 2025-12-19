@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class Board
 {
     public const int BoardSize = 15;
     public const int MaxCoord = BoardSize - 1;
     
-    private readonly Stone[,] _nowBoard;
+    private readonly StoneColorType[,] _nowBoard;
     private readonly JudgeType[,] _blackJudges;
     private readonly List<(int row, int col)> _record;
 
@@ -39,11 +40,11 @@ public class Board
     public event Action OverMaxTurn;
     public event Action OnBlackUnmovable;
     
-    public Stone this[int row, int col] => _nowBoard[row, col];
+    public StoneColorType this[int row, int col] => _nowBoard[row, col];
 
     public Board()
     {
-        _nowBoard = new Stone[BoardSize, BoardSize];
+        _nowBoard = new StoneColorType[BoardSize, BoardSize];
         _blackJudges = new JudgeType[BoardSize, BoardSize];
         _record = new List<(int row, int col)>();
         NowTurn = 0;
@@ -53,7 +54,7 @@ public class Board
     {
         if (row < 0 || MaxCoord < row ||
             col < 0 || MaxCoord < col ||
-            _nowBoard[row, col] != Stone.Empty)
+            _nowBoard[row, col] != StoneColorType.Empty)
         {
             return false;
         }
@@ -78,8 +79,8 @@ public class Board
             return false;
         }
 
-        _nowBoard[_record[^1].row, _record[^1].col] = Stone.Empty;
-        _nowBoard[_record[^2].row, _record[^2].col] = Stone.Empty;
+        _nowBoard[_record[^1].row, _record[^1].col] = StoneColorType.Empty;
+        _nowBoard[_record[^2].row, _record[^2].col] = StoneColorType.Empty;
         
         _record.RemoveRange(_record.Count - 2, 2);
         NowTurn -= 2;
@@ -98,7 +99,7 @@ public class Board
         {
             for (int col = 0; col < BoardSize; ++col)
             {
-                if (_nowBoard[row, col] != Stone.Empty)
+                if (_nowBoard[row, col] != StoneColorType.Empty)
                 {
                     _blackJudges[row, col] = JudgeType.None;
                     continue;
@@ -135,11 +136,11 @@ public class Board
             return false;
         }
 
-        _nowBoard[row, col] = Stone.Black;
+        _nowBoard[row, col] = StoneColorType.Black;
         _record.Add((row, col));
         ++NowTurn;
 
-        if (_blackJudges[row, col] == JudgeType.Omok)
+        if (_blackJudges[row, col] == JudgeType.Gomoku)
         {
             BlackWin!.Invoke();
         }
@@ -149,7 +150,7 @@ public class Board
 
     private void MoveWhite(int row, int col)
     {
-        _nowBoard[row, col] = Stone.White;
+        _nowBoard[row, col] = StoneColorType.White;
         _record.Add((row, col));
         ++NowTurn;
 

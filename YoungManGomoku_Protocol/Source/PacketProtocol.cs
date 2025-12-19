@@ -1,5 +1,6 @@
 ﻿using System;
-using YoungManGomoku_Protocol.Source.TypeEnum;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 /*
  Protocol의 PlayerData는 단순 서버와 통신용
  서버 DB 테이블과의 구조 역시 다르다
@@ -151,14 +152,17 @@ namespace YoungManGomoku_Protocol.ServerToClient
 		public string Message { get; set; }
 		public bool MatchingSuccess { get; set; }
 
+        public StoneColorType MyStoneColorType { get; set; }
+
         public SC_TimerSettingDTO TimerSettingDTO { get; set; }
 
         
-        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, in SC_TimerSettingDTO timerSettingDTO) 
+        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor, in SC_TimerSettingDTO timerSettingDTO) 
         { 
             OpponentPlayer = opponent;
             Message = msg;
             MatchingSuccess = isSuccess;
+            MyStoneColorType = stoneColor;
             TimerSettingDTO = timerSettingDTO;
         }
     }
@@ -204,11 +208,11 @@ namespace YoungManGomoku_Protocol.ServerToClient
 단촐한 예정도 및 변경, 관련 사항 제작 완료 시 제거 예정
 패킷타입은 웹서버 URL로 대체 예정
 
-롱폴링 구현 예정
+
  public enum CS_PacketType
     {
         None,
-        // 하트비트 제대로 동작 안 할것같은데...?
+
         HeartBeat, // 심장박동, 이게 끊기면 클라 접속 끊긴거임
                    // 대상 A가 심장박동을 보냈을 때 대상 B의 심장박동이 1분째 끊겼다? 접속끊김
 

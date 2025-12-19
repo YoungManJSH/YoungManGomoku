@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class StoneMoveController : MonoBehaviour
 {
@@ -86,7 +87,7 @@ public class StoneMoveController : MonoBehaviour
 
         if (TryGetBoardCoord(worldPos, out (int row, int col) coord))
         {
-            if (_boardInform[coord.row, coord.col] != Stone.Empty || _forbiddenCoords.Contains(coord))
+            if (_boardInform[coord.row, coord.col] != StoneColorType.Empty || _forbiddenCoords.Contains(coord))
             {
                 (_isBlackTurn ? _blackPreview : _whitePreview).SetActive(false);
                 return;
@@ -249,7 +250,7 @@ public class StoneMoveController : MonoBehaviour
         {
             for (int col = 0; col < Board.BoardSize; ++col)
             {
-                if (_boardInform[row, col] == Stone.Empty)
+                if (_boardInform[row, col] == StoneColorType.Empty)
                 {
                     await Awaitable.WaitForSecondsAsync(0.5f);
                     MoveStone((row, col));
