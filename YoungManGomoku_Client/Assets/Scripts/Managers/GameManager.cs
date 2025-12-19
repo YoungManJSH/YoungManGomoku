@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class GameManager : MonoBehaviour
 {
@@ -45,11 +46,12 @@ public class GameManager : MonoBehaviour
         _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
         _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
         _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
-        _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true; 
+        _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         
         #region 서버에서 받아온 매칭 정보로 초기화
         SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
-        // IsPlayerBlack = matchResult.어쩌고저쩌고;
+        // if (matchResult.MyStoneColorType is StoneColorType.None) 상대 탈주 등 예외 상황 처리
+        IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
         PlayerData myPlayer = PlayerDataFromWebServer.Instance.PlayerData;
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
