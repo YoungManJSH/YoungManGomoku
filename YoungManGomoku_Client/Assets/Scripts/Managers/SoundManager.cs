@@ -4,16 +4,16 @@ using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+public enum VolumeType
+{
+    Master,
+    BGM,
+    SFX
+}
+
 public class SoundManager : MonoBehaviour
 {
-    public enum VolumeType
-    {
-        Master,
-        BGM,
-        SFX
-    }
-
-    public static SoundManager Instance;
+    public static SoundManager instance;
 
     [SerializeField] private AudioMixer audioMixer;
 
@@ -28,22 +28,28 @@ public class SoundManager : MonoBehaviour
 
     public void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
             DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
+
+        audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
+        audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
+        audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
     }
 
     // 저장된 데이터를 기반으로 환경설정의 세팅을 UI에 반영함
+    // 외부에서 데이터 주입 필요 (외부 스크립트의 Start에서 적용하기)
     public void InitializeSoundManager(
         Image _masterVolumeImage, Image _BGMVolumeImage, Image _SFXVolumeImage,
         Slider _masterVolumeSlider, Slider _BGMVolumeSlider, Slider _SFXVolumeSlider)
     {
+        // bool 값에 따른 이미지 적용
         masterVolumeImage = _masterVolumeImage;
         BGMVolumeImage = _BGMVolumeImage;
         SFXVolumeImage = _SFXVolumeImage;
@@ -52,6 +58,7 @@ public class SoundManager : MonoBehaviour
         BGMVolumeImage.sprite = soundData.isMuteBGMVolume ? muteIcon : soundIcon;
         SFXVolumeImage.sprite = soundData.isMuteSFXVolume ? muteIcon : soundIcon;
 
+        // 슬라이더 값 적용
         _masterVolumeSlider.value = soundData.MasterVolume;
         _BGMVolumeSlider.value = soundData.BGMVolume;
         _SFXVolumeSlider.value = soundData.SFXVolume;
@@ -63,12 +70,22 @@ public class SoundManager : MonoBehaviour
     {
         switch (type)
         {
-            case VolumeType.Master: ChangeVolumeState(ref soundData.isMuteMasterVolume, masterVolumeImage); break;
-            case VolumeType.BGM: ChangeVolumeState(ref soundData.isMuteBGMVolume, BGMVolumeImage); break;
-            case VolumeType.SFX: ChangeVolumeState(ref soundData.isMuteSFXVolume, SFXVolumeImage); break;
+            case VolumeType.Master: 
+                ChangeVolumeState(ref soundData.isMuteMasterVolume, masterVolumeImage); 
+                audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
+                break;
+            case VolumeType.BGM: 
+                ChangeVolumeState(ref soundData.isMuteBGMVolume, BGMVolumeImage); 
+                audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
+                break;
+            case VolumeType.SFX: 
+                ChangeVolumeState(ref soundData.isMuteSFXVolume, SFXVolumeImage); 
+                audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
+                break;
         }
     }
-    
+
+    // UI 이미지 적용
     private void ChangeVolumeState(ref bool muteFlag, Image targetImage)
     {
         muteFlag = !muteFlag;
@@ -79,22 +96,31 @@ public class SoundManager : MonoBehaviour
     // 슬라이더의 value를 기준으로 보정한다.
     public void SetMasterVolume(float value)
     {
-        audioMixer.SetFloat("MasterVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
-
         soundData.MasterVolume = value;
+
+        if (soundData.isMuteMasterVolume == false)
+        {
+            audioMixer.SetFloat("MasterVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+        }
     }
 
     public void SetBGMVolume(float value)
     {
-        audioMixer.SetFloat("BGMVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
-
         soundData.BGMVolume = value;
+        
+        if (soundData.isMuteBGMVolume == false)
+        {
+            audioMixer.SetFloat("BGMVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+        }
     }
 
     public void SetSFXVolume(float value)
     {
-        audioMixer.SetFloat("SFXVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
-
         soundData.SFXVolume = value;
+
+        if (soundData.isMuteSFXVolume == false)
+        {
+            audioMixer.SetFloat("SFXVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+        }
     }
 }
