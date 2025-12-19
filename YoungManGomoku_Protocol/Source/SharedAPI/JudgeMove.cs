@@ -1,4 +1,7 @@
-﻿public static class JudgeMove
+﻿using YoungManGomoku_Protocol.TypeEnum.InGame;
+
+using LineDir = YoungManGomoku_Protocol.TypeEnum.InGame.LineDirection;
+public static class JudgeMove
 {
     /// <summary> 3의 종류: Solid, Ic(Indirect Closed), Broken(틈 3) </summary>
     private enum CaseOf3
@@ -10,10 +13,10 @@
         Solid,
 
         /// <summary> 앞쪽에서 열린 4로 이을 수 없는 연속된 3, 뒷쪽에서만 열린 4로 이어짐 </summary>
-        PrevIc,
+        PrevInDirectClosed,
 
         /// <summary> 뒷쪽에서 열린 4로 이을 수 없는 연속된 3, 앞쪽에서만 열린 4로 이어짐 </summary>
-        NextIc,
+        NextInDirectClosed,
 
         /// <summary> 틈 3, 탐색 좌표보다 앞쪽에 틈이 존재 </summary>
         PrevBroken,
@@ -71,7 +74,7 @@
     {
         JudgeType omokJudge = JudgeBlackOmok(board, row, col);
 
-        if (omokJudge == JudgeType.Omok) return JudgeType.Omok;
+        if (omokJudge == JudgeType.Gomoku) return JudgeType.Gomoku;
 
         return omokJudge == JudgeType.Forbidden || Is44(board, row, col) || Is33(board, row, col)
             ? JudgeType.Forbidden
@@ -89,7 +92,7 @@
     {
         for (LineDir dir = 0; dir < LineDir.Max; ++dir)
         {
-            if (LineCount(board, row, col, Stone.White, dir) >= 5)
+            if (LineCount(board, row, col, StoneColorType.White, dir) >= 5)
                 return true;
         }
 
@@ -115,8 +118,8 @@
         for (LineDir dir = 0; dir < LineDir.Max; ++dir)
         {
             if (dir == passing) continue;
-            int count = LineCount(board, row, col, Stone.Black, dir);
-            if (count == 5) return JudgeType.Omok;
+            int count = LineCount(board, row, col, StoneColorType.Black, dir);
+            if (count == 5) return JudgeType.Gomoku;
             if (count > 5) result = JudgeType.Forbidden;
         }
 
@@ -177,7 +180,7 @@
     /// <param name="stone">착수할 돌 색깔, Black or White</param>
     /// <param name="dir">탐색 방향</param>
     /// <returns>[row, col] 위치를 포함해서 연속된 돌의 개수</returns>
-    private static int LineCount(Board board, int row, int col, Stone stone, LineDir dir)
+    private static int LineCount(Board board, int row, int col, StoneColorType stone, LineDir dir)
     {
         var startCoord = (row, col);
         var endCoord = (row, col);
@@ -256,7 +259,7 @@
 
         while (CoordinateMove(ref startCoord, dir, -1))
         {
-            if (board[startCoord.row, startCoord.col] != Stone.Black)
+            if (board[startCoord.row, startCoord.col] != StoneColorType.Black)
             {
                 CoordinateMove(ref startCoord, dir, +1);
                 break;
@@ -265,7 +268,7 @@
 
         while (CoordinateMove(ref endCoord, dir, +1))
         {
-            if (board[endCoord.row, endCoord.col] != Stone.Black)
+            if (board[endCoord.row, endCoord.col] != StoneColorType.Black)
             {
                 CoordinateMove(ref endCoord, dir, -1);
                 break;
@@ -280,13 +283,13 @@
         {
             // 둘 중 한쪽 이상 열려 있는지
             if ((CoordinateMove(ref startCoord, dir, -1) &&
-                 board[startCoord.row, startCoord.col] == Stone.Empty &&
+                 board[startCoord.row, startCoord.col] == StoneColorType.Empty &&
                  (CoordinateMove(ref startCoord, dir, -1) is false ||
-                  board[startCoord.row, startCoord.col] != Stone.Black)) ||
+                  board[startCoord.row, startCoord.col] != StoneColorType.Black)) ||
                 (CoordinateMove(ref endCoord, dir, +1) &&
-                 board[endCoord.row, endCoord.col] == Stone.Empty &&
+                 board[endCoord.row, endCoord.col] == StoneColorType.Empty &&
                  (CoordinateMove(ref endCoord, dir, +1) is false ||
-                  board[endCoord.row, endCoord.col] != Stone.Black)))
+                  board[endCoord.row, endCoord.col] != StoneColorType.Black)))
             {
                 return 1;
             }
@@ -306,7 +309,7 @@
 
             for (int count = 0; count < remaining; ++count)
             {
-                if (board[startCoord.row, startCoord.col] != Stone.Black)
+                if (board[startCoord.row, startCoord.col] != StoneColorType.Black)
                 {
                     flag = false;
                     break;
@@ -315,9 +318,9 @@
                 CoordinateMove(ref startCoord, dir, +1);
             }
 
-            if (flag && board[startCoord.row, startCoord.col] == Stone.Empty &&
+            if (flag && board[startCoord.row, startCoord.col] == StoneColorType.Empty &&
                 (CoordinateMove(ref startCoord, dir, -remaining - 1) is false ||
-                 board[startCoord.row, startCoord.col] != Stone.Black))
+                 board[startCoord.row, startCoord.col] != StoneColorType.Black))
             {
                 ++count4;
             }
@@ -330,7 +333,7 @@
 
             for (int count = 0; count < remaining; ++count)
             {
-                if (board[endCoord.row, endCoord.col] != Stone.Black)
+                if (board[endCoord.row, endCoord.col] != StoneColorType.Black)
                 {
                     flag = false;
                     break;
@@ -339,9 +342,9 @@
                 CoordinateMove(ref endCoord, dir, -1);
             }
 
-            if (flag && board[endCoord.row, endCoord.col] == Stone.Empty &&
+            if (flag && board[endCoord.row, endCoord.col] == StoneColorType.Empty &&
                 (CoordinateMove(ref endCoord, dir, +remaining + 1) is false ||
-                 board[endCoord.row, endCoord.col] != Stone.Black))
+                 board[endCoord.row, endCoord.col] != StoneColorType.Black))
             {
                 ++count4;
             }
@@ -415,7 +418,7 @@
     private static bool IsForbidden(Board board, int row, int col, LineDir passing)
     {
         JudgeType omokJudge = JudgeBlackOmok(board, row, col, passing);
-        if (omokJudge == JudgeType.Omok) return false;
+        if (omokJudge == JudgeType.Gomoku) return false;
         return omokJudge == JudgeType.Forbidden || Is44(board, row, col, passing) || Is33(board, row, col, passing);
     }
 
@@ -437,7 +440,7 @@
             case CaseOf3.Solid:
                 while (CoordinateMove(ref coord, dir, -1))
                 {
-                    if (board[coord.row, coord.col] == Stone.Empty)
+                    if (board[coord.row, coord.col] == StoneColorType.Empty)
                         break;
                 }
 
@@ -445,28 +448,28 @@
                 CoordinateMove(ref coord, dir, +4);
                 open4Place.InputCoord2(coord);
                 break;
-            case CaseOf3.PrevIc:
+            case CaseOf3.PrevInDirectClosed:
                 while (CoordinateMove(ref coord, dir, +1))
                 {
-                    if (board[coord.row, coord.col] == Stone.Empty)
+                    if (board[coord.row, coord.col] == StoneColorType.Empty)
                         break;
                 }
 
                 open4Place.InputCoord1(coord);
                 break;
-            case CaseOf3.NextIc:
+            case CaseOf3.NextInDirectClosed:
                 while (CoordinateMove(ref coord, dir, -1))
                 {
-                    if (board[coord.row, coord.col] == Stone.Empty)
+                    if (board[coord.row, coord.col] == StoneColorType.Empty)
                         break;
                 }
 
                 open4Place.InputCoord1(coord);
                 break;
             case CaseOf3.PrevBroken:
-                goto case CaseOf3.NextIc;
+                goto case CaseOf3.NextInDirectClosed;
             case CaseOf3.NextBroken:
-                goto case CaseOf3.PrevIc;
+                goto case CaseOf3.PrevInDirectClosed;
         }
 
         return open4Place;
@@ -490,11 +493,11 @@
                 return CaseOf3.Not;
             }
 
-            Stone nowStone = board[coord.row, coord.col];
+            StoneColorType nowStone = board[coord.row, coord.col];
 
-            if (nowStone == Stone.White) return CaseOf3.Not;
+            if (nowStone == StoneColorType.White) return CaseOf3.Not;
 
-            if (nowStone == Stone.Black)
+            if (nowStone == StoneColorType.Black)
             {
                 ++blackCount;
                 continue;
@@ -507,7 +510,7 @@
             {
                 if (nowShape == CaseOf3.Solid)
                 {
-                    nowShape = CaseOf3.PrevIc;
+                    nowShape = CaseOf3.PrevInDirectClosed;
                 }
 
                 // 틈 3(Broken)이라면 PrevIc는 의미가 없음 
@@ -520,20 +523,20 @@
             if (nowShape >= CaseOf3.PrevBroken)
             {
                 // 3 패턴이 나오더라도 닫힌 4로 이어지게 됨.
-                if (nowStone == Stone.Black)
+                if (nowStone == StoneColorType.Black)
                     return CaseOf3.Not;
 
                 // 그밖의 경우는 뒷쪽 탐색으로 넘어가서 판단
                 break;
             }
 
-            if (nowStone == Stone.White)
+            if (nowStone == StoneColorType.White)
             {
-                nowShape = CaseOf3.PrevIc;
+                nowShape = CaseOf3.PrevInDirectClosed;
                 break;
             }
 
-            if (nowStone == Stone.Black)
+            if (nowStone == StoneColorType.Black)
             {
                 ++blackCount;
                 nowShape = CaseOf3.PrevBroken;
@@ -541,9 +544,9 @@
             }
 
             // 세 칸 앞에 흑돌이 있는 경우 = PrevIc 상황
-            if (CoordinateMove(ref coord, dir, -1) && board[coord.row, coord.col] == Stone.Black)
+            if (CoordinateMove(ref coord, dir, -1) && board[coord.row, coord.col] == StoneColorType.Black)
             {
-                nowShape = CaseOf3.PrevIc;
+                nowShape = CaseOf3.PrevInDirectClosed;
             }
 
             // 두 칸 연속 빈 칸이면 앞쪽 탐색 종료
@@ -561,11 +564,11 @@
                 return CaseOf3.Not;
             }
 
-            Stone nowStone = board[coord.row, coord.col];
+            StoneColorType nowStone = board[coord.row, coord.col];
 
-            if (nowStone == Stone.White) return CaseOf3.Not;
+            if (nowStone == StoneColorType.White) return CaseOf3.Not;
 
-            if (nowStone == Stone.Black)
+            if (nowStone == StoneColorType.Black)
             {
                 ++blackCount;
                 continue;
@@ -578,7 +581,7 @@
             {
                 if (blackCount < 3) return CaseOf3.Not;
 
-                if (nowShape == CaseOf3.Solid) return CaseOf3.NextIc;
+                if (nowShape == CaseOf3.Solid) return CaseOf3.NextInDirectClosed;
 
                 if (nowShape >= CaseOf3.PrevBroken) return nowShape;
 
@@ -592,16 +595,16 @@
             if (nowShape >= CaseOf3.PrevBroken)
             {
                 // 조건식 : 3 패턴이 아니거나 닫힌 4로 이어지는지?
-                return blackCount < 3 || nowStone == Stone.Black ? CaseOf3.Not : nowShape;
+                return blackCount < 3 || nowStone == StoneColorType.Black ? CaseOf3.Not : nowShape;
             }
 
-            if (nowStone == Stone.White)
+            if (nowStone == StoneColorType.White)
             {
                 // NextIc 상황이므로 양쪽이 모두 Ic면 3이 아님
-                return blackCount < 3 || nowShape == CaseOf3.PrevIc ? CaseOf3.Not : CaseOf3.NextIc;
+                return blackCount < 3 || nowShape == CaseOf3.PrevInDirectClosed ? CaseOf3.Not : CaseOf3.NextInDirectClosed;
             }
 
-            if (nowStone == Stone.Black)
+            if (nowStone == StoneColorType.Black)
             {
                 ++blackCount;
                 nowShape = CaseOf3.NextBroken;
@@ -612,9 +615,9 @@
             if (blackCount < 3) return CaseOf3.Not;
 
             // 세 칸 뒤에 흑돌이 있는 경우 = NextIc 상황
-            if (CoordinateMove(ref coord, dir, +1) && board[coord.row, coord.col] == Stone.Black)
+            if (CoordinateMove(ref coord, dir, +1) && board[coord.row, coord.col] == StoneColorType.Black)
             {
-                return nowShape == CaseOf3.PrevIc ? CaseOf3.Not : CaseOf3.NextIc;
+                return nowShape == CaseOf3.PrevInDirectClosed ? CaseOf3.Not : CaseOf3.NextInDirectClosed;
             }
 
             // nowShape is Solid or PrevIc
