@@ -20,7 +20,7 @@ AudioMixerGroupController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Music
+  m_Name: BGM
   m_AudioMixer: {fileID: 24100000}
   m_GroupID: 338263c300910af4ab457e9d385904f6
   m_Children: []
@@ -48,7 +48,13 @@ AudioMixerController:
   m_SuspendThreshold: -80
   m_EnableSuspend: 1
   m_UpdateMode: 0
-  m_ExposedParameters: []
+  m_ExposedParameters:
+  - guid: 815d8c48d5b137b4bb8b588eb9624f60
+    name: MyExposedParam 1
+  - guid: 05ad30b4753eabe4c846aca20bde6a4b
+    name: MyExposedParam
+  - guid: be7158ec3b2fc8740a99637eb1411a3d
+    name: MyExposedParam 2
   m_AudioMixerGroupViews:
   - guids:
     - 68295103e351ddd41bd1d8cd79f950aa
