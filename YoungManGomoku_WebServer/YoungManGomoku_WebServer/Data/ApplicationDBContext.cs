@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Numerics;
-using YoungManGomoku_Protocol.Source;
+using YoungManGomoku_Protocol;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
 
 namespace YoungManGomoku_WebServer.Data
