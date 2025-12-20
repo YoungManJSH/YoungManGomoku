@@ -59,8 +59,8 @@ public class StoneMoveController : MonoBehaviour
         _prevCoord = (-1, -1);
         _isBlackTurn = true;
         _boardInform = GameManager.Instance.BoardInform;
+        _boardInform.OnBlackUnmovable += OnBlackUnmovable;
 
-        _boardInform.OnBlackUnmovable += async () => await OnBlackUnmovable();
         ingameBoardManager.OnBoardScaled += async () => await CalcWorldValue();
 
         messageBox.OnOpened += () => enabled = false;
@@ -242,9 +242,10 @@ public class StoneMoveController : MonoBehaviour
         _forbiddenCoords.Add(coord);
     }
 
-    private async Awaitable OnBlackUnmovable()
+    private void OnBlackUnmovable()
     {
         enabled = false;
+        _audioSource.volume = 0f;
 
         for (int row = 0; row < Board.BoardSize; ++row)
         {
@@ -252,11 +253,12 @@ public class StoneMoveController : MonoBehaviour
             {
                 if (_boardInform[row, col] == StoneColorType.Empty)
                 {
-                    await Awaitable.WaitForSecondsAsync(0.5f);
                     MoveStone((row, col));
                 }
             }
         }
+
+        _audioSource.volume = 1f;
     }
 
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>

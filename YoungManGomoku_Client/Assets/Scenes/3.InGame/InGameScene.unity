@@ -3524,7 +3524,7 @@ AudioSource:
   m_GameObject: {fileID: 780528799}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 3277197445890604349, guid: a6834a4154c6b1c4b9f17977ca0b79b6, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 573bf57d56b77b64db37009681a00364, type: 3}
   m_PlayOnAwake: 0
@@ -5018,8 +5018,10 @@ MonoBehaviour:
   rematchButton: {fileID: 886483260}
   rematchText: {fileID: 400000622}
   rematchTimer: {fileID: 1348904664}
-  blackWinText: "\uD751\uB3CC\uC774 \uC2B9\uB9AC\uD558\uC600\uC2B5\uB2C8\uB2E4."
-  whiteWinText: "\uBC31\uB3CC\uC774 \uC2B9\uB9AC\uD558\uC600\uC2B5\uB2C8\uB2E4."
+  playerGomokuText: "\uC624\uBAA9\uC73C\uB85C \uC2B9\uB9AC\uD558\uC600\uC2B5\uB2C8\uB2E4."
+  oppositeGomokuText: "\uC0C1\uB300\uBC29\uC758 \uC624\uBAA9\uC73C\uB85C \uD328\uBC30\uD558\uC600\uC2B5\uB2C8\uB2E4."
+  playerUnmovableText: "\uCC29\uC218 \uAC00\uB2A5\uD55C \uC790\uB9AC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."
+  oppositeUnmovableText: "\uC0C1\uB300\uBC29\uC758 \uAE08\uC218\uD328\uB85C \uC2B9\uB9AC\uD558\uC600\uC2B5\uB2C8\uB2E4."
   surrenderWinText: "\uC0C1\uB300\uBC29\uC774 \uAC8C\uC784\uC744 \uD3EC\uAE30\uD558\uC600\uC2B5\uB2C8\uB2E4."
   surrenderLoseText: "\uAC8C\uC784\uC744 \uD3EC\uAE30\uD558\uC600\uC2B5\uB2C8\uB2E4."
   timeWinText: "\uC0C1\uB300\uBC29\uC774 \uC2DC\uAC04\uC744 \uBAA8\uB450 \uC0AC\uC6A9\uD558\uC600\uC2B5\uB2C8\uB2E4."
@@ -6807,7 +6809,7 @@ AudioSource:
   m_GameObject: {fileID: 1989689721}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 3277197445890604349, guid: a6834a4154c6b1c4b9f17977ca0b79b6, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 573bf57d56b77b64db37009681a00364, type: 3}
   m_PlayOnAwake: 0

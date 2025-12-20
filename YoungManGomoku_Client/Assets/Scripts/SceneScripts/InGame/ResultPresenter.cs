@@ -12,8 +12,10 @@ public class ResultPresenter : MonoBehaviour
     [SerializeField] private TextMeshProUGUI rematchText;
     [SerializeField] private TextMeshProUGUI rematchTimer;
     
-    [SerializeField] private string blackWinText;
-    [SerializeField] private string whiteWinText;
+    [SerializeField] private string playerGomokuText;
+    [SerializeField] private string oppositeGomokuText;
+    [SerializeField] private string playerUnmovableText;
+    [SerializeField] private string oppositeUnmovableText;
     [SerializeField] private string surrenderWinText;
     [SerializeField] private string surrenderLoseText;
     [SerializeField] private string timeWinText;
@@ -39,17 +41,17 @@ public class ResultPresenter : MonoBehaviour
             DisableRematch();
         };
         
-        GameManager gm = GameManager.Instance;
-        gm.BoardInform.BlackWin += () => detailText.text = blackWinText;
-        gm.BoardInform.WhiteWin += () => detailText.text = whiteWinText;
-        
         EventManager em = EventManager.Instance;
         em.OnGameEnd += OnGameEnd;
         em.OnGameWin += () => mainText.text = "승리";
         em.OnGameLose += () => mainText.text = "패배";
         em.OnGameDraw += () => mainText.text = "무승부";
-        
         em.OnGameDraw += () => detailText.text = drawText;
+        
+        em.OnPlayerGomoku += () => detailText.text = playerGomokuText;
+        em.OnOppositeGomoku += () => detailText.text = oppositeGomokuText;
+        em.OnBlackUnmovable += ()
+            => detailText.text = GameManager.Instance.IsPlayerBlack ? playerUnmovableText : oppositeUnmovableText;
         em.OnOppositeSurrender += () => detailText.text = surrenderWinText;
         em.OnPlayerSurrender += () => detailText.text = surrenderLoseText;
         em.OnOppositeTimeOut += () => detailText.text = timeWinText;

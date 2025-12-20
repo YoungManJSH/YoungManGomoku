@@ -10,6 +10,8 @@ public class Board
     private readonly StoneColorType[,] _nowBoard;
     private readonly JudgeType[,] _blackJudges;
     private readonly List<(int row, int col)> _record;
+    /// <summary> 기보를 방어적 복사로 전달하는 프로퍼티 </summary>
+    public List<(int row, int col)> Record => new (_record);
 
     private int _nowTurn;
     public int NowTurn
@@ -20,7 +22,7 @@ public class Board
             _nowTurn = value;
             if (value == BoardSize * BoardSize)
             {
-                OverMaxTurn!.Invoke();
+                OverMaxTurn?.Invoke();
                 return;
             }
             
@@ -33,12 +35,12 @@ public class Board
         }
     }
     
-    public event Action<int> OnTurnChanged;
-    public event Action OnTurnBackActivate;
-    public event Action BlackWin;
-    public event Action WhiteWin;
-    public event Action OverMaxTurn;
-    public event Action OnBlackUnmovable;
+    public event Action<int> OnTurnChanged; // 현재 턴을 매개변수로 전달
+    public event Action OnTurnBackActivate; // 무르기 활성화 이벤트 (3수 착수)
+    public event Action OnBlackGomoku; // 흑돌 오목 상황
+    public event Action OnWhiteGomoku; // 백돌 오목(장목 포함) 상황
+    public event Action OverMaxTurn; // 판 꽉 채운 경우 (무승부 처리로 연결)
+    public event Action OnBlackUnmovable; // 흑돌 금수패 상황 (백돌 승리로 연결)
     
     public StoneColorType this[int row, int col] => _nowBoard[row, col];
 
@@ -87,10 +89,7 @@ public class Board
         
         return true;
     }
-
-    public void SaveRecord(BasicPlayerData blackUser, BasicPlayerData whiteUser, string result)
-        => GiboFileManager.CreateGiboFile(_record, blackUser, whiteUser, result);
-
+    
     private void UpdateBlackJudges()
     {
         bool isMovable = false;
@@ -112,21 +111,8 @@ public class Board
 
         if (isMovable is false)
         {
-            InvokeOnBlackUnmovable();
+            OnBlackUnmovable?.Invoke();
         }
-    }
-
-    private void InvokeOnBlackUnmovable()
-    {
-        OnBlackUnmovable?.Invoke();
-        WhiteWin!.Invoke();
-        
-        //Delegate[] invokeList = OnBlackUnmovable.GetInvocationList();
-        //foreach (Delegate del in invokeList)
-        //{
-        //    Func<Awaitable> subscriber = (Func<Awaitable>)del;
-        //    await subscriber();
-        //}
     }
 
     private bool MoveBlack(int row, int col)
@@ -142,7 +128,7 @@ public class Board
 
         if (_blackJudges[row, col] == JudgeType.Gomoku)
         {
-            BlackWin!.Invoke();
+            OnBlackGomoku?.Invoke();
         }
 
         return true;
@@ -156,7 +142,7 @@ public class Board
 
         if (JudgeMove.JudgeWhiteOmok(this, row, col))
         {
-            WhiteWin!.Invoke();
+            OnWhiteGomoku?.Invoke();
             return;
         }
         

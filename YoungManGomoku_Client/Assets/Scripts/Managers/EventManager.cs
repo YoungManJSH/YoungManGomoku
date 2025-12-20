@@ -10,6 +10,10 @@ public class EventManager : MonoBehaviour
     public event Action OnGameLose;
     public event Action OnGameDraw;
     
+    public event Action OnPlayerGomoku;
+    public event Action OnOppositeGomoku;
+    public event Action OnBlackUnmovable;
+    
     public event Action OnPlayerSurrender;
     public event Action OnOppositeSurrender;
     public event Action OnStartSweeping;
@@ -47,20 +51,18 @@ public class EventManager : MonoBehaviour
         OnGameLose += OnGameEnd;
         OnGameDraw += OnGameEnd;
 
+        OnPlayerGomoku += OnGameWin;
+        OnOppositeGomoku += OnGameLose;
+        OnBlackUnmovable += _gameManager.IsPlayerBlack ? OnGameLose : OnGameWin;
+        
         OnPlayerSurrender += OnGameLose;
         OnOppositeSurrender += OnGameWin;
 
-        _gameManager.PlayerTimer.OnTimeOut += OnPlayerTimeOut;
-        // 상대방의 시간패는 클라에서 판단하지 않으므로 이벤트 구독 X
         OnPlayerTimeOut += OnGameLose;
         OnOppositeTimeOut += OnGameWin;
         
         OnOppositeDisconnectedWin += OnGameWin;
         OnPlayerDisconnectedLose += OnGameLose;
-
-        _gameManager.BoardInform.BlackWin += _gameManager.IsPlayerBlack ? OnGameWin : OnGameLose;
-        _gameManager.BoardInform.WhiteWin += _gameManager.IsPlayerBlack ? OnGameLose : OnGameWin;
-        _gameManager.BoardInform.OverMaxTurn += OnGameDraw;
     }
 
     public void StartGame() => OnGameStart!.Invoke();
