@@ -17,10 +17,10 @@ public class ProgressText : MonoBehaviour
         GameManager gm = GameManager.Instance;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
         
-        gm.BoardInform.BlackWin += () => OnGameOver(gm.IsPlayerBlack ? "승리" : "패배");
-        gm.BoardInform.WhiteWin += () => OnGameOver(gm.IsPlayerBlack ? "패배" : "승리");
-        
         EventManager em = EventManager.Instance;
+        em.OnPlayerGomoku += () => OnGameOver("승리");
+        em.OnOppositeGomoku += () => OnGameOver("패배");
+        em.OnBlackUnmovable += () => OnGameOver(gm.IsPlayerBlack ? "금수패" : "금수승");
         em.OnPlayerSurrender += () => OnGameOver("기권패");
         em.OnOppositeSurrender += () => OnGameOver("기권승");
         em.OnPlayerTimeOut += () => OnGameOver("시간패");

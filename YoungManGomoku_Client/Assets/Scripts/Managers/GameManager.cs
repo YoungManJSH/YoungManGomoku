@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     public int ByoyomiPurchaseAmount { get; private set; }
     public bool IsByoyomiPurchased { get; private set; }
 
-    public BasicPlayerData player;
+    public BasicPlayerData myPlayer;
     public BasicPlayerData oppositePlayer;
     
     private UserTimer _nowPlayerTimer;
@@ -40,9 +40,13 @@ public class GameManager : MonoBehaviour
         BoardInform = new Board();
         IsByoyomiPurchased = false;
         
+        #region 타이머 진행 제어 (스크립트 활성화 여부)
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
         _eventManager.OnStartSweeping += () => enabled = false;
+        _eventManager.OnBlackUnmovable += () => enabled = false;
+        #endregion
+        
         _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
         _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
         _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
@@ -53,9 +57,9 @@ public class GameManager : MonoBehaviour
         // if (matchResult.MyStoneColorType is StoneColorType.None) 상대 탈주 등 예외 상황 처리
         IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
-        PlayerData myPlayer = PlayerDataFromWebServer.Instance.PlayerData;
+        PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        player = new BasicPlayerData(myPlayer.Nickname, myPlayer.WinCount, myPlayer.DrawCount, myPlayer.LoseCount, myPlayer.Rating);
+        myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
         oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
 
         SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
@@ -65,34 +69,60 @@ public class GameManager : MonoBehaviour
         _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
         _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
         
+        #region 기보 저장
         if (IsPlayerBlack)
         {
-            var blackUser = player;
-            var whiteUser = oppositePlayer;
-            BoardInform.BlackWin += () => BoardInform.SaveRecord(blackUser,  whiteUser, "흑 승리");
-            BoardInform.WhiteWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 패배");
-            _eventManager.OnGameDraw += () => BoardInform.SaveRecord(blackUser, whiteUser, "무승부");
-            _eventManager.OnPlayerSurrender += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 기권패");
-            _eventManager.OnOppositeSurrender += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 기권승");
-            _eventManager.OnOppositeDisconnectedWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 접속끊김승");
-            _eventManager.OnPlayerDisconnectedLose += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 접속끊김패");
-            _eventManager.OnPlayerTimeOut += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 시간패");
-            _eventManager.OnOppositeTimeOut += () => BoardInform.SaveRecord(blackUser, whiteUser, "흑 시간승");
+            BasicPlayerData blackUser = myPlayer;
+            BasicPlayerData whiteUser = oppositePlayer;
+
+            _eventManager.OnPlayerGomoku += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 승리");
+            _eventManager.OnOppositeGomoku += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 패배");
+            _eventManager.OnBlackUnmovable += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 금수패");
+            _eventManager.OnGameDraw += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "무승부");
+            _eventManager.OnPlayerSurrender += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 기권패");
+            _eventManager.OnOppositeSurrender += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 기권승");
+            _eventManager.OnOppositeDisconnectedWin += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 접속끊김승");
+            _eventManager.OnPlayerDisconnectedLose += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 접속끊김패");
+            _eventManager.OnPlayerTimeOut += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 시간패");
+            _eventManager.OnOppositeTimeOut += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 시간승");
         }
         else
         {
-            var blackUser = oppositePlayer;
-            var whiteUser = player;
-            BoardInform.BlackWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 패배");
-            BoardInform.WhiteWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 승리");
-            _eventManager.OnGameDraw += () => BoardInform.SaveRecord(blackUser, whiteUser, "무승부");
-            _eventManager.OnPlayerSurrender += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 기권패");
-            _eventManager.OnOppositeSurrender += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 기권승");
-            _eventManager.OnOppositeDisconnectedWin += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 접속끊김승");
-            _eventManager.OnPlayerDisconnectedLose += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 접속끊김패");
-            _eventManager.OnPlayerTimeOut += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 시간패");
-            _eventManager.OnOppositeTimeOut += () => BoardInform.SaveRecord(blackUser, whiteUser, "백 시간승");
+            BasicPlayerData blackUser = oppositePlayer;
+            BasicPlayerData whiteUser = myPlayer;
+            
+            _eventManager.OnPlayerGomoku += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 승리");
+            _eventManager.OnOppositeGomoku += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 패배");
+            _eventManager.OnBlackUnmovable += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 금수승");
+            _eventManager.OnGameDraw += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "무승부");
+            _eventManager.OnPlayerSurrender += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 기권패");
+            _eventManager.OnOppositeSurrender += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 기권승");
+            _eventManager.OnOppositeDisconnectedWin += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 접속끊김승");
+            _eventManager.OnPlayerDisconnectedLose += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 접속끊김패");
+            _eventManager.OnPlayerTimeOut += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 시간패");
+            _eventManager.OnOppositeTimeOut += ()
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 시간승");
         }
+        #endregion
         
         // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
         // 오직 착수만 의미하는 이벤트는 OnStoneMove

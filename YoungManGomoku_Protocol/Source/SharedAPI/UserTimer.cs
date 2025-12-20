@@ -90,6 +90,7 @@ public class UserTimer : IComparable<UserTimer>
         MainTime = mainTime;
         ByoyomiCount = byoyomiCount;
         NowByoyomiSeconds = initByoyomiSeconds;
+        _isTimeOut = false;
     }
 
     public void ByoyomiPurchased(int amount)

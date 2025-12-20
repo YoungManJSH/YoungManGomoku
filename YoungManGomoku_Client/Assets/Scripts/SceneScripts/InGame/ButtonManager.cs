@@ -48,13 +48,14 @@ public class ButtonManager : MonoBehaviour
         _isPlayerTurn = GameManager.Instance.IsPlayerBlack;
         _isTakeBackedTurn = false;
 
-        GameManager gm = GameManager.Instance;
         EventManager em = EventManager.Instance;
+        GameManager gm = GameManager.Instance;
         
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
         em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
-        em.OnStartSweeping += OnStartSweeping;
+        em.OnStartSweeping += DisableIngameButton;
+        gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
@@ -111,12 +112,11 @@ public class ButtonManager : MonoBehaviour
         ButtonActivate(_exitSet);
     }
 
-    private void OnStartSweeping()
+    private void DisableIngameButton()
     {
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
-        // Sweeping이 끝날 때까지 나가기는 활성화 X
     }
 
     private void OnTurnBackActivate()

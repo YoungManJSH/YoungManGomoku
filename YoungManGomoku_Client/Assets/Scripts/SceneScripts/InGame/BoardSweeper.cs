@@ -1,4 +1,3 @@
-using System;
 using DG.Tweening;
 using UnityEngine;
 
@@ -32,6 +31,7 @@ public class BoardSweeper : MonoBehaviour
     
     public void Sweeping()
     {
+        /* TODO : 추후 이 부분에서 playerHand일 경우 서버로 기권 의사 전달 */
         EventManager.Instance.StartSweeping();
         
         gameObject.SetActive(true);
@@ -54,10 +54,12 @@ public class BoardSweeper : MonoBehaviour
             if (isPlayerHand)
             {
                 EventManager.Instance.PlayerSurrendered();
+                /* TODO : 추후 이 부분 삭제, 해당 처리는 서버의 응답과 연동 */
             }
             else
             {
                 EventManager.Instance.OppositeSurrendered();
+                /* TODO : 이 부분은 유지, 서버의 응답을 받고 실행된 영역이므로 */
             }
             gameObject.SetActive(false);
         });
