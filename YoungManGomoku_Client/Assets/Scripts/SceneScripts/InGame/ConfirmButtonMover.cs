@@ -1,13 +1,14 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [SerializeField] private float dragStartTime;
     [SerializeField] private Sprite blackButtonSprite;
-    [SerializeField] private StoneMoveController stoneMoveController;
+    [SerializeField] private StoneMoverSingle stoneMoverSingle;
 
     private RectTransform _myRect;
     private RectTransform _parentRect;
@@ -22,8 +23,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
     {
 #if UNITY_STANDALONE || UNITY_EDITOR
         Destroy(gameObject);
-        return;
-#endif
+#elif UNITY_ANDROID
         _myRect = GetComponent<RectTransform>();
         _parentRect = _myRect.parent.GetComponent<RectTransform>();
         _buttonImage = GetComponent<Image>();
@@ -40,7 +40,8 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _isDragging = false;
         _holdTime = 0f;
         
-        stoneMoveController.OnStoneMove += OnStoneMove;
+        stoneMoverSingle.OnStoneMove += OnStoneMove;
+#endif
     }
 
     private void Update()
@@ -82,6 +83,6 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _buttonImage.color = Color.white;
     }
 
+    /*TODO: 본인 턴일 때만 활성화 되도록 변경하기*/
     private void OnStoneMove(bool isBlackTurn) => _button.interactable = true;
-    // => _button.interactable = isBlackTurn == GameManager.Instance.IsPlayerBlack;
 }

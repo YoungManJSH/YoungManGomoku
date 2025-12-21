@@ -1273,12 +1273,12 @@ MonoBehaviour:
   blackStone: {fileID: 5064696670536264343, guid: f3268151f9f2f42468e8645e9dd5ff21, type: 3}
   whiteStone: {fileID: 5419395727140812493, guid: 00a3216d908dfe94abea5cda38ed9ad6, type: 3}
   forbiddenMark: {fileID: 5372146143770715992, guid: e768997e296529345a5406d70507e0ae, type: 3}
-  recentMark: {fileID: 787886031}
   deniedSound: {fileID: 8300000, guid: 799e1d12cf0c07c4fb8f0f354737d2c2, type: 3}
   takeBackSound: {fileID: 8300000, guid: a59f2ace2467e2c498053f825255d207, type: 3}
-  ingameBoardManager: {fileID: 362371475}
   messageBox: {fileID: 530988113}
   previewAlpha: 0.7
+  mainCamera: {fileID: 519420031}
+  recentMark: {fileID: 787886031}
 --- !u!82 &362371477
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2653,7 +2653,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 793b18fc23dbc23468a317000dcc9f2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  stoneMoveController: {fileID: 362371476}
+  stoneMoverSingle: {fileID: 362371476}
   oppositeSweeper: {fileID: 1989689724}
   winSound: {fileID: 8300000, guid: 22a7897e60a63de4ca2ccf8dc45266eb, type: 3}
   loseSound: {fileID: 8300000, guid: afdd92fb925bf894fbe429635940c64a, type: 3}
@@ -3017,7 +3017,7 @@ MonoBehaviour:
   clockIcon: {fileID: 1943621003}
   nicknameText: {fileID: 1246139021}
   recordText: {fileID: 1921073174}
-  stoneMoveController: {fileID: 362371476}
+  stoneMoverSingle: {fileID: 362371476}
   useByoyomiSound: {fileID: 0}
   byoyomiTickSound: {fileID: 0}
   byoyomiWarningSound: {fileID: 0}
@@ -3224,7 +3224,7 @@ MonoBehaviour:
   clockIcon: {fileID: 2002091781}
   nicknameText: {fileID: 962777831}
   recordText: {fileID: 1617508297}
-  stoneMoveController: {fileID: 362371476}
+  stoneMoverSingle: {fileID: 362371476}
   useByoyomiSound: {fileID: 8300000, guid: 387e17f412be49c46ad74ed7157a26e2, type: 3}
   byoyomiTickSound: {fileID: 8300000, guid: 82af92b2ba6abea4988e27c15e4ed8cf, type: 3}
   byoyomiWarningSound: {fileID: 8300000, guid: 102a0c83ef638ac4582bb33f431cc41d, type: 3}
@@ -6205,7 +6205,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConfirmButtonMoving
   dragStartTime: 0.6
   blackButtonSprite: {fileID: 21300000, guid: c458810e213fc2144a775b6d4bcd8344, type: 3}
-  stoneMoveController: {fileID: 362371476}
+  stoneMoverSingle: {fileID: 362371476}
 --- !u!1 &1897755328
 GameObject:
   m_ObjectHideFlags: 0

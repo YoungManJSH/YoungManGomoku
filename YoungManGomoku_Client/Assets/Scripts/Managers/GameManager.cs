@@ -6,7 +6,7 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private StoneMoveController stoneMoveController;
+    [SerializeField] private StoneMoverSingle stoneMoverSingle;
     [SerializeField] private BoardSweeper oppositeSweeper;
     [SerializeField] private AudioClip winSound;
     [SerializeField] private AudioClip loseSound;
@@ -52,22 +52,32 @@ public class GameManager : MonoBehaviour
         _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         
-        #region 서버에서 받아온 매칭 정보로 초기화
-        SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
-        // if (matchResult.MyStoneColorType is StoneColorType.None) 상대 탈주 등 예외 상황 처리
-        IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
+        #region 테스트용 임시 초기화
+        IsPlayerBlack = true;
+        myPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f);
+        oppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f);
+        PlayerTimer = new UserTimer(15f, 2, 15f);
+        OppositeTimer = new UserTimer(15f, 2, 15f);
+        ByoyomiPurchaseAmount = 2;
+        #endregion
         
-        PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
-        OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
-        oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
-
-        SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
-        PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
-        OppositeTimer = new UserTimer(10f, 2, 15f);
-        ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
-        _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
-        _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
+        //#region 서버에서 받아온 매칭 정보로 초기화
+        //SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
+        //// if (matchResult.MyStoneColorType is StoneColorType.None) 상대 탈주 등 예외 상황 처리
+        //IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
+        //
+        //PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
+        //OpponentPlayerData opponent = matchResult.OpponentPlayer;
+        //myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
+        //oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
+//
+        //SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
+        //PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
+        //OppositeTimer = new UserTimer(10f, 2, 15f);
+        //ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
+        //_eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
+        //_eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
+        //#endregion
         
         #region 기보 저장
         if (IsPlayerBlack)
@@ -126,19 +136,18 @@ public class GameManager : MonoBehaviour
         
         // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
         // 오직 착수만 의미하는 이벤트는 OnStoneMove
-        // 착수 통신은 StoneMoveController에 일임하도록 짜기
-        stoneMoveController.OnStoneMove += isBlackTurn =>
+        stoneMoverSingle.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTimer = isBlackTurn == IsPlayerBlack ? PlayerTimer : OppositeTimer;
             _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             
             /* TODO: 서버에서 받은 타이머 정보로 양쪽 ReviseTimer 실행하기
              내 돌 착수 정보 전송 시점에 OnStoneMove 이벤트를 바로 발생시켜서 내 시간이 안 가도록 해야 함*/
+            
             // 임시 코드, 초읽기 시간 복구용
-            PlayerTimer.ReviseTimer(PlayerTimer.MainTime, PlayerTimer.ByoyomiCount);
-            OppositeTimer.ReviseTimer(OppositeTimer.MainTime, Math.Max(OppositeTimer.ByoyomiCount, 1));
+            PlayerTimer.ReviseTimer();
+            OppositeTimer.ReviseTimer();
         };
-        #endregion
     }
     
     private void OnDestroy() => Instance = null;
