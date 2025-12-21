@@ -68,6 +68,12 @@ public sealed class StoneMoverSingle : StoneMover
         }
         
 #elif UNITY_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            _nowPreview.SetActive(false);
+            return;
+        }
+        
         if (Input.touchCount == 0) return;
         
         Touch touch = Input.GetTouch(0);

@@ -70,6 +70,19 @@ public class ResultPresenter : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    /* TODO: 서버 연결 시 주석 해제
+    private void OnEnable()
+    {
+        if (matchResult.MatchingSuccess is false ||
+            matchResult.MyStoneColorType is StoneColorType.Empty)
+        {
+            mainText.text = "무효";
+            detailText.text = disconnectedText;
+            DisableRematch();
+        }
+    }
+    */
+
     private void Update()
     {
         float remainTime = idlingTime -

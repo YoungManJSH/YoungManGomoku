@@ -46,6 +46,14 @@ public class EventManager : MonoBehaviour
 
     private void Start()
     {
+        // TODO: 서버 연결 시 해당 부분 주석 해제
+        //if (matchResult.MatchingSuccess is false ||
+        //    matchResult.MyStoneColorType is StoneColorType.Empty)
+        //{
+        //    OnGameEnd!.Invoke();
+        //    return;
+        //}
+        
         // Action 개체는 Immutable이므로 구독 순서에 유의할 것!!
         OnGameWin += OnGameEnd;
         OnGameLose += OnGameEnd;

@@ -61,23 +61,30 @@ public class GameManager : MonoBehaviour
         ByoyomiPurchaseAmount = 2;
         #endregion
         
-        //#region 서버에서 받아온 매칭 정보로 초기화
-        //SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
-        //// if (matchResult.MyStoneColorType is StoneColorType.None) 상대 탈주 등 예외 상황 처리
-        //IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
-        //
-        //PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
-        //OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        //myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
-        //oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
-//
-        //SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
-        //PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
-        //OppositeTimer = new UserTimer(10f, 2, 15f);
-        //ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
-        //_eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
-        //_eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
-        //#endregion
+        #region 서버에서 받아온 매칭 정보로 초기화
+        /*
+        SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
+        if (matchResult.MatchingSuccess is false ||
+            matchResult.MyStoneColorType is StoneColorType.Empty)
+        {
+            return;
+        }
+            
+        IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
+        
+        PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
+        OpponentPlayerData opponent = matchResult.OpponentPlayer;
+        myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
+        oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
+
+        SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
+        PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
+        OppositeTimer = new UserTimer(10f, 2, 15f);
+        ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
+        _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
+        _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
+        */
+        #endregion
         
         #region 기보 저장
         if (IsPlayerBlack)

@@ -1,3 +1,8 @@
+using System;
+using System.Threading;
+using DG.Tweening;
+using DG.Tweening.Core;
+using DG.Tweening.Plugins.Options;
 using TMPro;
 using UnityEngine;
 
@@ -8,53 +13,71 @@ public class CountDown : MonoBehaviour
     [SerializeField] private AudioClip startSound;
     
     private TextMeshProUGUI _countDownText;
-    private RectTransform _textTransform;
     private AudioSource _audioSource;
+    private TweenerCore<float, float, FloatOptions> _tween;
+    private CancellationTokenSource _cancelToken;
 
     private void Awake()
     {
         _countDownText = GetComponent<TextMeshProUGUI>();
-        _textTransform = GetComponent<RectTransform>();
         _audioSource = GetComponent<AudioSource>();
+        _cancelToken = new CancellationTokenSource();
+
+        NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
+        EventManager.Instance.OnGameEnd += OnGameEnd;
     }
 
-    private void Start()
+    private void Start() => StartCountDown(_cancelToken.Token).Cancel();
+
+    private void OnDestroy()
     {
-        StartCountDown().Cancel();
+        _cancelToken?.Cancel();
+        _cancelToken?.Dispose();
+        NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
+        EventManager.Instance.OnGameEnd -= OnGameEnd;
     }
 
-    private async Awaitable StartCountDown()
+    private async Awaitable StartCountDown(CancellationToken ctn)
     {
-        for (int count = 3; count > 0; --count)
+        try
         {
-            await ScaleAnimating(count.ToString(), countSound);
-        }
-        
-        await ScaleAnimating("Start!!", startSound);
-        gameObject.SetActive(false);
-        
-        EventManager.Instance.StartGame();
-    }
+            float originSize = _countDownText.fontSize;
+            float minSize = originSize * minScale;
 
-    private async Awaitable ScaleAnimating(string text, AudioClip clip)
-    {
-        _countDownText.text = text;
-        bool isSoundPlayed = false;
-
-        float second = 0f;
-        
-        while (second < 1f)
-        {
-            second += Time.deltaTime;
-            
-            if (isSoundPlayed is false && second >= 0.2f)
+            for (int count = 3; count > 0; --count)
             {
-                _audioSource.PlayOneShot(clip);
-                isSoundPlayed = true;
+                _countDownText.text = count.ToString();
+                _countDownText.fontSize = minSize;
+
+                _tween = DOTween.To(getter: () => _countDownText.fontSize,
+                    setter: size => _countDownText.fontSize = size,
+                    endValue: originSize, duration: 1f).SetEase(Ease.OutSine);
+
+                _audioSource.PlayOneShot(countSound);
+                await Awaitable.WaitForSecondsAsync(1f, ctn);
+                _tween.Kill();
             }
-            
-            _textTransform.localScale = Mathf.Lerp(minScale, 1f, 1f - Mathf.Cos(second * Mathf.PI)) * Vector3.one;
-            await Awaitable.NextFrameAsync();
+
+            _countDownText.text = "Start!!";
+            _countDownText.fontSize = minSize;
+            _tween = DOTween.To(getter: () => _countDownText.fontSize, setter: size => _countDownText.fontSize = size,
+                endValue: originSize, duration: 1f).SetEase(Ease.OutSine);
+
+            _audioSource.PlayOneShot(startSound);
+            await Awaitable.WaitForSecondsAsync(1f, ctn);
+            _tween.Kill(complete: true);
+
+            _countDownText.enabled = false;
+            EventManager.Instance.StartGame();
+            Destroy(gameObject, t: 1f);
+        }
+        catch (OperationCanceledException)
+        {
+            _tween.Kill();
+            _tween = null;
         }
     }
+
+    private void OnRequestFailed(RequestError e) => Destroy(gameObject);
+    private void OnGameEnd() => Destroy(gameObject);
 }

@@ -384,7 +384,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBB34\uC2B9\uBD80"
+  m_text: "\uBB34\uD6A8"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
   m_sharedMaterial: {fileID: -8723602951677602281, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
@@ -4194,10 +4194,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 192.95
+  m_fontSize: 200
   m_fontSizeBase: 200
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 20
   m_fontSizeMax: 3000
   m_fontStyle: 0
@@ -5029,7 +5029,7 @@ MonoBehaviour:
   oppositeDisconnectedText: "\uC0C1\uB300\uBC29\uC758 \uC811\uC18D\uC774 \uB04A\uC5B4\uC84C\uC2B5\uB2C8\uB2E4."
   playerDisconnectedText: "\uC811\uC18D\uC774 \uB04A\uACA8 \uD328\uBC30 \uCC98\uB9AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
   drawText: "\uD310\uC744 \uBAA8\uB450 \uCC44\uC6CC \uBB34\uC2B9\uBD80 \uCC98\uB9AC\uB429\uB2C8\uB2E4."
-  disconnectedText: "\uC11C\uBC84 \uD1B5\uC2E0\uC5D0 \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4."
+  disconnectedText: "\uD1B5\uC2E0\uC5D0 \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4."
   idlingTime: 10
 --- !u!1 &1041641606
 GameObject:
@@ -7179,7 +7179,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC0C1\uB300\uBC29\uC774 \uC2DC\uAC04\uC744"
+  m_text: "\uC5F0\uACB0\uC774 \uB04A\uC5B4\uC84C\uC2B5\uB2C8\uB2E4."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
   m_sharedMaterial: {fileID: -8723602951677602281, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
