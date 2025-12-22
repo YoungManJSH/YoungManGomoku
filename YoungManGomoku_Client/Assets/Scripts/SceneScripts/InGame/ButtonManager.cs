@@ -10,6 +10,7 @@ public class ButtonManager : MonoBehaviour
     [SerializeField] private MessageBoxManager messageBox;
     [SerializeField] private BoardSweeper playerSweeper;
     [SerializeField] private PlayerPanelController playerPanel;
+    [SerializeField] private StoneMover stoneMover;
     
     [SerializeField] private Button surrenderButton;
     [SerializeField] private Button byoyomiPurchaseButton;
@@ -24,10 +25,7 @@ public class ButtonManager : MonoBehaviour
     private ValueTuple<Button, TextMeshProUGUI> _byoyomiPurchaseSet;
     private ValueTuple<Button, TextMeshProUGUI> _takeBackSet;
     private ValueTuple<Button, TextMeshProUGUI> _exitSet;
-    
     private HashSet<ValueTuple<Button, TextMeshProUGUI>> _activateSet; // 플레이어 턴이 올 때마다 활성화시킬 버튼 모음
-    private bool _isPlayerTurn;
-    private bool _isTakeBackedTurn;
     
     private void Awake()
     {
@@ -43,22 +41,18 @@ public class ButtonManager : MonoBehaviour
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
         ButtonInactivate(_exitSet);
-        
         _activateSet = new HashSet<ValueTuple<Button, TextMeshProUGUI>>();
-        _isPlayerTurn = GameManager.Instance.IsPlayerBlack;
-        _isTakeBackedTurn = false;
-
+        
         EventManager em = EventManager.Instance;
         GameManager gm = GameManager.Instance;
-        
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
         em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
         em.OnStartSweeping += DisableIngameButton;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
-        gm.BoardInform.OnTurnChanged += OnTurnChanged;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
+        stoneMover.OnStoneMove += OnStoneMove;
 
 #if UNITY_ANDROID
         messageBox.OnOpened += () =>
@@ -147,37 +141,21 @@ public class ButtonManager : MonoBehaviour
 
     private void TakeBack()
     {
-        _isTakeBackedTurn = true;
         ButtonInactivate(_takeBackSet);
         GameManager.Instance.SendTakeBackRequest();
     }
 
-    private void OnTurnChanged(int turn)
+    private void OnStoneMove(bool isBlackTurn)
     {
-        if (_isTakeBackedTurn)
-        {
-            _isTakeBackedTurn = false;
-            return;
-        }
-        
-        _isPlayerTurn = (turn % 2 == 0) == GameManager.Instance.IsPlayerBlack;
-        
-        if (_isPlayerTurn)
+        if (isBlackTurn == GameManager.Instance.IsPlayerBlack)
         {
 #if UNITY_ANDROID
-            if (messageBox.gameObject.activeSelf is false)
-            {
-                foreach (var buttonSet in _activateSet)
-                {
-                    ButtonActivate(buttonSet);
-                }
-            }
-#else
+            if (messageBox.gameObject.activeSelf) return;
+#endif
             foreach (var buttonSet in _activateSet)
             {
                 ButtonActivate(buttonSet);
             }
-#endif
         }
         else
         {

@@ -16,7 +16,7 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private Image clockIcon;
     [SerializeField] private TextMeshProUGUI nicknameText;
     [SerializeField] private TextMeshProUGUI recordText;
-    [SerializeField] private StoneMoverSingle stoneMoverSingle;
+    [SerializeField] private StoneMover stoneMover;
     [SerializeField] private AudioClip useByoyomiSound;
     [SerializeField] private AudioClip byoyomiTickSound;
     [SerializeField] private AudioClip byoyomiWarningSound;
@@ -111,7 +111,7 @@ public class PlayerPanelController : MonoBehaviour
             em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
         } 
         
-        stoneMoverSingle.OnStoneMove += OnTurnChanged;
+        stoneMover.OnStoneMove += OnStoneMove;
         enabled = false;
     }
     
@@ -209,7 +209,7 @@ public class PlayerPanelController : MonoBehaviour
         }
     }
 
-    private void OnTurnChanged(bool isBlackTurn)
+    private void OnStoneMove(bool isBlackTurn)
     {
         if (_isGameEnd) return;
         
