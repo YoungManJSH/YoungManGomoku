@@ -84,6 +84,14 @@ public class UserTimer : IComparable<UserTimer>
         }
     }
 
+    /// <summary> 착수 후 초읽기 복구 함수 </summary>
+    public void ReviseTimer()
+    {
+        if (ByoyomiCount == 0) ByoyomiCount = 1;
+        NowByoyomiSeconds = initByoyomiSeconds;
+        _isTimeOut = false;
+    }
+    
     /// <summary> [서버,클라이언트] 타이머 동기화 함수 </summary>
     public void ReviseTimer(float mainTime, int byoyomiCount)
     {
