@@ -5,9 +5,20 @@ using YoungManGomoku_Protocol;
 
 public class LobbySceneManager : MonoBehaviour
 {
+    public static LobbySceneManager Instance { get; private set; }
+    
     [SerializeField] private GameObject matchMakePanel;
     
     private PlayerDataFromWebServer playerDataFromWebServer;
+
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
 
     private void Start()
     {
@@ -33,6 +44,7 @@ public class LobbySceneManager : MonoBehaviour
         if (matchData != null)
         {
             PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
+            Destroy(SoundManager.instance.gameObject); 
             SceneManager.LoadScene("InGameScene");
         }
     }
