@@ -89,7 +89,7 @@ public class PlayerPanelController : MonoBehaviour
         _initByoyomiSecondText = Mathf.CeilToInt(_myTimer.initByoyomiSeconds).ToString("D2");
         byoyomiTimer.text = _initByoyomiSecondText;
         
-        BasicPlayerData myUser = isPlayer ? gm.myPlayer : gm.oppositePlayer;
+        BasicPlayerData myUser = isPlayer ? gm.MyPlayer : gm.OppositePlayer;
         InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating);
         
         EventManager em = EventManager.Instance;

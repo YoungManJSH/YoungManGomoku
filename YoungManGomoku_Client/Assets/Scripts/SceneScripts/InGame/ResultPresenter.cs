@@ -24,6 +24,7 @@ public class ResultPresenter : MonoBehaviour
     [SerializeField] private string playerDisconnectedText;
     [SerializeField] private string drawText;
     [SerializeField] private string disconnectedText;
+    [SerializeField] private string matchingFailText;
     [SerializeField] private float idlingTime;
     
     private int _prevTime;
@@ -36,7 +37,7 @@ public class ResultPresenter : MonoBehaviour
 
         NetworkManager.Instance.OnRequestFailed += _ =>
         {
-            mainText.text = "무효";
+            mainText.text = "통신 실패";
             detailText.text = disconnectedText;
             DisableRematch();
         };
@@ -67,21 +68,17 @@ public class ResultPresenter : MonoBehaviour
             DisableRematch();
         };
         
-        gameObject.SetActive(false);
-    }
-
-    /* TODO: 서버 연결 시 주석 해제
-    private void OnEnable()
-    {
+        /* TODO: 서버 연결 시 주석 해제
         if (matchResult.MatchingSuccess is false ||
             matchResult.MyStoneColorType is StoneColorType.Empty)
         {
-            mainText.text = "무효";
-            detailText.text = disconnectedText;
+            mainText.text = "매칭 실패";
+            detailText.text = matchingFailText;
             DisableRematch();
-        }
+        } */
+        
+        gameObject.SetActive(false);
     }
-    */
 
     private void Update()
     {

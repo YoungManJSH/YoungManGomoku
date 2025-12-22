@@ -27,6 +27,13 @@ public class ProgressText : MonoBehaviour
         em.OnOppositeTimeOut += () => OnGameOver("시간승");
         em.OnOppositeDisconnectedWin += () => OnGameOver("접속끊김승");
         em.OnGameDraw += () => OnGameOver("무승부");
+        
+        /* TODO: 서버 연결 시 주석 해제
+        if (matchResult.MatchingSuccess is false ||
+            matchResult.MyStoneColorType is StoneColorType.Empty)
+        {
+            _progressText.text = "-매칭 실패-";
+        } */
     }
     
     private void OnTurnChanged(int turn)

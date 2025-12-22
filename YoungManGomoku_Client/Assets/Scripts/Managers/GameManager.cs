@@ -20,10 +20,9 @@ public class GameManager : MonoBehaviour
     public UserTimer OppositeTimer { get; private set; }
     public int ByoyomiPurchaseAmount { get; private set; }
     public bool IsByoyomiPurchased { get; private set; }
+    public BasicPlayerData MyPlayer { get; private set; }
+    public BasicPlayerData OppositePlayer { get; private set; }
 
-    public BasicPlayerData myPlayer;
-    public BasicPlayerData oppositePlayer;
-    
     private UserTimer _nowPlayerTimer;
     private EventManager _eventManager;
     private AudioSource _audioSource;
@@ -54,8 +53,8 @@ public class GameManager : MonoBehaviour
         
         #region 테스트용 임시 초기화
         IsPlayerBlack = true;
-        myPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f);
-        oppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f);
+        MyPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f);
+        OppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f);
         PlayerTimer = new UserTimer(15f, 2, 15f);
         OppositeTimer = new UserTimer(15f, 2, 15f);
         ByoyomiPurchaseAmount = 2;
@@ -63,23 +62,27 @@ public class GameManager : MonoBehaviour
         
         #region 서버에서 받아온 매칭 정보로 초기화
         /*
+        PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
+        MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
+        
         SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
         if (matchResult.MatchingSuccess is false ||
             matchResult.MyStoneColorType is StoneColorType.Empty)
         {
+            OppositePlayer = new BasicPlayerData(String.Empty, 0, 0, 0, 0f);
+            PlayerTimer = new UserTimer(0f, 3, 30f);
+            OppositeTimer = new UserTimer(0f, 3, 30f);
             return;
         }
             
         IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
-        PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        myPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
-        oppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
+        OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
 
         SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
         PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
-        OppositeTimer = new UserTimer(10f, 2, 15f);
+        OppositeTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
         ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
         _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
         _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
@@ -89,8 +92,8 @@ public class GameManager : MonoBehaviour
         #region 기보 저장
         if (IsPlayerBlack)
         {
-            BasicPlayerData blackUser = myPlayer;
-            BasicPlayerData whiteUser = oppositePlayer;
+            BasicPlayerData blackUser = MyPlayer;
+            BasicPlayerData whiteUser = OppositePlayer;
 
             _eventManager.OnPlayerGomoku += ()
                 => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 승리");
@@ -115,8 +118,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            BasicPlayerData blackUser = oppositePlayer;
-            BasicPlayerData whiteUser = myPlayer;
+            BasicPlayerData blackUser = OppositePlayer;
+            BasicPlayerData whiteUser = MyPlayer;
             
             _eventManager.OnPlayerGomoku += ()
                 => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 승리");
