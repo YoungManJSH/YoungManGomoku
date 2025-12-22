@@ -1,4 +1,5 @@
 ﻿using System;
+using Global.Protocol.TypeEnum;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 /*
@@ -126,9 +127,12 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_PlaceStoneDTO
     {
         public string IDToken { get; set; }
-        public byte X { get; set; }
-        public byte Y { get; set; }
+        public byte Row { get; set; }
+        public byte Col { get; set; }
+        public UserTimer MyTimer { get; set; }
     }
+    
+    // 그밖에 인게임 요청은 IngameRequest enum값만 보내면 될 듯
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
@@ -184,23 +188,25 @@ namespace YoungManGomoku_Protocol.ServerToClient
         }
     }
 
-    // 착수가 이루어질 때마다 클라가 받을 타이머 정보
-    public struct SC_TimerDTO
+    // 착수가 이루어질 때 상대방 클라이언트가 받을 착수 및 타이머 정보
+    public class SC_OpponentMoveDTO
     {
-        // byoyomiSeconds는 착수가 될 때마다 리셋되므로 보내줄 필요 없음
-        public float BlackMainTime { get; set; }
-        public int BlackByoyomiCount { get; set; }
-        public float WhiteMainTime { get; set; }
-        public int WhiteByoyomiCount { get; set; }
+	    public byte Row { get; set; }
+	    public byte Col { get; set; }
+	    public UserTimer OpponentTimer { get; set; }
+	    public GameEndCode EndCode { get; set; }
 
-        public SC_TimerDTO(float blackMainTime, int blackByoyomiCount, float whiteMainTime, int whiteByoyomiCount)
-        {
-            BlackMainTime = blackMainTime;
-            BlackByoyomiCount = blackByoyomiCount;
-            WhiteMainTime = whiteMainTime;
-            WhiteByoyomiCount = whiteByoyomiCount;
-        }
+	    public SC_OpponentMoveDTO(byte row, byte col, UserTimer opponentTimer, GameEndCode endCode = GameEndCode.None)
+	    {
+		    Row = row;
+		    Col = col;
+		    OpponentTimer = opponentTimer;
+		    EndCode = endCode; // None or GomokuLose or BlackUnmovable
+	    }
     }
+    
+    /* 플레이어의 타이머를 반려시킬 때 보낼 동기화용 타이머 정보는 그냥 UserTimer 바로 보내주면 될 듯?
+     * 상대방 착수 없이 게임 종료되는 케이스에는 EndCode enum값만 보내주면 될 듯? */
 }
 
 

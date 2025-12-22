@@ -74,6 +74,7 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameEnd += DisableUpdate;
         _em.OnStartSweeping += DisableUpdate;
         _em.OnTakeBack += TakeBack;
+        GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
         OnAwake(); // 자식 클래스에서 추가적으로 정의한 Awake 로직
     }
@@ -94,6 +95,7 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameEnd -= DisableUpdate;
         _em.OnStartSweeping -= DisableUpdate;
         _em.OnTakeBack -= TakeBack;
+        GameManager.Instance.PlayerTimer.OnTimeOut -= DisableUpdate;
     }
     
     /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
@@ -127,7 +129,9 @@ public abstract class StoneMover : MonoBehaviour
         _audioSource.PlayOneShot(deniedSound);
         _forbiddenCoords.Add(coord);
     }
-
+    
+    private void DisableUpdate() => enabled = false;
+    
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)
     {
@@ -282,8 +286,6 @@ public abstract class StoneMover : MonoBehaviour
         MoveStone((7, 7));
         recentMark.SetActive(true);
     }
-
-    private void DisableUpdate() => enabled = false;
     
     /// <summary> 무르기 적용 - 최근 돌 2개 제거 </summary>
     private void TakeBack()

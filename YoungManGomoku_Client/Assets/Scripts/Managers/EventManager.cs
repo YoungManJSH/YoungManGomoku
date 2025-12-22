@@ -73,8 +73,12 @@ public class EventManager : MonoBehaviour
         OnPlayerDisconnectedLose += OnGameLose;
     }
 
-    public void StartGame() => OnGameStart!.Invoke();
-
+    public void StartGame()
+    {
+        /*TODO: 스타트 요청 서버 보내는 것부터 시작*/
+        OnGameStart!.Invoke();
+    }
+    
     public void StartSweeping() => OnStartSweeping!.Invoke();
     
     public void PlayerSurrendered() => OnPlayerSurrender!.Invoke();
