@@ -38,6 +38,11 @@ public class SoundManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        
+    }
+
+    private void Start()
+    {
         audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
         audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
         audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
@@ -66,6 +71,8 @@ public class SoundManager : MonoBehaviour
 
     // c#에서는 bool값이 값형이라서, 함수에서 값을 변경하면 원본에 반영이 안된다.
     // 그래서 ref로 인자를 넘겨줘야 함
+    // 로그 내부에 0이 들어갈 수 없음. 유니티에서 해당 값에 0을 넣으면, 디폴트 값으로 변환하는 것을 확인함
+    // 슬라이더의 최소 값을 0이 아닌 0.0001로 바꿔서 해당 문제를 해결.
     public void ChangeVolumeState(VolumeType type)
     {
         switch (type)

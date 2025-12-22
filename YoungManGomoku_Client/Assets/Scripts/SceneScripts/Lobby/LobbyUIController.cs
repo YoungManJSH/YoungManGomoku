@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,6 +14,9 @@ public class LobbyUIController : MonoBehaviour
     
     [Header("ReplayPanel")]
     [SerializeField] private GameObject replayPanel;
+    
+    [Header("SettingPanel")]
+    [SerializeField] private GameObject settingPanel;
     
     [Header("MatchMakingPanel")]
     [SerializeField] private GameObject matchMakingPanel;
@@ -44,13 +48,17 @@ public class LobbyUIController : MonoBehaviour
         {
             if (matchMakingPanel.activeSelf)
             {
-                matchMakingPanel.SetActive(false);
+                LobbySceneManager.Instance.CancleMatchMaking();
                 return;
             }
-
-            if (replayPanel.activeSelf)
+            else if (replayPanel.activeSelf)
             {
                 replayPanel.SetActive(false);
+                return;
+            }
+            else if (settingPanel.activeSelf)
+            {
+                settingPanel.SetActive(false);
                 return;
             }
 
