@@ -127,10 +127,42 @@ public class NetworkManager : MonoBehaviour
         => await RequestPostServer<SC_ResponseStringDTO>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
 
 
+    // 작성도중 껍데기뿐
+	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 10)
+	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameStart", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Game Start");
 
-    // 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
-    public async Awaitable<RecvData> RequestPing<RecvData>(int timeOutSeconds = 10, string successAnnounce = "=== Ping Pong Success! ===")
-        => await RequestServer<RecvData>("Ping", "GET", "\"\"", timeOutSeconds, successAnnounce);
+
+	/// <summary>
+	/// 착수 요청
+	/// </summary>
+	/// <param name="placeStoneDTO"></param>
+	/// 클라이언트 인증용 ID Token, 착수 (x,y) 위치 좌표, Client Timer 정보
+	/// UserTimer의 경우 너무 크기 때문에 추후 Timer 정보에서 서버 전송에 필요한 것들만 따로 선별할 필요성 있음
+	/// <param name="timeOutSeconds"></param>
+	/// /// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
+	/// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
+	/// <returns> 
+	/// null : 서버 터짐 
+	/// </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 10)
+	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
+
+
+	/// <summary>
+	/// 웹 서버에 하트 비트 요청 (접속 여부 확인)
+	/// </summary>
+	/// <param name="timeOutSeconds"></param>
+	/// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
+	/// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
+	/// <returns></returns>
+	public async Awaitable<string> RequestHeartbeat(int timeOutSeconds = 10)
+		=> await RequestServer<string>("Heartbeat", "GET", "\"\"", timeOutSeconds, "=== Heart Beat Success ===");
+
+
+	// 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
+	// 응답만 해주는 테스트용 함수기 때문에 별도의 서버 동작이 이루어지진 않음.
+	public async Awaitable<string> RequestPing(int timeOutSeconds = 10, string successAnnounce = "=== Ping Pong Success! ===")
+        => await RequestServer<string>("Ping", "GET", "\"\"", timeOutSeconds, successAnnounce);
 
 
 

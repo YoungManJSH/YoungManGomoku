@@ -14,17 +14,13 @@ namespace YoungManGomoku_WebServer.Controllers
     [ApiController]
     public class MatchingController : ControllerBase
     {
-        ApplicationDBContext _context;
-
         private readonly ILogger<MatchingController> _logger;
         private readonly ServerManager _serverManager;
         private readonly MatchingManager _matchingManager;
 
-        // ConcurrentQueue<PlayerSession> _MatchingQueue;
-        public MatchingController(ILogger<MatchingController> logger, ApplicationDBContext context, ServerManager serverManager, MatchingManager matchingManager)
+        public MatchingController(ILogger<MatchingController> logger, ServerManager serverManager, MatchingManager matchingManager)
         {
             _logger = logger;
-            _context = context;
             _serverManager = serverManager;
             _matchingManager = matchingManager;
         }
@@ -34,12 +30,14 @@ namespace YoungManGomoku_WebServer.Controllers
         {
             _logger.LogTrace($"[{DateTime.UtcNow}] [Matching Controller]Match Register By [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}");
 
+            // Long Polling
             MatchResult mr = await _matchingManager.EnqueueAsync(idToken, ct);
             SC_MatchResultDTO scDTO = new SC_MatchResultDTO(
                 _serverManager.ComposeOpponentPlayerData(mr.OpponentID),
                 mr.Message,
                 mr.Success,
                 mr.StoneColor,
+                // 초기값에 대한 정의에 대한 기획이 따로 없으므로 우선 magic number로 처리.
                 new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount: 3, byoyomiSeconds: 30f, byoyomiPurchaseAmount: 2)
                 );
             _logger.LogTrace($"[{DateTime.UtcNow}] [Matching Controller]Match Register Response : [{_serverManager.GetPlayerUID(idToken)}]{_serverManager.GetPlayerSession(_serverManager.GetPlayerUID(idToken)).Account.Nickname}\nVerSus\n[{mr.OpponentID}]{_serverManager.GetPlayerSession(mr.OpponentID).Account.Nickname}\n{mr.Message},{mr.Success}");

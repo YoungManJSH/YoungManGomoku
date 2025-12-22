@@ -64,6 +64,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     _logger.LogDebug($"[{DateTime.UtcNow}] Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
                     return Task.FromResult(new MatchResult
                     {
+                        StoneColor = StoneColorType.Empty,
                         Success = false,
                         Message = "Server busy"
                     });
@@ -75,7 +76,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     //throw new InvalidOperationException("Already matching");
                     return Task.FromResult(new MatchResult
                     {
-                        Success = false,
+						StoneColor = StoneColorType.Empty,
+						Success = false,
                         Message = "Already matching"
                     });
                 }
@@ -171,12 +173,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
 
                 Random random = new Random();              
-                int color = random.Next(0, 2);
+                int colorRandomValue = random.Next(0, 2);
                 p1.TaskCompSrc.TrySetResult(new MatchResult
                 {
                     Success = true,
                     OpponentID = _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
-                    StoneColor = (StoneColorType)(color) + 1,
+                    StoneColor = StoneColorType.Black + colorRandomValue,
                     GameRoomID = roomID
                 });
 
@@ -184,7 +186,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 {
                     Success = true,
                     OpponentID = _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
-                    StoneColor = (StoneColorType)(2-color),
+                    StoneColor = StoneColorType.White - colorRandomValue,
                     GameRoomID = roomID
                 });
 

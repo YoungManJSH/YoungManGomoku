@@ -1,5 +1,4 @@
 ﻿using System;
-using Global.Protocol.TypeEnum;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 /*
@@ -127,9 +126,13 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_PlaceStoneDTO
     {
         public string IDToken { get; set; }
-        public byte Row { get; set; }
+		public UserTimer MyTimer { get; set; }
+		public byte Row { get; set; }
         public byte Col { get; set; }
-        public UserTimer MyTimer { get; set; }
+        
+        // Unity Transform과 무관한 보드 좌표 Read 전용
+		public byte X => Row;
+		public byte Y => Col;
     }
     
     // 그밖에 인게임 요청은 IngameRequest enum값만 보내면 될 듯

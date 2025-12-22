@@ -10,10 +10,12 @@ public class Board
     private readonly StoneColorType[,] _nowBoard;
     private readonly JudgeType[,] _blackJudges;
     private readonly List<(int row, int col)> _record;
-    /// <summary> 기보를 방어적 복사로 전달하는 프로퍼티 </summary>
-    public List<(int row, int col)> Record => new (_record);
 
-    private int _nowTurn;
+    /// <summary> 기보를 방어적 복사로 전달하는 프로퍼티 </summary>
+    public List<(int row, int col)> Record => new List<(int row, int col)>(_record); // C# 8
+
+
+	private int _nowTurn;
     public int NowTurn
     {
         get => _nowTurn;
@@ -37,10 +39,10 @@ public class Board
     
     public event Action<int> OnTurnChanged; // 현재 턴을 매개변수로 전달
     public event Action OnTurnBackActivate; // 무르기 활성화 이벤트 (3수 착수)
-    public event Action OnBlackGomoku; // 흑돌 오목 상황
-    public event Action OnWhiteGomoku; // 백돌 오목(장목 포함) 상황
-    public event Action OverMaxTurn; // 판 꽉 채운 경우 (무승부 처리로 연결)
-    public event Action OnBlackUnmovable; // 흑돌 금수패 상황 (백돌 승리로 연결)
+    public event Action OnBlackGomoku;      // 흑돌 오목 상황
+    public event Action OnWhiteGomoku;      // 백돌 오목(장목 포함) 상황
+    public event Action OverMaxTurn;        // 판 꽉 채운 경우 (무승부 처리로 연결)
+    public event Action OnBlackUnmovable;   // 흑돌 금수패 상황 (백돌 승리로 연결)
     
     public StoneColorType this[int row, int col] => _nowBoard[row, col];
 
