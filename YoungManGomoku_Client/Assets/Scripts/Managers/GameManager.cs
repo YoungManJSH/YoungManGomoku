@@ -6,7 +6,7 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private StoneMoverSingle stoneMoverSingle;
+    [SerializeField] private StoneMover stoneMover;
     [SerializeField] private BoardSweeper oppositeSweeper;
     [SerializeField] private AudioClip winSound;
     [SerializeField] private AudioClip loseSound;
@@ -146,7 +146,7 @@ public class GameManager : MonoBehaviour
         
         // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
         // 오직 착수만 의미하는 이벤트는 OnStoneMove
-        stoneMoverSingle.OnStoneMove += isBlackTurn =>
+        stoneMover.OnStoneMove += isBlackTurn =>
         {
             _nowPlayerTimer = isBlackTurn == IsPlayerBlack ? PlayerTimer : OppositeTimer;
             _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -171,7 +171,7 @@ public class GameManager : MonoBehaviour
         _lastTime = nowTime;
     }
 
-    // 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 
+    // TODO: 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 
     public void SendTakeBackRequest()
     {
         if (BoardInform.TryTakeBack() is false)

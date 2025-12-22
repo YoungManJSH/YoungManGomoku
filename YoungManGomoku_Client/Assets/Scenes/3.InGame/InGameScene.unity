@@ -2102,6 +2102,7 @@ MonoBehaviour:
   messageBox: {fileID: 530988113}
   playerSweeper: {fileID: 780528804}
   playerPanel: {fileID: 702740387}
+  stoneMover: {fileID: 362371476}
   surrenderButton: {fileID: 1120175422}
   byoyomiPurchaseButton: {fileID: 940303152}
   takeBackButton: {fileID: 1068441404}
@@ -2653,7 +2654,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 793b18fc23dbc23468a317000dcc9f2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  stoneMoverSingle: {fileID: 362371476}
+  stoneMover: {fileID: 362371476}
   oppositeSweeper: {fileID: 1989689724}
   winSound: {fileID: 8300000, guid: 22a7897e60a63de4ca2ccf8dc45266eb, type: 3}
   loseSound: {fileID: 8300000, guid: afdd92fb925bf894fbe429635940c64a, type: 3}
@@ -3017,7 +3018,7 @@ MonoBehaviour:
   clockIcon: {fileID: 1943621003}
   nicknameText: {fileID: 1246139021}
   recordText: {fileID: 1921073174}
-  stoneMoverSingle: {fileID: 362371476}
+  stoneMover: {fileID: 362371476}
   useByoyomiSound: {fileID: 0}
   byoyomiTickSound: {fileID: 0}
   byoyomiWarningSound: {fileID: 0}
@@ -3224,7 +3225,7 @@ MonoBehaviour:
   clockIcon: {fileID: 2002091781}
   nicknameText: {fileID: 962777831}
   recordText: {fileID: 1617508297}
-  stoneMoverSingle: {fileID: 362371476}
+  stoneMover: {fileID: 362371476}
   useByoyomiSound: {fileID: 8300000, guid: 387e17f412be49c46ad74ed7157a26e2, type: 3}
   byoyomiTickSound: {fileID: 8300000, guid: 82af92b2ba6abea4988e27c15e4ed8cf, type: 3}
   byoyomiWarningSound: {fileID: 8300000, guid: 102a0c83ef638ac4582bb33f431cc41d, type: 3}
@@ -6143,7 +6144,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 362371476}
-        m_TargetAssemblyTypeName: StoneMoveController, Assembly-CSharp
+        m_TargetAssemblyTypeName: StoneMoverSingle, Assembly-CSharp
         m_MethodName: MoveConfirmed
         m_Mode: 1
         m_Arguments:
@@ -6206,7 +6207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConfirmButtonMoving
   dragStartTime: 0.6
   blackButtonSprite: {fileID: 21300000, guid: c458810e213fc2144a775b6d4bcd8344, type: 3}
-  stoneMoverSingle: {fileID: 362371476}
+  stoneMover: {fileID: 362371476}
 --- !u!1 &1897755328
 GameObject:
   m_ObjectHideFlags: 0

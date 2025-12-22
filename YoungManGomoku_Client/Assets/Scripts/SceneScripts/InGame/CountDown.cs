@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
@@ -15,67 +14,82 @@ public class CountDown : MonoBehaviour
     private TextMeshProUGUI _countDownText;
     private AudioSource _audioSource;
     private TweenerCore<float, float, FloatOptions> _tween;
-    private CancellationTokenSource _cancelToken;
+    private long _startTime;
+    private int _elapsedSecond;
+    private float _originFontSize;
+    private float _minFontSize;
 
     private void Awake()
     {
         _countDownText = GetComponent<TextMeshProUGUI>();
         _audioSource = GetComponent<AudioSource>();
-        _cancelToken = new CancellationTokenSource();
+        _elapsedSecond = 0;
+        _originFontSize = _countDownText.fontSize;
+        _minFontSize = _originFontSize * minScale;
 
         NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
         EventManager.Instance.OnGameEnd += OnGameEnd;
     }
 
-    private void Start() => StartCountDown(_cancelToken.Token).Cancel();
+    private void Start()
+    {
+        _startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        DoTextAnim("3");
+        _audioSource.PlayOneShot(countSound);
+    }
+
+    private void Update()
+    {
+        int elapsed = Mathf.FloorToInt((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _startTime) / 1000f);
+        
+        if (elapsed > _elapsedSecond)
+        {
+            _tween.Kill();
+            _countDownText.fontSize = _originFontSize;
+            
+            if (elapsed < 3)
+            {
+                DoTextAnim((3 - elapsed).ToString());
+                _audioSource.PlayOneShot(countSound);
+            }
+            else if (elapsed == 3)
+            {
+                DoTextAnim("Start!!");
+                _audioSource.PlayOneShot(startSound);
+            }
+            else
+            {
+                if (_elapsedSecond < 3)
+                {
+                    // Start!! 연출을 건너뛴 경우 사운드만 재생
+                    _audioSource.PlayOneShot(startSound);
+                }
+                
+                _countDownText.enabled = false;
+                EventManager.Instance.StartGame();
+                enabled = false;
+                Destroy(gameObject, t: 3f);
+            }
+            
+            _elapsedSecond = elapsed;
+        }
+    }
 
     private void OnDestroy()
     {
-        _cancelToken?.Cancel();
-        _cancelToken?.Dispose();
+        _tween?.Kill();
         NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
         EventManager.Instance.OnGameEnd -= OnGameEnd;
     }
 
-    private async Awaitable StartCountDown(CancellationToken ctn)
+    private void DoTextAnim(string text)
     {
-        try
-        {
-            float originSize = _countDownText.fontSize;
-            float minSize = originSize * minScale;
+        _countDownText.text = text;
+        _countDownText.fontSize = _minFontSize;
 
-            for (int count = 3; count > 0; --count)
-            {
-                _countDownText.text = count.ToString();
-                _countDownText.fontSize = minSize;
-
-                _tween = DOTween.To(getter: () => _countDownText.fontSize,
-                    setter: size => _countDownText.fontSize = size,
-                    endValue: originSize, duration: 1f).SetEase(Ease.OutSine);
-
-                _audioSource.PlayOneShot(countSound);
-                await Awaitable.WaitForSecondsAsync(1f, ctn);
-                _tween.Kill();
-            }
-
-            _countDownText.text = "Start!!";
-            _countDownText.fontSize = minSize;
-            _tween = DOTween.To(getter: () => _countDownText.fontSize, setter: size => _countDownText.fontSize = size,
-                endValue: originSize, duration: 1f).SetEase(Ease.OutSine);
-
-            _audioSource.PlayOneShot(startSound);
-            await Awaitable.WaitForSecondsAsync(1f, ctn);
-            _tween.Kill(complete: true);
-
-            _countDownText.enabled = false;
-            EventManager.Instance.StartGame();
-            Destroy(gameObject, t: 1f);
-        }
-        catch (OperationCanceledException)
-        {
-            _tween.Kill();
-            _tween = null;
-        }
+        _tween = DOTween.To(getter: () => _countDownText.fontSize,
+            setter: size => _countDownText.fontSize = size,
+            endValue: _originFontSize, duration: 1f).SetEase(Ease.OutSine);
     }
 
     private void OnRequestFailed(RequestError e) => Destroy(gameObject);

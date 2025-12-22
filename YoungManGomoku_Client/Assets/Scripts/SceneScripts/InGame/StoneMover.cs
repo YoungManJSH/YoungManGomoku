@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
@@ -7,60 +8,64 @@ public abstract class StoneMover : MonoBehaviour
 {
     [SerializeField] protected GameObject blackStone;
     [SerializeField] protected GameObject whiteStone;
-    [SerializeField] protected GameObject forbiddenMark;
-    [SerializeField] protected AudioClip deniedSound;
-    [SerializeField] protected AudioClip takeBackSound;
-    [SerializeField] protected MessageBoxManager messageBox;
-    [SerializeField] protected float previewAlpha;
-    [SerializeField] protected Camera mainCamera;
+    [SerializeField] private GameObject forbiddenMark;
+    [SerializeField] private AudioClip deniedSound;
+    [SerializeField] private AudioClip takeBackSound;
+    [SerializeField] private MessageBoxManager messageBox;
+    [SerializeField] private float previewAlpha;
+    [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject recentMark;
     
-    protected Board boardInform;
-    protected SpriteRenderer spriteRenderer;
-    protected AudioSource audioSource;
     protected Transform blackParent;
     protected Transform whiteParent;
-    private Transform forbiddenParent;
-    protected HashSet<(int row, int col)> forbiddenCoords;
+    protected GameObject nowPreview;
     protected Color previewColor;
-    protected bool isBlackTurn;
-    protected (int row, int col) prevCoord; // 직전에 인식한 오목판 좌표
+    private Board _boardInform;
+    private SpriteRenderer _spriteRenderer;
+    private AudioSource _audioSource;
+    private Transform _forbiddenParent;
+    private HashSet<(int row, int col)> _forbiddenCoords;
+    private bool _isBlackTurn;
+    private (int row, int col) _prevCoord; // 직전에 인식한 오목판 좌표
     
-    private float marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
-    protected float firstLineWorld; // 첫 번째 격자 위치
-    protected float cellSizeWorld; // World 좌표 단위 격자 간격
+    private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
+    private float _firstLineWorld; // 첫 번째 격자 위치
+    private float _cellSizeWorld; // World 좌표 단위 격자 간격
     
     private IngameBoardManager _ingameBoardManager;
     private (GameObject black, GameObject white) _recentStone;
     private Camera _mainCamera;
     private EventManager _em;
 
+    /// <summary> 매개변수: 시작된 턴이 흑돌 턴인지 여부 </summary>
+    public event Action<bool> OnStoneMove;
+    
     protected void Awake()
     {
         _ingameBoardManager = GetComponent<IngameBoardManager>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        audioSource = GetComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.loop = false;
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        _audioSource = GetComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.loop = false;
 
         blackParent = new GameObject("Black Parent").transform;
         whiteParent = new GameObject("White Parent").transform;
-        forbiddenParent = new GameObject("Forbidden Parent").transform;
+        _forbiddenParent = new GameObject("Forbidden Parent").transform;
         blackParent.SetParent(transform);
         whiteParent.SetParent(transform);
-        forbiddenParent.SetParent(transform);
-        forbiddenCoords = new HashSet<(int row, int col)>();
+        _forbiddenParent.SetParent(transform);
+        _forbiddenCoords = new HashSet<(int row, int col)>();
         
         previewColor = new Color(1f, 1f, 1f, previewAlpha);
         CreatePreview();
         
-        boardInform = GameManager.Instance.BoardInform;
-        prevCoord = (-1, -1);
-        isBlackTurn = true;
+        _boardInform = GameManager.Instance.BoardInform;
+        _prevCoord = (-1, -1);
+        _isBlackTurn = true;
         recentMark.SetActive(false);
         
         _ingameBoardManager.OnBoardScaled += async () => await CalcWorldValue();
-        boardInform.OnBlackUnmovable += OnBlackUnmovable;
+        _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
 
@@ -69,6 +74,7 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameEnd += DisableUpdate;
         _em.OnStartSweeping += DisableUpdate;
         _em.OnTakeBack += TakeBack;
+        GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
         OnAwake(); // 자식 클래스에서 추가적으로 정의한 Awake 로직
     }
@@ -82,13 +88,14 @@ public abstract class StoneMover : MonoBehaviour
 
     protected void OnDestroy()
     {
-        boardInform.OnBlackUnmovable -= OnBlackUnmovable;
+        _boardInform.OnBlackUnmovable -= OnBlackUnmovable;
         messageBox.OnOpened -= MessageBoxOpened;
         messageBox.TurnBackToGame -= MessageBoxClosed;
         _em.OnGameStart -= OnGameStart;
         _em.OnGameEnd -= DisableUpdate;
         _em.OnStartSweeping -= DisableUpdate;
         _em.OnTakeBack -= TakeBack;
+        GameManager.Instance.PlayerTimer.OnTimeOut -= DisableUpdate;
     }
     
     /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
@@ -97,42 +104,135 @@ public abstract class StoneMover : MonoBehaviour
     private void MessageBoxOpened() => enabled = false;
     protected abstract void MessageBoxClosed();
 
-    /// <summary> PC 및 모바일 착수 입력 프로세스 </summary>
-    protected abstract void InputProcessing();
-    
-    /// <summary>[row, col] 위치에 착수 시도, 금수일 경우 Forbidden mark 생성</summary>
-    protected abstract void MoveStone((int row, int col) coord);
-
     /// <summary> 착수 위치를 미리 표시하는 반투명 preview 생성 </summary>
     protected abstract void CreatePreview();
+    
+    /// <summary>[row, col] 위치에 착수 시도, 금수일 경우 Forbidden mark 생성</summary>
+    protected void MoveStone((int row, int col) coord)
+    {
+        Vector3 position = _spriteRenderer.bounds.min + new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
+            _firstLineWorld + _cellSizeWorld * (Board.MaxCoord - coord.row), 0f);
 
+        if (_boardInform.TryMoveStone(coord.row, coord.col))
+        {
+            PlaceStone(position);
+            _audioSource.Play();
+            if (_isBlackTurn) ClearForbiddenMarks();
+            _isBlackTurn = _boardInform.NowTurn % 2 == 0;
+            
+            OnStoneMove?.Invoke(_isBlackTurn);
+            return;
+        }
+
+        // 금수로 인한 착수 실패
+        PlaceForbiddenMark(position);
+        _audioSource.PlayOneShot(deniedSound);
+        _forbiddenCoords.Add(coord);
+    }
+    
+    private void DisableUpdate() => enabled = false;
+    
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
-    protected abstract void UpdatePreview((int row, int col) coord);
+    private void UpdatePreview((int row, int col) coord)
+    {
+        nowPreview.transform.position = _spriteRenderer.bounds.min +
+                                        new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
+                                            _firstLineWorld + _cellSizeWorld * (Board.MaxCoord - coord.row), 0f);
+        
+        nowPreview.SetActive(true);
+    }
+    
+    /// <summary> PC 및 모바일 착수 입력 프로세스 </summary>
+    private void InputProcessing()
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        worldPos.z = 0;
+        
+        if (TryGetBoardCoord(worldPos, out var coord) is false ||
+            _boardInform[coord.row, coord.col] != StoneColorType.Empty ||
+            _forbiddenCoords.Contains(coord))
+        {
+            nowPreview.SetActive(false);
+            _prevCoord = coord;
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(0) ||
+            Input.GetKeyDown(KeyCode.Return) ||
+            Input.GetKeyDown(KeyCode.Space))
+        {
+            nowPreview.SetActive(false);
+            _prevCoord = (-1, -1);
+            MoveStone(coord);
+            return;
+        }
+            
+        if (coord != _prevCoord)
+        {
+            _prevCoord = coord;
+            UpdatePreview(coord);
+        }
+        
+#elif UNITY_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            _nowPreview.SetActive(false);
+            return;
+        }
+        
+        if (Input.touchCount == 0) return;
+        
+        Touch touch = Input.GetTouch(0);
+        
+        if (touch.phase is TouchPhase.Began or TouchPhase.Moved)
+        {
+            Vector3 worldPos = mainCamera.ScreenToWorldPoint(touch.position);
+            worldPos.z = 0;
+
+            if (TryGetBoardCoord(worldPos, out var coord))
+            {
+                if (coord == prevCoord) return;
+
+                prevCoord = coord;
+                
+                if (boardInform[coord.row, coord.col] != StoneColorType.Empty ||
+                    forbiddenCoords.Contains(coord))
+                {
+                    _nowPreview.SetActive(false);
+                    return;
+                }
+
+                UpdatePreview(coord);
+            }
+        }
+#endif
+    }
     
     /// <summary> position에 Stone prefab을 Instantiate </summary>
-    protected void PlaceStone(Vector3 position)
+    private void PlaceStone(Vector3 position)
     {
         recentMark.transform.position = position;
 
-        if (isBlackTurn)
+        if (_isBlackTurn)
             _recentStone.black = Instantiate(blackStone, position, Quaternion.identity, blackParent);
         else
             _recentStone.white = Instantiate(whiteStone, position, Quaternion.identity, whiteParent);
     }
     
     /// <summary> 금수 표시 마크 생성 </summary>
-    protected void PlaceForbiddenMark(Vector3 position)
-        => Instantiate(forbiddenMark, position, Quaternion.identity, forbiddenParent);
+    private void PlaceForbiddenMark(Vector3 position)
+        => Instantiate(forbiddenMark, position, Quaternion.identity, _forbiddenParent);
     
     /// <summary> 금수 표시 마크 삭제 </summary>
-    protected void ClearForbiddenMarks()
+    private void ClearForbiddenMarks()
     {
-        for (int i = forbiddenParent.childCount - 1; i >= 0; --i)
+        for (int i = _forbiddenParent.childCount - 1; i >= 0; --i)
         {
-            Destroy(forbiddenParent.GetChild(i).gameObject);
+            Destroy(_forbiddenParent.GetChild(i).gameObject);
         }
 
-        forbiddenCoords.Clear();
+        _forbiddenCoords.Clear();
     }
     
     /// <summary> 월드 좌표를 오목판 좌표 변환 </summary>
@@ -142,9 +242,9 @@ public abstract class StoneMover : MonoBehaviour
     /// <para>true: worldPos가 오목판 안에 있음, coord = 오목판 좌표</para>
     /// <para>false: worldPos가 오목판 밖에 있음, coord = (-1, -1)</para>
     /// </returns>
-    protected bool TryGetBoardCoord(Vector3 worldPos, out (int row, int col) coord)
+    private bool TryGetBoardCoord(Vector3 worldPos, out (int row, int col) coord)
     {
-        Bounds bounds = spriteRenderer.bounds;
+        Bounds bounds = _spriteRenderer.bounds;
 
         // 보드 영역에 들어가지 않는 좌표인 경우
         if (bounds.Contains(worldPos) is false)
@@ -155,15 +255,15 @@ public abstract class StoneMover : MonoBehaviour
 
         Vector3 localPos = worldPos - bounds.min;
 
-        if (localPos.x < marginWorld || bounds.size.x - marginWorld < localPos.x ||
-            localPos.y < marginWorld || bounds.size.y - marginWorld < localPos.y)
+        if (localPos.x < _marginWorld || bounds.size.x - _marginWorld < localPos.x ||
+            localPos.y < _marginWorld || bounds.size.y - _marginWorld < localPos.y)
         {
             coord = (-1, -1);
             return false;
         }
 
-        coord = (Board.MaxCoord - Mathf.FloorToInt((localPos.y - marginWorld) / cellSizeWorld),
-            Mathf.FloorToInt((localPos.x - marginWorld) / cellSizeWorld));
+        coord = (Board.MaxCoord - Mathf.FloorToInt((localPos.y - _marginWorld) / _cellSizeWorld),
+            Mathf.FloorToInt((localPos.x - _marginWorld) / _cellSizeWorld));
 
         return true;
     }
@@ -174,10 +274,10 @@ public abstract class StoneMover : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
 
         var data = _ingameBoardManager.BoardData;
-        float pixelToWorld = spriteRenderer.bounds.size.x / data.TotalPixel;
-        marginWorld = (data.MarginSize - data.CellSize / 2f) * pixelToWorld;
-        firstLineWorld = data.MarginSize * pixelToWorld;
-        cellSizeWorld = data.CellSize * pixelToWorld;
+        float pixelToWorld = _spriteRenderer.bounds.size.x / data.TotalPixel;
+        _marginWorld = (data.MarginSize - data.CellSize / 2f) * pixelToWorld;
+        _firstLineWorld = data.MarginSize * pixelToWorld;
+        _cellSizeWorld = data.CellSize * pixelToWorld;
     }
     
     /// <summary> 게임 시작 시 천원점 자동 착수 </summary>
@@ -186,15 +286,13 @@ public abstract class StoneMover : MonoBehaviour
         MoveStone((7, 7));
         recentMark.SetActive(true);
     }
-
-    private void DisableUpdate() => enabled = false;
     
     /// <summary> 무르기 적용 - 최근 돌 2개 제거 </summary>
     private void TakeBack()
     {
         Destroy(_recentStone.black);
         Destroy(_recentStone.white);
-        audioSource.PlayOneShot(takeBackSound);
+        _audioSource.PlayOneShot(takeBackSound);
         ClearForbiddenMarks();
     }
     
@@ -202,19 +300,17 @@ public abstract class StoneMover : MonoBehaviour
     private void OnBlackUnmovable()
     {
         enabled = false;
-        audioSource.volume = 0f;
+        _audioSource.mute = true;
 
         for (int row = 0; row < Board.BoardSize; ++row)
         {
             for (int col = 0; col < Board.BoardSize; ++col)
             {
-                if (boardInform[row, col] == StoneColorType.Empty)
+                if (_boardInform[row, col] == StoneColorType.Empty)
                 {
                     MoveStone((row, col));
                 }
             }
         }
-
-        audioSource.volume = 1f;
     }
 }

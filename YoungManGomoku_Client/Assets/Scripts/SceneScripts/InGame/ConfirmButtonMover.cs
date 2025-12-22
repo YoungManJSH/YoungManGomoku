@@ -8,7 +8,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
 {
     [SerializeField] private float dragStartTime;
     [SerializeField] private Sprite blackButtonSprite;
-    [SerializeField] private StoneMoverSingle stoneMoverSingle;
+    [SerializeField] private StoneMover stoneMover;
 
     private RectTransform _myRect;
     private RectTransform _parentRect;
@@ -18,6 +18,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
     private bool _isHolding;
     private bool _isDragging;
     private float _holdTime;
+    private bool _isPlayerBlack;
 
     private void Awake()
     {
@@ -29,8 +30,9 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _buttonImage = GetComponent<Image>();
         _button = GetComponent<Button>();
         _button.interactable = false;
-        
-        if (GameManager.Instance.IsPlayerBlack)
+
+        _isPlayerBlack = GameManager.Instance.IsPlayerBlack;
+        if (_isPlayerBlack)
         {
             _buttonImage.sprite = blackButtonSprite;
             GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
@@ -39,8 +41,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _isHolding = false;
         _isDragging = false;
         _holdTime = 0f;
-        
-        stoneMoverSingle.OnStoneMove += OnStoneMove;
+        stoneMover.OnStoneMove += OnStoneMove;
 #endif
     }
 
@@ -82,7 +83,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         _isDragging = false;
         _buttonImage.color = Color.white;
     }
-
-    /*TODO: 본인 턴일 때만 활성화 되도록 변경하기*/
-    private void OnStoneMove(bool isBlackTurn) => _button.interactable = true;
+    
+    private void OnStoneMove(bool isBlackTurn)
+        => _button.interactable = isBlackTurn == _isPlayerBlack;
 }
