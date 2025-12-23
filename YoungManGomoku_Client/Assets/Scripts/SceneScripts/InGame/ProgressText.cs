@@ -9,10 +9,7 @@ public class ProgressText : MonoBehaviour
     {
         _progressText = GetComponent<TextMeshProUGUI>();
 
-        NetworkManager.Instance.OnRequestFailed += _ =>
-        {
-            _progressText.text = "-통신 오류-";
-        };
+        NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
         
         GameManager gm = GameManager.Instance;
         gm.BoardInform.OnTurnChanged += OnTurnChanged;
@@ -36,9 +33,16 @@ public class ProgressText : MonoBehaviour
         } */
     }
     
+    // GameManager, EventManager는 같은 씬에서 함께 가므로 구독 해제 생략
+    private void OnDestroy()
+        => NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
+    
     private void OnTurnChanged(int turn)
         => _progressText.text = $"{turn}수 진행 중";
 
     private void OnGameOver(string gameResult)
         => _progressText.text = $"{(GameManager.Instance.IsPlayerBlack ? "흑" : "백")} {GameManager.Instance.BoardInform.NowTurn}수 {gameResult}";
+
+    private void OnRequestFailed(RequestError _)
+        => _progressText.text = "-통신 오류-";
 }

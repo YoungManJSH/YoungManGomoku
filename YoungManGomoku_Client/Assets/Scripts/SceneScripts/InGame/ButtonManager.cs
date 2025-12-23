@@ -67,7 +67,8 @@ public class ButtonManager : MonoBehaviour
         messageBox.TurnBackToGame += () =>
         {
             ButtonActivate(_surrenderSet);
-            if (_isPlayerTurn)
+            // 플레이어 턴일 때만 activateSet 활성화
+            if (gm.BoardInform.NowTurn % 2 == 0 == gm.IsPlayerBlack)
             {
                 foreach (var buttonSet in _activateSet)
                 {

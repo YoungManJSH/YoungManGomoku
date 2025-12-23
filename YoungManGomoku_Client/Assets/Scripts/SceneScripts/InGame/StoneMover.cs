@@ -15,28 +15,29 @@ public abstract class StoneMover : MonoBehaviour
     [SerializeField] private float previewAlpha;
     [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject recentMark;
+
+    protected Transform BlackParent { get; private set; }
+    protected Transform WhiteParent { get; private set; }
+    protected GameObject NowPreview { get; set; }
+    protected Color PreviewColor { get; private set; }
+    /// <summary> 직전에 인식한 오목판 좌표 </summary>
+    protected (int row, int col) PrevCoord { get; private set; }
     
-    protected Transform blackParent;
-    protected Transform whiteParent;
-    protected GameObject nowPreview;
-    protected Color previewColor;
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
     private AudioSource _audioSource;
     private Transform _forbiddenParent;
+    private IngameBoardManager _ingameBoardManager;
     private HashSet<(int row, int col)> _forbiddenCoords;
-    private bool _isBlackTurn;
-    private (int row, int col) _prevCoord; // 직전에 인식한 오목판 좌표
+    private (GameObject black, GameObject white) _recentStone;
+    private Camera _mainCamera;
+    private EventManager _em;
     
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
+    private bool _isBlackTurn;
     
-    private IngameBoardManager _ingameBoardManager;
-    private (GameObject black, GameObject white) _recentStone;
-    private Camera _mainCamera;
-    private EventManager _em;
-
     /// <summary> 매개변수: 시작된 턴이 흑돌 턴인지 여부 </summary>
     public event Action<bool> OnStoneMove;
     
@@ -48,19 +49,19 @@ public abstract class StoneMover : MonoBehaviour
         _audioSource.playOnAwake = false;
         _audioSource.loop = false;
 
-        blackParent = new GameObject("Black Parent").transform;
-        whiteParent = new GameObject("White Parent").transform;
+        BlackParent = new GameObject("Black Parent").transform;
+        WhiteParent = new GameObject("White Parent").transform;
         _forbiddenParent = new GameObject("Forbidden Parent").transform;
-        blackParent.SetParent(transform);
-        whiteParent.SetParent(transform);
+        BlackParent.SetParent(transform);
+        WhiteParent.SetParent(transform);
         _forbiddenParent.SetParent(transform);
         _forbiddenCoords = new HashSet<(int row, int col)>();
         
-        previewColor = new Color(1f, 1f, 1f, previewAlpha);
+        PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
         CreatePreview();
         
         _boardInform = GameManager.Instance.BoardInform;
-        _prevCoord = (-1, -1);
+        PrevCoord = (-1, -1);
         _isBlackTurn = true;
         recentMark.SetActive(false);
         
@@ -135,11 +136,11 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)
     {
-        nowPreview.transform.position = _spriteRenderer.bounds.min +
+        NowPreview.transform.position = _spriteRenderer.bounds.min +
                                         new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
                                             _firstLineWorld + _cellSizeWorld * (Board.MaxCoord - coord.row), 0f);
         
-        nowPreview.SetActive(true);
+        NowPreview.SetActive(true);
     }
     
     /// <summary> PC 및 모바일 착수 입력 프로세스 </summary>
@@ -153,8 +154,8 @@ public abstract class StoneMover : MonoBehaviour
             _boardInform[coord.row, coord.col] != StoneColorType.Empty ||
             _forbiddenCoords.Contains(coord))
         {
-            nowPreview.SetActive(false);
-            _prevCoord = coord;
+            NowPreview.SetActive(false);
+            PrevCoord = coord;
             return;
         }
 
@@ -162,22 +163,22 @@ public abstract class StoneMover : MonoBehaviour
             Input.GetKeyDown(KeyCode.Return) ||
             Input.GetKeyDown(KeyCode.Space))
         {
-            nowPreview.SetActive(false);
-            _prevCoord = (-1, -1);
+            NowPreview.SetActive(false);
+            PrevCoord = (-1, -1);
             MoveStone(coord);
             return;
         }
             
-        if (coord != _prevCoord)
+        if (coord != PrevCoord)
         {
-            _prevCoord = coord;
+            PrevCoord = coord;
             UpdatePreview(coord);
         }
         
 #elif UNITY_ANDROID
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            _nowPreview.SetActive(false);
+            NowPreview.SetActive(false);
             return;
         }
         
@@ -192,14 +193,14 @@ public abstract class StoneMover : MonoBehaviour
 
             if (TryGetBoardCoord(worldPos, out var coord))
             {
-                if (coord == prevCoord) return;
+                if (coord == PrevCoord) return;
 
-                prevCoord = coord;
+                PrevCoord = coord;
                 
-                if (boardInform[coord.row, coord.col] != StoneColorType.Empty ||
-                    forbiddenCoords.Contains(coord))
+                if (_boardInform[coord.row, coord.col] != StoneColorType.Empty ||
+                    _forbiddenCoords.Contains(coord))
                 {
-                    _nowPreview.SetActive(false);
+                    NowPreview.SetActive(false);
                     return;
                 }
 
@@ -215,9 +216,9 @@ public abstract class StoneMover : MonoBehaviour
         recentMark.transform.position = position;
 
         if (_isBlackTurn)
-            _recentStone.black = Instantiate(blackStone, position, Quaternion.identity, blackParent);
+            _recentStone.black = Instantiate(blackStone, position, Quaternion.identity, BlackParent);
         else
-            _recentStone.white = Instantiate(whiteStone, position, Quaternion.identity, whiteParent);
+            _recentStone.white = Instantiate(whiteStone, position, Quaternion.identity, WhiteParent);
     }
     
     /// <summary> 금수 표시 마크 생성 </summary>

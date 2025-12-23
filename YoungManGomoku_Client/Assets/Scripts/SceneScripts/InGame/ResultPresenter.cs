@@ -35,12 +35,7 @@ public class ResultPresenter : MonoBehaviour
         _prevTime = Mathf.CeilToInt(idlingTime);
         rematchTimer.text = _prevTime.ToString();
 
-        NetworkManager.Instance.OnRequestFailed += _ =>
-        {
-            mainText.text = "통신 실패";
-            detailText.text = disconnectedText;
-            DisableRematch();
-        };
+        NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
         
         EventManager em = EventManager.Instance;
         em.OnGameEnd += OnGameEnd;
@@ -103,6 +98,10 @@ public class ResultPresenter : MonoBehaviour
         }
     }
 
+    // GameManager, EventManager는 같은 씬에서 함께 가므로 구독 해제 생략
+    private void OnDestroy()
+        => NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
+    
     public void OpenReplay()
     {
         /*TODO: 추후 재대국 신청 취소 처리*/
@@ -130,7 +129,15 @@ public class ResultPresenter : MonoBehaviour
         gameObject.SetActive(true);
         BlinkText(mainText).Cancel();
     }
-    
+
+    private void OnRequestFailed(RequestError error)
+    {
+        Debug.LogError($"{error.Result}({error.StatusCode}): {error.Message}, {error.ResponseBody}");
+        mainText.text = "통신 실패";
+        detailText.text = disconnectedText;
+        DisableRematch();
+    }
+
     private async Awaitable BlinkText(TextMeshProUGUI text)
     {
         for (int i = 0; i < 3; ++i)
