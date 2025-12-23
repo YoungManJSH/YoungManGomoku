@@ -11,6 +11,8 @@ namespace YoungManGomoku_WebServer.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            // 서버 살아있는지 테스트용이라 그 어떤 유저 관련 처리도 없음
+            // 유저 생존 처리는 Heart Beat에서
             return Ok("pong");
         }
     }

@@ -37,7 +37,7 @@ namespace YoungManGomoku_WebServer.Controllers
 		[HttpPost("Register")]
         public IActionResult RegisterAccountData([FromBody] CS_AccountRegisterDTO registerUserData)
 		{
-			_logger.LogTrace($"[{DateTime.UtcNow}] [Account Controller] ID Token : {registerUserData.IdToken}\nName : {registerUserData.UserNickname} / Guest : {registerUserData.IsGuest}\n");
+			_logger.LogTrace($"[{DateTime.Now}] [Account Controller] ID Token : {registerUserData.IdToken}\nName : {registerUserData.UserNickname} / Guest : {registerUserData.IsGuest}\n");
 
 			/*
             이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
@@ -61,12 +61,12 @@ namespace YoungManGomoku_WebServer.Controllers
                 , new PlayerSession(_serverManager.GenerateUID64(), playerAccount, isConnect: true))
                 == false)
             {
-                _logger.LogDebug($"[{DateTime.UtcNow}] [Account Controller] Register : PlayerSession already exists. UID={playerAccount.UID}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession already exists. UID={playerAccount.UID}");
             }
 
             if (_serverManager.UIDByIDToken.TryAdd(playerAccount.AuthToken, playerAccount.UID) == false)
             {
-                _logger.LogDebug($"[{DateTime.UtcNow}] [Account Controller] Register : PlayerSession UID-Token Link already exists. UID={playerAccount.UID} / {playerAccount.AuthToken}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession UID-Token Link already exists. UID={playerAccount.UID} / {playerAccount.AuthToken}");
             }
 
             return Ok(_serverManager.ComposePlayerData(playerAccount.UID));
@@ -85,11 +85,11 @@ namespace YoungManGomoku_WebServer.Controllers
                                 .Include(a => a.Inventory)
                                 .FirstOrDefault();
 
-            _logger.LogTrace($"[{DateTime.UtcNow}] [Account Controller] DB Token By Find ID Token {idToken}");
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] DB Token By Find ID Token {idToken}");
 
             if (findAccount == null) return Conflict("Can't Find ID Token. Login Failed!");
 
-            _logger.LogTrace($"[{DateTime.UtcNow}] [Account Controller] Success - Find Login Account");
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Success - Find Login Account");
 
             // DB Column Update
             findAccount.LastLoginDate = DateTime.Now;
@@ -97,19 +97,19 @@ namespace YoungManGomoku_WebServer.Controllers
             // DB Process
             _context.PlayerAccountTable.Update(findAccount);
             _context.SaveChanges();
-            _logger.LogTrace($"[{DateTime.UtcNow}] [Account Controller] Success - Login DB Transaction");
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Success - Login DB Transaction");
 
             // 접속이 끊긴 유저의 로그아웃 처리가 제대로 되지 않았었던 것 같다.
             // 메모리에 그대로 남아있네...?
             if (_serverManager.PlayerDatas.TryAdd(findAccount.UID
                 , new PlayerSession(_serverManager.GenerateUID64(), findAccount, isConnect: true)) == false)
             {
-                _logger.LogDebug($"[{DateTime.UtcNow}] [Account Controller] Register : PlayerSession already exists. UID={findAccount.UID}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession already exists. UID={findAccount.UID}");
             }
 
             if (_serverManager.UIDByIDToken.TryAdd(findAccount.AuthToken, findAccount.UID))
             {
-                _logger.LogDebug($"[{DateTime.UtcNow}] [Account Controller] Register : PlayerSession UID-Token Link already exists. UID={findAccount.UID} / {findAccount.AuthToken}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession UID-Token Link already exists. UID={findAccount.UID} / {findAccount.AuthToken}");
             }
 
             return Ok(_serverManager.ComposePlayerData(findAccount.UID));

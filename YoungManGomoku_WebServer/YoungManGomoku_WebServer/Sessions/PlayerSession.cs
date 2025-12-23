@@ -37,7 +37,7 @@ namespace YoungManGomoku_WebServer.Sessions
 		// 게임 상태
 		public bool IsMatching { get; set; }
 		public bool IsInGame { get; set; }
-		//public GameRoom CurrentRoom { get; set; }
+		public GameRoom CurrentRoom { get; set; }
 
 		// 요청 제한 / 보안
 		public int RecentRequestCount { get; set; }

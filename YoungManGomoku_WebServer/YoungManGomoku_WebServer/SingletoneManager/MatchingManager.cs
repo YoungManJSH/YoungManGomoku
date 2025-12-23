@@ -72,11 +72,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.UtcNow}] Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.Now}] Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
 
                 if (_waitingMap.Count >= MAX_WAITING)
                 {
-                    _logger.LogDebug($"[{DateTime.UtcNow}] Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
+                    _logger.LogDebug($"[{DateTime.Now}] Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
                     return Task.FromResult(
                         new MatchResult
                         (
@@ -88,7 +88,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (_waitingMap.ContainsKey(playerIDToken))
                 {
-                    _logger.LogDebug($"[{DateTime.UtcNow}] Already Matching: {_waitingMap[playerIDToken]}");
+                    _logger.LogDebug($"[{DateTime.Now}] Already Matching: {_waitingMap[playerIDToken]}");
                     //throw new InvalidOperationException("Already matching");
                     return Task.FromResult(
                         new MatchResult
@@ -127,10 +127,13 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Cancel: {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel: {playerIDToken}");
+
                 if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer wp) == false)
                     return;
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Cancel - Has WaitingMap {playerIDToken}");
+
+                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel - Has WaitingMap {playerIDToken}");
+
                 wp.TaskCompSrc.TrySetResult(
                     new MatchResult
                     (
@@ -138,10 +141,10 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                         success: false
                     )
                 );
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Match Result Setting Success");
-                _waitingMap.Remove(playerIDToken);
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Remove WatingMap");
+
                 // Queue에서 제거는 lazy (매칭 시 스킵)
+                _waitingMap.Remove(playerIDToken);
+                
             }
         }
 
@@ -159,7 +162,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
 
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
+                _logger.LogTrace($"[{DateTime.Now}] Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
 
                 WaitingPlayer p2 = null;
                 while (_matchingQueue.Count > 0)
@@ -167,12 +170,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
                     if (p1.PlayerIdToken == candidate.PlayerIdToken)
                     {
-                        _logger.LogWarning($"[{DateTime.UtcNow}] Matching Queue에 자기 자신과 매칭됨 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogWarning($"[{DateTime.Now}] Matching Queue에 자기 자신과 매칭됨 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
                         continue;
                     }
                     if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
-                        _logger.LogTrace($"[{DateTime.UtcNow}] Matching - discover other player [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogTrace($"[{DateTime.Now}] Matching - discover other player [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
                         p2 = candidate;
                         break;
                     }
@@ -180,7 +183,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (p2 == null)
                 {
-                    _logger.LogTrace($"[{DateTime.UtcNow}] Matching Fail - Matching Opponent is not Exist");
+                    _logger.LogTrace($"[{DateTime.Now}] Matching Fail - Matching Opponent is not Exist");
                     _matchingQueue.Enqueue(p1);
                     break; // 매칭 가능한 상대 없음
                 }
@@ -188,7 +191,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Success : Room ID {roomID}");
+                _logger.LogTrace($"[{DateTime.Now}] Matching Success : Room ID {roomID}");
 
 
                 Random random = new Random();
@@ -216,11 +219,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 _waitingMap.Remove(p1.PlayerIdToken);
                 _waitingMap.Remove(p2.PlayerIdToken);
 
-                _logger.LogTrace($"[{DateTime.UtcNow}] Try Match : Create Room");
+                _logger.LogTrace($"[{DateTime.Now}] Try Match : Create Room");
                 _gameRoomManager.CreateRoom(
                     roomID,
-                    _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
-                    _serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
+                    colorRandomValue == 0 ? _serverManagerContext.GetPlayerUID(p1.PlayerIdToken) : _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
+                    colorRandomValue == 1 ? _serverManagerContext.GetPlayerUID(p1.PlayerIdToken) : _serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
                 );
             }
 

@@ -168,7 +168,7 @@ public class NetworkManager : MonoBehaviour
     /// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
     /// <returns></returns>
     public async Awaitable<string> RequestHeartbeat(string idToken, int timeOutSeconds = 10)
-		=> await RequestServer<string>("Heartbeat", "POST", $"\"{idToken}\"", timeOutSeconds, "=== Heart Beat Success ===");
+		=> await RequestPostServer<string>("Heartbeat", $"\"{idToken}\"", timeOutSeconds, "=== Heart Beat Success ===");
 
 
 	// 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
@@ -222,14 +222,14 @@ public class NetworkManager : MonoBehaviour
                 /*
                 uwr.responseCode 값 의미 정리
                 400 : 잘못된 요청 (클라가 이상하게 보냄)
-                401 : 인증 만료 (재로그인) 
+                401 : 인증 만료 (재로그인) (서버에 네 ID Token이 로그인되어있지 않음)
                 403 : 권한 없음 (접근 차단)
-                409 : 상태 충돌 (중복요청 or 이미 진행중인 요청)
+                409 : 상태 충돌 (중복요청 or 이미 진행중인 요청) (ex. 게임중인데 또 게임함, 매칭중인데 또 매칭요청함)
                 503 : 서버 과부하
                  */
                 StatusCode = uwr.responseCode,
-                Result = uwr.result,  // 클라서버 통신이 안되면 커넥션에러, 서버에서 배드리퀘스트 혹은 컨플릭 등의 응답이 오면 ProtocolError
-                Message = uwr.error,                    // "Bad Request" or "Conflict" 등의 응답
+                Result = uwr.result,  // 클라-서버 간 통신이 안 되면 ConnectionError, 서버에서 배드리퀘스트 혹은 컨플릭트 등의 응답이 오면 ProtocolError
+                Message = uwr.error,                    // "Bad Request" or "Conflict" or "Time Out" 등의 응답
                 ResponseBody = uwr.downloadHandler.text // 서버가 같이 보내온 에러 설명 문자열
             });
 

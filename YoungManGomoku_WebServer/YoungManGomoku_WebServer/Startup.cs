@@ -51,7 +51,7 @@ namespace YoungManGomoku_WebServer
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            logger.LogInformation($"[{DateTime.UtcNow}] Server Start!");
+            logger.LogInformation($"[{DateTime.Now}] Server Start!");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -9,6 +9,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		// Key : Room UID
 		private readonly ConcurrentDictionary<ulong, GameRoom> _rooms;
 
+		// 이 플레이어가 어느 방에서 게임 중인지
 		// Key : Player UID / Value : Room UID
 		private readonly ConcurrentDictionary<ulong, ulong> _roomByPlayer;
 
@@ -21,9 +22,20 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 			_serverContext = serverContext;
 		}
 
-		public GameRoom CreateRoom(ulong roomID, ulong playerA, ulong playerB)
+        public GameRoom CreateRoom(ulong playerA, ulong playerB)
+        {
+            GameRoom room = new GameRoom(_serverContext.GenerateUID64(), playerA, playerB, this);
+            _rooms[room.RoomID] = room;
+
+            _roomByPlayer[playerA] = room.RoomID;
+            _roomByPlayer[playerB] = room.RoomID;
+
+            return room;
+        }
+
+        public GameRoom CreateRoom(ulong roomID, ulong playerA, ulong playerB)
 		{
-			var room = new GameRoom(roomID, playerA, playerB, this);
+            GameRoom room = new GameRoom(roomID, playerA, playerB, this);
 			_rooms[roomID] = room;
 
 			_roomByPlayer[playerA] = roomID;
@@ -32,19 +44,30 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 			return room;
 		}
 
-		public bool TryGetRoomByPlayer(ulong playerUid, out GameRoom room)
+		public bool TryGetRoomByPlayer(ulong playerUID, out GameRoom room)
 		{
 			// 못 찾았으면 null
 			room = null;
 
 			// 플레이어가 소속된 room ID를 찾고, room ID로 room을 찾아옴 
-			if (_roomByPlayer.TryGetValue(playerUid, out ulong roomID))
+			if (_roomByPlayer.TryGetValue(playerUID, out ulong roomID))
 				return _rooms.TryGetValue(roomID, out room);
 
 			return false;
 		}
 
-		internal void CloseRoom(GameRoom room)
+        internal void CloseRoom(ulong roomID)
+        {
+			// Remove 하고 나서 삭제한 값을 따로 쓸 일은 없으니 그냥 _ 때림
+			if (_rooms.TryGetValue(roomID, out GameRoom room))
+			{
+				_roomByPlayer.TryRemove(room.BlackPlayerUID, out _);
+				_roomByPlayer.TryRemove(room.WhitePlayerUID, out _);
+			}
+            _rooms.TryRemove(roomID, out _);
+        }
+
+        internal void CloseRoom(GameRoom room)
 		{
 			// Remove 하고 나서 삭제한 값을 따로 쓸 일은 없으니 그냥 _ 때림
 			_rooms.TryRemove(room.RoomID, out _);
