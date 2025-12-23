@@ -53,6 +53,11 @@ public class PlayerPanelController : MonoBehaviour
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
         if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
+        gm.BoardInform.OnBlackUnmovable += () =>
+        {
+            enabled = false;
+            _isGameEnd = true;
+        };
         
         _myTimer = isPlayer ? gm.PlayerTimer : gm.OppositeTimer;
         _isByoyomi = _myTimer.MainTime == 0f;
@@ -109,9 +114,10 @@ public class PlayerPanelController : MonoBehaviour
         {
             em.OnOppositeTimeOut += OnTimeOut;
             em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
-        } 
+        }
         
         stoneMover.OnStoneMove += OnStoneMove;
+        
         enabled = false;
     }
     
