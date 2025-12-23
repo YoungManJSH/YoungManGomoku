@@ -86,18 +86,6 @@ public abstract class StoneMover : MonoBehaviour
     protected void Start() => enabled = false;
 
     protected void Update() => InputProcessing();
-
-    protected void OnDestroy()
-    {
-        _boardInform.OnBlackUnmovable -= OnBlackUnmovable;
-        messageBox.OnOpened -= MessageBoxOpened;
-        messageBox.TurnBackToGame -= MessageBoxClosed;
-        _em.OnGameStart -= OnGameStart;
-        _em.OnGameEnd -= DisableUpdate;
-        _em.OnStartSweeping -= DisableUpdate;
-        _em.OnTakeBack -= TakeBack;
-        GameManager.Instance.PlayerTimer.OnTimeOut -= DisableUpdate;
-    }
     
     /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
     public abstract void MoveConfirmed();

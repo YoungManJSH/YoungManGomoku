@@ -97,10 +97,6 @@ public class ResultPresenter : MonoBehaviour
             _prevTime = remainTimeToInt;
         }
     }
-
-    // GameManager, EventManager는 같은 씬에서 함께 가므로 구독 해제 생략
-    private void OnDestroy()
-        => NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
     
     public void OpenReplay()
     {

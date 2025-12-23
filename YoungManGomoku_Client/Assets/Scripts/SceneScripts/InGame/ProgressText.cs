@@ -33,10 +33,6 @@ public class ProgressText : MonoBehaviour
         } */
     }
     
-    // GameManager, EventManager는 같은 씬에서 함께 가므로 구독 해제 생략
-    private void OnDestroy()
-        => NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
-    
     private void OnTurnChanged(int turn)
         => _progressText.text = $"{turn}수 진행 중";
 

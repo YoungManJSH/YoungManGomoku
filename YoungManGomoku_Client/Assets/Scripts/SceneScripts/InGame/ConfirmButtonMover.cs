@@ -18,6 +18,8 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
     private bool _isHolding;
     private bool _isDragging;
     private float _holdTime;
+    private (float min, float max) _xLimits;
+    private (float min, float max) _yLimits;
     private bool _isPlayerBlack;
 
     private void Awake()
@@ -54,6 +56,10 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
             {
                 _isDragging = true;
                 _buttonImage.color = new Color(1f, 1f, 1f, 0.45f);
+                _xLimits = (-_parentRect.rect.width / 2f, _parentRect.rect.width / 2f);
+                _yLimits = (-_parentRect.rect.height, -_parentRect.rect.width * 0.06f);
+                /* parentRect.height가 종횡비에 따라 가변적임
+                 * 따라서 yLimits.max를 width 기준으로 계산한 건 의도된 것 */
             }
         }
     }
@@ -70,9 +76,11 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_parentRect,
             eventData.position, eventData.pressEventCamera, out Vector2 localPoint);
+        // localPoint는 _parentRect의 pivot 위치에 따른 상대적인 값임에 유의!
         
-        Vector2 clamped = new Vector2(Mathf.Clamp(localPoint.x, 0f, _parentRect.rect.width),
-            Mathf.Clamp(localPoint.y, _parentRect.rect.height * -1f, 0f));
+        // parentRect pivot = myRect anchors = (x: 0.5, y: 1.0) 기준
+        Vector2 clamped = new Vector2(Mathf.Clamp(localPoint.x, _xLimits.min, _xLimits.max),
+            Mathf.Clamp(localPoint.y, _yLimits.min, _yLimits.max));
         
         _myRect.anchoredPosition = clamped;
     }
