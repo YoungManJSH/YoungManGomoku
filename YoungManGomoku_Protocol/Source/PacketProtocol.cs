@@ -149,12 +149,12 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
     public class SC_ResponseStringDTO
     {
-        string Message{ get; set; }
-        bool IsSuccess { get; set; }
+        public string Message{ get; set; }
+        public bool IsSuccess { get; set; }
         public SC_ResponseStringDTO(string msg, bool isSuccess)
         {
             Message = msg;
-            IsSuccess =isSuccess;
+            IsSuccess = isSuccess;
         }
     }
 
@@ -209,7 +209,10 @@ namespace YoungManGomoku_Protocol.ServerToClient
         public byte X => Row;
         public byte Y => Col;
 
-	    public SC_OpponentMoveDTO(byte row, byte col, UserTimer opponentTimer, GameEndCode endCode = GameEndCode.None)
+        // 재대결 가능 알림? 일단 만들어는 봤는데... 쓸 일이 있을까?
+        public bool CanRequestRematch { get; set; }
+
+        public SC_OpponentMoveDTO(byte row, byte col, UserTimer opponentTimer, GameEndCode endCode = GameEndCode.None)
 	    {
 		    Row = row;
 		    Col = col;
