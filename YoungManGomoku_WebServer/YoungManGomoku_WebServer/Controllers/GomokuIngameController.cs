@@ -35,7 +35,7 @@ namespace YoungManGomoku_WebServer.Controllers
 			ulong uid = _serverManager.GetPlayerUID(idToken);
 
 			if (uid == 0)
-				return BadRequest("미접속 유저임");
+				return BadRequest("Logout or UnConnected User");
 
 			// 네 이놈 게임 룸에 있지도 않은 주제에 게임 시작이라고 뻥카를 쳐?
 			if (_gameRoomManager.TryGetRoomByPlayer(uid, out GameRoom room) == false)
@@ -63,18 +63,55 @@ namespace YoungManGomoku_WebServer.Controllers
 		[HttpPost("PlaceStone")]
 		public IActionResult PlaceStone([FromBody] CS_PlaceStoneDTO userPlaceStoneDTO)
 		{
-            // 일단 보내온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
+			if (userPlaceStoneDTO == null)
+				return BadRequest("뭘 두겠다는 건데???");
+
+
+            if (userPlaceStoneDTO.MyTimer == null)
+				return BadRequest("Timer is Null");
+            
+			
+			// 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
 			ulong uid = _serverManager.GetPlayerUID(userPlaceStoneDTO.IDToken);
 
+			// 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             if (uid == 0)
-                return BadRequest("미접속 유저");
+                return BadRequest("Logout or UnConnected User");
 
-            // 네이놈 게임 룸에 있지도 않은 주제에 착수 요청을 해?
+            // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 착수 요청을 해?
 			if (_gameRoomManager.TryGetRoomByPlayer(uid, out GameRoom room) == false)
 				return BadRequest("Not in game");
 
 			PlaceStoneResult result = room.PlaceStone(uid, userPlaceStoneDTO.Row, userPlaceStoneDTO.Col);
 			return Ok(result);
 		}
-	}
+
+        [HttpPost("Request")]
+        public IActionResult PlaceStone([FromBody] CS_InGameRequestDTO userInGameRequestDTO)
+        {
+            if (userInGameRequestDTO == null)
+                return BadRequest("뭘 두겠다는 건데???");
+
+
+            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
+            ulong uid = _serverManager.GetPlayerUID(userInGameRequestDTO.IDToken);
+
+            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
+            if (uid == 0)
+                return BadRequest("미접속 유저");
+
+            // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 인게임 요청을 했다고?
+            if (_gameRoomManager.TryGetRoomByPlayer(uid, out GameRoom room) == false)
+                return BadRequest("Not in game");
+
+
+
+            // 여기서 인게임 리퀘스트 처리 
+
+
+
+            return Ok(userInGameRequestDTO.IngameRequest.ToString());
+        }
+
+    }
 }

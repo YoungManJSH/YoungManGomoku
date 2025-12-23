@@ -11,14 +11,22 @@ using YoungManGomoku_Protocol.ServerToClient;
 // OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
 {
+    /*
+    HTTP Error Code 의미
+    400 : 잘못된 요청 (클라가 이상하게 보냄)
+    401 : 인증 만료 (재로그인) 
+    403 : 권한 없음 (접근 차단)
+    409 : 상태 충돌 (중복요청 or 이미 진행중인 요청)
+    503 : 서버 과부하
+     */
     public long StatusCode; // HTTP Error Code
-    public UnityWebRequest.Result Result;
-    public string Message; // 클라에서 발생한 에러 메시지
-    public string ResponseBody; // 서버로부터 보내져온 메인 데이터
+    public UnityWebRequest.Result Result; // 클라서버 통신이 안되면 ConnectionError, 서버에서 배드리퀘스트 혹은 컨플릭 등의 응답이 오면 ProtocolError
+    public string Message;      // 에러 메시지 "Bad Request" or "Conflict" 등의 응답
+    public string ResponseBody; // 서버로부터 보내져온 메인 데이터 or 배드 리퀘스트나 컨플릭트 등의 응답 시 같이 보내져온 설명 문자열
 }
 
-// 유니티에서 보내오는 모든 데이터를 전부 신뢰시킴
-// 당연히 보안적으로 개 쓰레기, 우리 개발할 때만 잠깐 쓰자
+// 모든 유니티 클라이언트에서 보내오는 모든 데이터를 전부 신뢰시킴
+// 당연히 보안적으로 개 쓰레기니까 개발 도중 테스트 편이성을 위해서만 잠깐 쓰자
 class BypassCertificate : CertificateHandler
 {
     protected override bool ValidateCertificate(byte[] certificateData)
@@ -28,13 +36,15 @@ class BypassCertificate : CertificateHandler
 }
 
 
-// 로그인할 때 인증 토큰(UID같은거)을 보냄
-// 게임 시작 시점과 게임 결과 시점 등 요청할 때마다 토큰을 같이 보내서 인증
-// 웹서버라서 매 요청마다 토큰이 필요함
+/*
+로그인할 때 인증 토큰(UID같은거)을 보냄
+게임 시작 시점과 게임 결과 시점 등 요청할 때마다 토큰을 같이 보내서 인증
+웹서버라서 매 요청마다 토큰이 필요함
+*/
 public class NetworkManager : MonoBehaviour
 {
     // 나중에 바꿀 예정
-    [SerializeField] private const string baseURL = "https://192.168.200.146:5001"; //"https://localhost:5001";
+    [SerializeField] private const string baseURL = "https://192.168.200.158:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -51,10 +61,6 @@ public class NetworkManager : MonoBehaviour
     }
 
     private void OnDestroy() => Instance = null;
-
-    // GoogleSignInUser는 구글 어카운트 정보가 다 들어 있어서 무겁다.
-    // 따라서 Json으로 변환하면 string이 무지막지하게 길어질 것이다.
-    // -> 꼭 필요한 데이터 string IdToken, NickName 2가지만 DTO로 빼서 넘겨주도록 하자.
 
     /// <summary>
     /// CS_AccountRegisterDTO(회원가입을 위해 필요한 데이터)를 조립해서 웹 서버로 회원 가입 요청
@@ -78,8 +84,6 @@ public class NetworkManager : MonoBehaviour
 			Debug.Log($"CS_AccountRegisterDTO : Unknown User!");
 			return null;
 		}
-		// Debug.Log($"Account Register User DTO : {JsonUtility.ToJson(registerUserDTO)}");
-		// Debug.Log($"Account Register User DTO : {JsonConvert.SerializeObject(registerUserDTO)}");
 		return await RequestPostServer<PlayerData>("Account/Register", JsonConvert.SerializeObject(registerUserDTO), timeOutSeconds, "Account Register Success");
     }
 
@@ -127,8 +131,8 @@ public class NetworkManager : MonoBehaviour
         => await RequestPostServer<SC_ResponseStringDTO>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
 
 
-    // 작성도중 껍데기뿐
-	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 10)
+    // 
+	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameStart", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Game Start");
 
 
@@ -144,19 +148,27 @@ public class NetworkManager : MonoBehaviour
 	/// <returns> 
 	/// null : 서버 터짐 
 	/// </returns>
-	public async Awaitable<SC_ResponseStringDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 10)
+	public async Awaitable<SC_ResponseStringDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
 
 
-	/// <summary>
-	/// 웹 서버에 하트 비트 요청 (접속 여부 확인)
-	/// </summary>
-	/// <param name="timeOutSeconds"></param>
-	/// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
-	/// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
-	/// <returns></returns>
-	public async Awaitable<string> RequestHeartbeat(int timeOutSeconds = 10)
-		=> await RequestServer<string>("Heartbeat", "GET", "\"\"", timeOutSeconds, "=== Heart Beat Success ===");
+    public async Awaitable<SC_ResponseStringDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
+    => await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
+
+
+
+
+
+    /// <summary>
+    /// 웹 서버에 하트 비트 요청 (접속 여부 확인)
+    /// 서버에서는 클라의 마지막 요청 시간과 하트비트가 날아온 시간차를 비교해 유효한 연결인지 계산
+    /// </summary>
+    /// <param name="timeOutSeconds"></param>
+    /// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
+    /// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
+    /// <returns></returns>
+    public async Awaitable<string> RequestHeartbeat(string idToken, int timeOutSeconds = 10)
+		=> await RequestServer<string>("Heartbeat", "POST", $"\"{idToken}\"", timeOutSeconds, "=== Heart Beat Success ===");
 
 
 	// 서버가 살았는지 아닌지 테스트하는 용도의 함수, 핑을 그냥 던져봄. 서버가 살았으면 return으로 문자열 pong이 돌아올 것.
@@ -207,10 +219,18 @@ public class NetworkManager : MonoBehaviour
 
             OnRequestFailed?.Invoke(new RequestError
             {
+                /*
+                uwr.responseCode 값 의미 정리
+                400 : 잘못된 요청 (클라가 이상하게 보냄)
+                401 : 인증 만료 (재로그인) 
+                403 : 권한 없음 (접근 차단)
+                409 : 상태 충돌 (중복요청 or 이미 진행중인 요청)
+                503 : 서버 과부하
+                 */
                 StatusCode = uwr.responseCode,
-                Result = uwr.result,
-                Message = uwr.error,
-                ResponseBody = uwr.downloadHandler.text
+                Result = uwr.result,  // 클라서버 통신이 안되면 커넥션에러, 서버에서 배드리퀘스트 혹은 컨플릭 등의 응답이 오면 ProtocolError
+                Message = uwr.error,                    // "Bad Request" or "Conflict" 등의 응답
+                ResponseBody = uwr.downloadHandler.text // 서버가 같이 보내온 에러 설명 문자열
             });
 
             return default(RecvData);
@@ -219,10 +239,12 @@ public class NetworkManager : MonoBehaviour
 		string responseJson = uwr.downloadHandler.text;
         Debug.Log($"{successAnnounce}\n{responseJson}");
 
-        // Server에서 Ok() 때리고 빈 응답만 보내져 왔을 때
-        // Server 작업 자체는 성공해서 반환해줬지만 온 데이터가 비어있는 상황
-        // 이러면 성공 실패 여부를 Http Code로만 판단해야 한다
-        // 어지간해선 안 들어 오는 쪽이 좋다.
+        /*
+        Server에서 Ok() 때리고 빈 응답만 보내져 왔을 때...
+        Server 작업 자체는 성공해서 반환해줬지만 온 데이터가 비어있는 상황이다.
+        이러면 성공 실패 여부를 Http Code로만 판단해야 한다.
+        어지간해선 이 코드로는 안 들어 오는 쪽이 좋다.
+        */
         if (string.IsNullOrEmpty(responseJson))
         {
             return default(RecvData);

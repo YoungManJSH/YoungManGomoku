@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using YoungManGomoku_WebServer.Sessions;
+using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {

@@ -5,15 +5,7 @@ using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Sessions
 {
-	/*
-	public enum GameEndReason
-	{
-		None, // 게임이 아직 안 끝났음
-		Win,
-		Draw,
-		Surrender,
-		Disconnect
-	}*/
+
 
 	/*
 	public class GameTimer

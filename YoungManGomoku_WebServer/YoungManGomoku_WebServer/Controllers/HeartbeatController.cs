@@ -21,9 +21,10 @@ namespace YoungManGomoku_WebServer.Controllers
 			_context = context;
 			_serverManager = serverManager;
 		}
-		[HttpGet]
-		public IActionResult Get()
+		[HttpPost]
+		public IActionResult HeartBeat([FromBody] string idToken)
 		{
+			
 			return Ok("HeartBeat Success");
 		}
 	}

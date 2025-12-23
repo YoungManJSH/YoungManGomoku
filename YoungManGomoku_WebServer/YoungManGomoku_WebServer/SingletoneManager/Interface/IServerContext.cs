@@ -1,6 +1,6 @@
 ﻿using YoungManGomoku_Protocol;
 
-namespace YoungManGomoku_WebServer.SingletoneManager
+namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 {
 	public interface IServerContext : IUIDProvider
 	{

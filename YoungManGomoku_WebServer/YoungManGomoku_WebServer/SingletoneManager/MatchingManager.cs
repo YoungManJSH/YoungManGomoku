@@ -4,16 +4,31 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
+using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
     public class MatchResult
-    {     
-        public ulong OpponentID { get; set; }
-        public ulong GameRoomID { get; set; }
-        public string Message { get; set; }
-        public StoneColorType StoneColor { get; set; }
-        public bool Success { get; set; }
+    {
+        public ulong OpponentUID { get; private set; }
+        public ulong GameRoomUID { get; private set; }
+        public string Message { get; private set; }
+        public StoneColorType StoneColor { get; private set; }
+        public bool Success { get; private set; }
+
+        // default parameter는 message string을 제외하면 매치 실패 기준
+        public MatchResult(string message = "", bool success = false, ulong opponentUID = 0, ulong gameRoomUID = 0, StoneColorType stoneColor = StoneColorType.Empty)
+        {
+            if (opponentUID != 0 && gameRoomUID != 0)
+            {
+                OpponentUID = opponentUID;
+                GameRoomUID = gameRoomUID;
+            }
+
+            Message = message;
+            StoneColor = stoneColor;
+            Success = success;
+        }
     }
 
     // 매칭 큐용 DTO
@@ -39,9 +54,9 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
         private readonly ILogger<ServerManager> _logger;
         private readonly IServerContext _serverManagerContext;
-		private readonly GameRoomManager _gameRoomManager;
+        private readonly GameRoomManager _gameRoomManager;
 
-		public MatchingManager(ILogger<ServerManager> logger, IServerContext serverManagerContext, GameRoomManager gameRoomManager)
+        public MatchingManager(ILogger<ServerManager> logger, IServerContext serverManagerContext, GameRoomManager gameRoomManager)
         {
             _logger = logger;
             _lock = new object();
@@ -58,34 +73,36 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             lock (_lock)
             {
                 _logger.LogTrace($"[{DateTime.UtcNow}] Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
-                
+
                 if (_waitingMap.Count >= MAX_WAITING)
                 {
                     _logger.LogDebug($"[{DateTime.UtcNow}] Server Busy : {_waitingMap.Count} >= {MAX_WAITING}");
-                    return Task.FromResult(new MatchResult
-                    {
-                        StoneColor = StoneColorType.Empty,
-                        Success = false,
-                        Message = "Server busy"
-                    });
+                    return Task.FromResult(
+                        new MatchResult
+                        (
+                            message: "Server busy",
+                            success: false
+                        )
+                    );
                 }
 
                 if (_waitingMap.ContainsKey(playerIDToken))
                 {
                     _logger.LogDebug($"[{DateTime.UtcNow}] Already Matching: {_waitingMap[playerIDToken]}");
                     //throw new InvalidOperationException("Already matching");
-                    return Task.FromResult(new MatchResult
-                    {
-						StoneColor = StoneColorType.Empty,
-						Success = false,
-                        Message = "Already matching"
-                    });
+                    return Task.FromResult(
+                        new MatchResult
+                        (
+                            message: "Already matching",
+                            success: false    
+                        )
+                    );
                 }
 
                 // RunContinuationsAsynchronously 옵션
                 // await SetResult 이후 코드를 호출 스레드에서 바로 실행하지 않고 스레드 풀로 넘긴다
                 // 데드락 방지 및 성능 향상
-                TaskCompletionSource<MatchResult> tcs 
+                TaskCompletionSource<MatchResult> tcs
                     = new TaskCompletionSource<MatchResult>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -114,11 +131,13 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer wp) == false)
                     return;
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Cancel - Has WaitingMap {playerIDToken}");
-                wp.TaskCompSrc.TrySetResult(new MatchResult
-                {
-                    Success = false,
-                    Message = "Matching Register Cancelled"
-                });
+                wp.TaskCompSrc.TrySetResult(
+                    new MatchResult
+                    (
+                        message: "Matching Register Cancelled",
+                        success: false
+                    )
+                );
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Match Result Setting Success");
                 _waitingMap.Remove(playerIDToken);
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Register Cancel - Remove WatingMap");
@@ -131,7 +150,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try");
             // 아직 레이팅이고 뭐고 신경쓰기 싫다는 코드
-            // 동시다발적 접속이 있으면 3 이상일 수 있다
+            // 동시다발적 매칭 신청이 있으면 3 이상일 수 있다
             while (_matchingQueue.Count >= 2)
             {
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Game : {_matchingQueue.Count}");
@@ -166,29 +185,33 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     break; // 매칭 가능한 상대 없음
                 }
 
-                
+
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
                 _logger.LogTrace($"[{DateTime.UtcNow}] Matching Success : Room ID {roomID}");
 
 
-                Random random = new Random();              
+                Random random = new Random();
                 int colorRandomValue = random.Next(0, 2);
-                p1.TaskCompSrc.TrySetResult(new MatchResult
-                {
-                    Success = true,
-                    OpponentID = _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
-                    StoneColor = StoneColorType.Black + colorRandomValue,
-                    GameRoomID = roomID
-                });
+                p1.TaskCompSrc.TrySetResult(
+                    new MatchResult
+                    (
+                        success: true,
+                        opponentUID: _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
+                        gameRoomUID: roomID,
+                        stoneColor: StoneColorType.Black + colorRandomValue
+                    )
+                );
 
-                p2.TaskCompSrc.TrySetResult(new MatchResult
-                {
-                    Success = true,
-                    OpponentID = _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
-                    StoneColor = StoneColorType.White - colorRandomValue,
-                    GameRoomID = roomID
-                });
+                p2.TaskCompSrc.TrySetResult(
+                    new MatchResult
+                    (
+                        success: true,
+                        opponentUID: _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
+                        gameRoomUID: roomID,
+                        stoneColor: StoneColorType.White - colorRandomValue
+                    )
+                );
 
                 _waitingMap.Remove(p1.PlayerIdToken);
                 _waitingMap.Remove(p2.PlayerIdToken);
@@ -197,9 +220,9 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 _gameRoomManager.CreateRoom(
                     roomID,
                     _serverManagerContext.GetPlayerUID(p1.PlayerIdToken),
-					_serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
-				);
-			}
+                    _serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
+                );
+            }
 
             _logger.LogTrace($"[{DateTime.UtcNow}] Matching End");
         }

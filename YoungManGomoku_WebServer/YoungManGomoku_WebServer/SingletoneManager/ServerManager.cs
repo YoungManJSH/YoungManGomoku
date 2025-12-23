@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
+
 //using System.Security.Cryptography;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_WebServer.Sessions;
+using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
@@ -11,7 +14,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
     {
         private readonly ILogger<ServerManager> _logger;
 
-        private UIDGenerator _uidGenerator;
+        private readonly UIDGenerator _uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
         // PlayerData는 클라에서도 사용되기 때문에 보안 상 노출 위험이 있다고 판단
         // [] 인덱서를 사용해 검색하지 말 것. 마음 같아서는 TryGetValue 강제를 위해 private get을 하고 싶다
@@ -31,33 +34,46 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		public ulong GenerateUID64() => _uidGenerator.GenerateUID64();
 
         /// <summary>
-        /// 함수 인자로 들어온 UID로 검색한 데이터가 존재하지 않을 시 null 반환
+        /// 함수 인자로 들어온 UID로 검색한 데이터가 존재하지 않을 시 null 반환,
         /// 현재 멀티 스레드 시점에 찾을 때만 없었던 것이므로 찾고 나서 다른 스레드에서 추가해 생겨있을 수도 있음
         /// </summary>
         /// <param name="UID"></param>
         /// <returns></returns>
         internal PlayerSession GetPlayerSession(ulong UID)
         {
+            if (UID == 0) return null;
+            
             if (PlayerDatas.TryGetValue(UID, out PlayerSession playerSession))
-            {
                 return playerSession;
-            }
+            
             return null;
         }
+        internal PlayerSession GetPlayerSession(string idToken) => GetPlayerSession(GetPlayerUID(idToken));
 
-        public ulong GetPlayerUID(string id_Token)
+        public ulong GetPlayerUID(string idToken)
         {
-            if (UIDByIDToken.TryGetValue(id_Token, out ulong UID))
-            {
-                return UID;
-            }
+            if (UIDByIDToken.TryGetValue(idToken, out ulong UID))
+                return UID;           
             return 0;
         }
 
+        // 로깅용 유저 출력
+        public string UserInfo(ulong UID)
+        {
+            PlayerSession user = GetPlayerSession(UID);
+            if (user == null)
+                return $"[{UID}] : (Invalid User UID)";
+            return $"[{UID}] Lv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating} )";
+        }
+
+        public string UserInfo(string idToken) => UserInfo(GetPlayerUID(idToken));
+
+
         /// <summary>
-        /// Player Data는 Client에서 사용하는 class
-        /// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다</summary>
+        /// Player Data는 Client에서 사용하는 class, 
+        /// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다. 
         /// 서버가 가진 데이터를 조립해 클라가 알아보기 쉬운 PlayerData로 바꿔주는 함수
+        /// </summary>
         /// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
         /// <returns> 클라용 플레이어 데이터 </returns>
         public PlayerData ComposePlayerData(ulong UID)
@@ -100,7 +116,6 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		{
             if (PlayerDatas.TryGetValue(opponentPlayerUID, out PlayerSession playerData))
             {
-                // key 존재 → value 안전하게 사용
                 return new OpponentPlayerData()
                 {
                     Nickname = playerData.Account.Nickname,
