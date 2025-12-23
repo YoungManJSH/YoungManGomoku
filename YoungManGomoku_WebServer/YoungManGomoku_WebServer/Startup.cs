@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore; // Use Sql Server
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.SingletoneManager;
+using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
 namespace YoungManGomoku_WebServer
 {

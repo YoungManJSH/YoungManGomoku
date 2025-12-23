@@ -1,4 +1,4 @@
-﻿namespace Global.Protocol.TypeEnum
+﻿namespace YoungManGomoku_Protocol.TypeEnum.InGame
 {
     public enum IngameRequest
     {

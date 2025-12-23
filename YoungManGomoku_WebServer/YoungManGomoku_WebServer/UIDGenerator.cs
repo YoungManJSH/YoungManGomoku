@@ -77,6 +77,12 @@ namespace YoungManGomoku_WebServer
 			x ^= 0xA3C59AC3;
 			x = (x << 7) | (x >> 25); // rotate-left 7
 			x ^= 0x5F1ABB13;
+
+			// UID가 0인 경우 재설정. UID 생성 시마다 0이 무한히 나올 확률은 존재하지 않는다.
+			if(x == 0)
+			{
+				x = GenerateUID();
+            }
 			return x;
 		}
 	}
@@ -139,7 +145,14 @@ namespace YoungManGomoku_WebServer
 			x ^= 0xC3D2E1F0A5B4C3D2UL;
 			x = (x << 13) | (x >> 51); // rotate-left 13
 			x ^= 0x9E3779B97F4A7C15UL;
-			return x;
+
+
+            // UID가 0인 경우 재설정. UID 생성 시마다 0이 무한히 나올 확률은 존재하지 않는다.
+            if (x == 0)
+            {
+                x = GenerateUID();
+            }
+            return x;
 		}
 	}
 }

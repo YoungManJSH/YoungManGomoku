@@ -10,7 +10,7 @@ namespace YoungManGomoku_WebServer.Controllers
     [ApiController]
     public class ShopController : ControllerBase
     {
-        ApplicationDBContext _context;
+		private  ApplicationDBContext _context;
         private readonly ILogger<ShopController> _logger;
         private readonly ServerManager _serverManager;
 
