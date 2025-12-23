@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 //using System.Security.Policy;
+
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 //using YoungManGomoku_WebServer.SingletoneManager;
 

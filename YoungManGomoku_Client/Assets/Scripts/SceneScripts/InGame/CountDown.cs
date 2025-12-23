@@ -75,12 +75,7 @@ public class CountDown : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        _tween?.Kill();
-        NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
-        EventManager.Instance.OnGameEnd -= OnGameEnd;
-    }
+    private void OnDestroy() => _tween?.Kill();
 
     private void DoTextAnim(string text)
     {

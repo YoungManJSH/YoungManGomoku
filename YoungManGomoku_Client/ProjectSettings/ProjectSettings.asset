@@ -68,16 +68,16 @@ PlayerSettings:
   preserveFramebufferAlpha: 0
   disableDepthAndStencilBuffers: 0
   androidStartInFullscreen: 0
-  androidRenderOutsideSafeArea: 1
+  androidRenderOutsideSafeArea: 0
   androidUseSwappy: 1
   androidDisplayOptions: 1
   androidBlitType: 0
   androidResizeableActivity: 0
-  androidDefaultWindowWidth: 1920
-  androidDefaultWindowHeight: 1080
-  androidMinimumWindowWidth: 1080
-  androidMinimumWindowHeight: 2200
-  androidFullscreenMode: 1
+  androidDefaultWindowWidth: 1080
+  androidDefaultWindowHeight: 2200
+  androidMinimumWindowWidth: 720
+  androidMinimumWindowHeight: 1466
+  androidFullscreenMode: 3
   androidAutoRotationBehavior: 1
   androidPredictiveBackSupport: 0
   androidApplicationEntry: 2
@@ -269,7 +269,7 @@ PlayerSettings:
   AndroidTargetArchitectures: 2
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
-  AndroidKeystoreName: D:/Fork/GomokuKeystore/user.keystore
+  AndroidKeystoreName: D:/Users/owen8/user.keystore
   AndroidKeyaliasName: gomokukey
   AndroidEnableArmv9SecurityFeatures: 0
   AndroidEnableArm64MTE: 0
@@ -893,7 +893,7 @@ PlayerSettings:
   qnxGraphicConfPath: 
   apiCompatibilityLevel: 6
   captureStartupLogs: {}
-  activeInputHandler: 2
+  activeInputHandler: 0
   windowsGamepadBackendHint: 0
   cloudProjectId: 107dbba9-fdaa-4954-8678-219ecc8e57bd
   framebufferDepthMemorylessMode: 0

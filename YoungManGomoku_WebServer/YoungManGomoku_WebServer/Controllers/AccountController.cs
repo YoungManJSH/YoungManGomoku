@@ -1,18 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿//using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // AsNoTracking()
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+//using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
+//using System.Security.Cryptography.X509Certificates;
+
+using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ClientToServer;
 
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
-using YoungManGomoku_Protocol;
-using YoungManGomoku_Protocol.TypeEnum.PlayerData;
-using YoungManGomoku_Protocol.ClientToServer;
+using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Controllers
@@ -21,7 +22,7 @@ namespace YoungManGomoku_WebServer.Controllers
 	[ApiController]
 	public class AccountController : ControllerBase
 	{
-		ApplicationDBContext _context;
+		private ApplicationDBContext _context;
 		private readonly ILogger<AccountController> _logger;
         private readonly ServerManager _serverManager;
 

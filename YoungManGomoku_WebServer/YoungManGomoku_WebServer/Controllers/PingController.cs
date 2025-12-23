@@ -8,7 +8,6 @@ namespace YoungManGomoku_WebServer.Controllers
     [ApiController]
     public class PingController : ControllerBase
     {
-        private readonly ServerManager _serverManager;
         [HttpGet]
         public IActionResult Get()
         {

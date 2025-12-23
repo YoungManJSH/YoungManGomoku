@@ -1,5 +1,4 @@
 ﻿using System;
-using Global.Protocol.TypeEnum;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 /*
@@ -40,7 +39,6 @@ namespace YoungManGomoku_Protocol
 		public BoardSkinType EquipBoardSkin { get; set; }
 
 		// 실력 판단용 내부 지표 레이팅
-		// MMR은 서버에서만 쓰고 클라이언트에서는 딱히 보여주지 않기로 합의함
 		public float Rating { get; set; }
 
 		// 게임을 얼마나 많이 했는지 판단하는 지표, Exp가 일정량 찰 때마다 레벨 업
@@ -127,12 +125,22 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_PlaceStoneDTO
     {
         public string IDToken { get; set; }
-        public byte Row { get; set; }
+		public UserTimer MyTimer { get; set; }
+		public byte Row { get; set; }
         public byte Col { get; set; }
-        public UserTimer MyTimer { get; set; }
+        
+        // Unity Transform과 무관한 보드 좌표 Read 전용
+		public byte X => Row;
+		public byte Y => Col;
     }
     
     // 그밖에 인게임 요청은 IngameRequest enum값만 보내면 될 듯
+
+    public class CS_InGameRequestDTO
+    {
+        public string IDToken { get; set; }
+        public IngameRequest IngameRequest { get; set; }
+    }
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
@@ -191,10 +199,15 @@ namespace YoungManGomoku_Protocol.ServerToClient
     // 착수가 이루어질 때 상대방 클라이언트가 받을 착수 및 타이머 정보
     public class SC_OpponentMoveDTO
     {
-	    public byte Row { get; set; }
+        public UserTimer OpponentTimer { get; set; }
+        public GameEndCode EndCode { get; set; }
+
+        public byte Row { get; set; }
 	    public byte Col { get; set; }
-	    public UserTimer OpponentTimer { get; set; }
-	    public GameEndCode EndCode { get; set; }
+
+        // Unity Transform과 무관한 보드 좌표 Read 전용
+        public byte X => Row;
+        public byte Y => Col;
 
 	    public SC_OpponentMoveDTO(byte row, byte col, UserTimer opponentTimer, GameEndCode endCode = GameEndCode.None)
 	    {

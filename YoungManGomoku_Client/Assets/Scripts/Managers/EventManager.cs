@@ -31,6 +31,7 @@ public class EventManager : MonoBehaviour
     public static EventManager Instance { get; private set; }
     
     private GameManager _gameManager;
+    private NetworkManager _networkManager;
     
     // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
     // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음.
@@ -39,7 +40,8 @@ public class EventManager : MonoBehaviour
         if (Instance != null) Destroy(gameObject);
         Instance = this;
         _gameManager = GetComponent<GameManager>();
-        NetworkManager.Instance.OnRequestFailed += _ => OnGameEnd!.Invoke();
+        _networkManager = GetComponent<NetworkManager>();
+        _networkManager.OnRequestFailed += _ => OnGameEnd!.Invoke();
     }
 
     private void OnDestroy() => Instance = null;
