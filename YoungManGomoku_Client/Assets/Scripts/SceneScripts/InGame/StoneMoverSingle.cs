@@ -11,7 +11,7 @@ public sealed class StoneMoverSingle : StoneMover
     {
         EventManager.Instance.OnGameStart += () => enabled = true;
         OnStoneMove += isBlack
-            => nowPreview = isBlack ? _blackPreview : _whitePreview;
+            => NowPreview = isBlack ? _blackPreview : _whitePreview;
     }
 
     private void OnDisable()
@@ -23,15 +23,15 @@ public sealed class StoneMoverSingle : StoneMover
     public override void MoveConfirmed()
     {
 #if UNITY_ANDROID
-        if (isBlackTurn && _blackPreview.activeSelf)
+        if (_blackPreview.activeSelf)
         {
             _blackPreview.SetActive(false);
-            MoveStone(prevCoord);
+            MoveStone(PrevCoord);
         }
-        else if (isBlackTurn is false && _whitePreview.activeSelf)
+        else if (_whitePreview.activeSelf)
         {
             _whitePreview.SetActive(false);
-            MoveStone(prevCoord);
+            MoveStone(PrevCoord);
         }
 #endif
     }
@@ -40,13 +40,13 @@ public sealed class StoneMoverSingle : StoneMover
     
     protected override void CreatePreview()
     {
-        _blackPreview = Instantiate(blackStone, blackParent);
-        _blackPreview.GetComponent<SpriteRenderer>().color = previewColor;
+        _blackPreview = Instantiate(blackStone, BlackParent);
+        _blackPreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         _blackPreview.name = "Black Preview";
         _blackPreview.SetActive(false);
 
-        _whitePreview = Instantiate(whiteStone, whiteParent);
-        _whitePreview.GetComponent<SpriteRenderer>().color = previewColor;
+        _whitePreview = Instantiate(whiteStone, WhiteParent);
+        _whitePreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         _whitePreview.name = "White Preview";
         _whitePreview.SetActive(false);
     }

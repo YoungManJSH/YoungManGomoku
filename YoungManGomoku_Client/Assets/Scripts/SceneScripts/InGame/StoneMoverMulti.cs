@@ -15,15 +15,15 @@ public class StoneMoverMulti : StoneMover
         };
     }
 
-    private void OnDisable() => nowPreview.SetActive(false);
+    private void OnDisable() => NowPreview.SetActive(false);
 
     public override void MoveConfirmed()
     {
 #if UNITY_ANDROID
-        if (nowPreview.activeSelf)
+        if (NowPreview.activeSelf)
         {
-            nowPreview.SetActive(false);
-            MoveStone(prevCoord);
+            NowPreview.SetActive(false);
+            MoveStone(PrevCoord);
         }
 #endif
     }
@@ -32,11 +32,11 @@ public class StoneMoverMulti : StoneMover
     
     protected override void CreatePreview()
     {
-        nowPreview = GameManager.Instance.IsPlayerBlack ?
-            Instantiate(blackStone, blackParent) : Instantiate(whiteStone, whiteParent);
+        NowPreview = GameManager.Instance.IsPlayerBlack ?
+            Instantiate(blackStone, BlackParent) : Instantiate(whiteStone, WhiteParent);
         
-        nowPreview.GetComponent<SpriteRenderer>().color = previewColor;
-        nowPreview.name = "Preview";
-        nowPreview.SetActive(false);
+        NowPreview.GetComponent<SpriteRenderer>().color = PreviewColor;
+        NowPreview.name = "Preview";
+        NowPreview.SetActive(false);
     }
 }
