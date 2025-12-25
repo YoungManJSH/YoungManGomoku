@@ -188,7 +188,7 @@ public class GameManager : MonoBehaviour
 
                 if (result.IsRejected)
                 {
-                    PlayerTimer.ReviseTimer(result.ServerTimer);
+                    PlayerTimer.SynchroTimer(result.ServerTimer);
                 }
             }
         }

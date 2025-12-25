@@ -69,10 +69,10 @@ public class StoneMoverMulti : StoneMover
             }
             else
             {
-                var placeStoneDto = new CS_PlaceStoneDTO(_idToken, _playerTimer, PrevCoord.row, PrevCoord.col);
+                var placeStoneDto = new CS_PlaceStoneDTO(_idToken, _playerTimer.SyncData, PrevCoord.row, PrevCoord.col);
                 var opponentMove = await _networkManager.RequestPlaceStone(placeStoneDto);
 
-                _oppositeTimer.ReviseTimer(opponentMove.OpponentTimer);
+                _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
 
                 if (opponentMove.GameEndCode != GameEndCode.None)
                 {

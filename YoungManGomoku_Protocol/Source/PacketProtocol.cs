@@ -111,6 +111,19 @@ namespace YoungManGomoku_Protocol
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
         public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
     }
+
+    /// <summary> 서버-클라이언트 간 타이머 전송용 DTO </summary>
+    public struct TimerSyncData
+    {
+	    public float MainTime { get; set; }
+	    public int ByoyomiCount { get; set; }
+
+	    public TimerSyncData(float mainTime, int byoyomiCount)
+	    {
+		    MainTime = mainTime;
+		    ByoyomiCount = byoyomiCount;
+	    }
+    }
 }
 
 namespace YoungManGomoku_Protocol.ClientToServer
@@ -125,7 +138,7 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_PlaceStoneDTO
     {
         public string IDToken { get; set; }
-		public UserTimer MyTimer { get; set; }
+		public TimerSyncData MyTimer { get; set; }
 		public byte Row { get; set; }
         public byte Col { get; set; }
         
@@ -133,7 +146,7 @@ namespace YoungManGomoku_Protocol.ClientToServer
 		public byte X => Row;
 		public byte Y => Col;
 
-		public CS_PlaceStoneDTO(string idToken, UserTimer myTimer, int row, int col)
+		public CS_PlaceStoneDTO(string idToken, TimerSyncData myTimer, int row, int col)
 		{
 			IDToken = idToken;
 			MyTimer = myTimer;
@@ -142,8 +155,6 @@ namespace YoungManGomoku_Protocol.ClientToServer
 		}
     }
     
-    // 그밖에 인게임 요청은 IngameRequest enum값만 보내면 될 듯
-
     public class CS_InGameRequestDTO
     {
         public string IDToken { get; set; }
@@ -212,10 +223,10 @@ namespace YoungManGomoku_Protocol.ServerToClient
     }
 
     /// <summary> 착수가 이루어질 때 상대방 클라이언트가 받을 착수 위치 및 타이머 정보 </summary>
-    public class SC_OpponentMoveDTO
+    public class SC_OpponentPlaceStoneDTO
     {
 	    /// <summary> 상대방의 타이머 </summary>
-        public UserTimer OpponentTimer { get; set; }
+        public TimerSyncData OpponentTimer { get; set; }
 	    
 	    /// <summary> 게임이 끝난 경우 알맞은 값을 넣어주세요 </summary>
         public GameEndCode GameEndCode { get; set; }
@@ -230,7 +241,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
         // 재대결 가능 알림? 일단 만들어는 봤는데... 쓸 일이 있을까?
         public bool CanRequestRematch { get; set; }
 
-        public SC_OpponentMoveDTO(UserTimer opponentTimer, byte row, byte col, GameEndCode endCode = GameEndCode.None)
+        public SC_OpponentPlaceStoneDTO(TimerSyncData opponentTimer, byte row, byte col, GameEndCode endCode = GameEndCode.None)
 	    {
 		    OpponentTimer = opponentTimer;
 		    Row = row;
@@ -243,18 +254,18 @@ namespace YoungManGomoku_Protocol.ServerToClient
     public class SC_TimerSynchroResultDTO
     {
 	    /// <summary>
-	    /// <para>true : 네 타이머 선 넘음, 서버 걸로 고쳐서 써</para>
-	    /// <para>false: 네 타이머 인정, 그대로 쓰세요</para>
+	    /// <para>true : 보내준 타이머 선 넘음, 서버 걸로 고쳐서 써</para>
+	    /// <para>false: ㅇㅋ 인정, 그대로 쓰세요</para>
 	    /// </summary>
 	    public bool IsRejected { get; set; }
 	    
 	    /// <summary>
 	    /// 클라이언트 타이머를 거부한 경우 서버가 보내주는 정정된 타이머 정보,
-	    /// IsRejected가 false이면 null 넣어주세요.
+	    /// 서버 타이머.SyncData(반환된 프로퍼티 값) 보내주세요.
 	    /// </summary>
-	    public UserTimer ServerTimer { get; set; }
+	    public TimerSyncData ServerTimer { get; set; }
 
-	    public SC_TimerSynchroResultDTO(bool isRejected, UserTimer serverTimer)
+	    public SC_TimerSynchroResultDTO(bool isRejected, TimerSyncData serverTimer)
 	    {
 		    IsRejected = isRejected;
 		    ServerTimer = serverTimer;
