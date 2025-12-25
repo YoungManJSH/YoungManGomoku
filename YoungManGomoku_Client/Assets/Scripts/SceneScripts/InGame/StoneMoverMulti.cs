@@ -9,18 +9,22 @@ public class StoneMoverMulti : StoneMover
     private bool _isPlayerTurn;
     private NetworkManager _networkManager;
     private EventManager _eventManager;
-    private string _idToken;
+    private GameManager _gameManager;
     private UserTimer _playerTimer;
     private UserTimer _oppositeTimer;
+    private CS_PlaceStoneDTO _placeStoneDto;
 
     protected override void OnAwake()
     {
         _networkManager = NetworkManager.Instance;
         _eventManager = EventManager.Instance;
-        _isPlayerTurn = GameManager.Instance.IsPlayerBlack;
-        _idToken = GameManager.Instance.IdToken;
-        _playerTimer = GameManager.Instance.PlayerTimer;
-        _oppositeTimer = GameManager.Instance.OppositeTimer;
+        _gameManager = GameManager.Instance;
+        
+        _isPlayerTurn = _gameManager.IsPlayerBlack;
+        _playerTimer = _gameManager.PlayerTimer;
+        _oppositeTimer = _gameManager.OppositeTimer;
+        _placeStoneDto = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
+        
         OnStoneMove += OnTurnChanged;
     }
 
@@ -41,7 +45,7 @@ public class StoneMoverMulti : StoneMover
     
     protected override void CreatePreview()
     {
-        NowPreview = GameManager.Instance.IsPlayerBlack ?
+        NowPreview = _gameManager.IsPlayerBlack ?
             Instantiate(blackStone, BlackParent) : Instantiate(whiteStone, WhiteParent);
         
         NowPreview.GetComponent<SpriteRenderer>().color = PreviewColor;
@@ -60,7 +64,8 @@ public class StoneMoverMulti : StoneMover
 
             if (_isPlayerTurn)
             {
-                GameEndCode endCode = await _networkManager.RequestMyTurn(_idToken);
+                GameEndCode endCode =
+                    await _networkManager.RequestMyTurn(_gameManager.IdToken);
 
                 if (endCode != GameEndCode.None)
                 {
@@ -69,8 +74,12 @@ public class StoneMoverMulti : StoneMover
             }
             else
             {
-                var placeStoneDto = new CS_PlaceStoneDTO(_idToken, _playerTimer.SyncData, PrevCoord.row, PrevCoord.col);
-                var opponentMove = await _networkManager.RequestPlaceStone(placeStoneDto);
+                _placeStoneDto.MyTimer = _playerTimer.SyncData;
+                _placeStoneDto.Row = (byte)PrevCoord.row;
+                _placeStoneDto.Col = (byte)PrevCoord.col;
+                
+                var opponentMove =
+                    await _networkManager.RequestPlaceStone(_placeStoneDto);
 
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
 

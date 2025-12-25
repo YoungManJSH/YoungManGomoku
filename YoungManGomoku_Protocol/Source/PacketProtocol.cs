@@ -154,6 +154,18 @@ namespace YoungManGomoku_Protocol.ClientToServer
 			Col = (byte)col;
 		}
     }
+
+    public class CS_RequestTimerSynchroDTO
+    {
+	    public string IDToken { get; set; }
+	    public int NowTurn { get; set; }
+
+	    public CS_RequestTimerSynchroDTO(string idToken, int nowTurn)
+	    {
+		    IDToken = idToken;
+		    NowTurn = nowTurn;
+	    }
+    }
     
     public class CS_InGameRequestDTO
     {
@@ -247,28 +259,6 @@ namespace YoungManGomoku_Protocol.ServerToClient
 		    Row = row;
 		    Col = col;
 		    GameEndCode = endCode; // None or GomokuLose or BlackUnmovable
-	    }
-    }
-
-    /// <summary> 착수 요청 이후 Timer 동기화 결과 응답 </summary>
-    public class SC_TimerSynchroResultDTO
-    {
-	    /// <summary>
-	    /// <para>true : 보내준 타이머 선 넘음, 서버 걸로 고쳐서 써</para>
-	    /// <para>false: ㅇㅋ 인정, 그대로 쓰세요</para>
-	    /// </summary>
-	    public bool IsRejected { get; set; }
-	    
-	    /// <summary>
-	    /// 클라이언트 타이머를 거부한 경우 서버가 보내주는 정정된 타이머 정보,
-	    /// 서버 타이머.SyncData(반환된 프로퍼티 값) 보내주세요.
-	    /// </summary>
-	    public TimerSyncData ServerTimer { get; set; }
-
-	    public SC_TimerSynchroResultDTO(bool isRejected, TimerSyncData serverTimer)
-	    {
-		    IsRejected = isRejected;
-		    ServerTimer = serverTimer;
 	    }
     }
     

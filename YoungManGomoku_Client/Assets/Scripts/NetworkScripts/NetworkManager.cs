@@ -144,8 +144,8 @@ public class NetworkManager : MonoBehaviour
 	/// <para> 클라이언트 타이머 승인: false, 서버 타이머 데이터 혹은 이상 감지값 </para>
 	/// <para> 클라이언트 타이머 반려: true, 서버 타이머 데이터 </para>
 	/// </returns>
-	public async Awaitable<SC_TimerSynchroResultDTO> RequestTimerSynchro(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<SC_TimerSynchroResultDTO>("GomokuIngame/Standby", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Timer Confirmed");
+	public async Awaitable<TimerSyncData> RequestTimerSynchro(CS_RequestTimerSynchroDTO requestSynchroDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<TimerSyncData>("GomokuIngame/Standby", JsonConvert.SerializeObject(requestSynchroDTO), timeOutSeconds, "Gomoku Ingame : Timer Synchro Data");
 	
 	/// <summary> 착수 요청 </summary>
 	/// <param name="placeStoneDTO"> IdToken, 착수 위치, 본인 타이머 정보 </param>
