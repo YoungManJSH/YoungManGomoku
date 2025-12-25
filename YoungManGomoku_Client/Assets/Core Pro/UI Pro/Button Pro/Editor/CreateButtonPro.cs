@@ -119,8 +119,8 @@ namespace CorePro.ButtonPro
 
             if (existingEventSystem == null)
             {
-                // Create a new EventSystem
-                GameObject eventSystemObject = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+                // Create a new EventSystem, 현재 프로젝트 설계에 맞춰 StandaloneInputModule로 수정
+                GameObject eventSystemObject = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 Undo.RegisterCreatedObjectUndo(eventSystemObject, "Create EventSystem");
             }
         }

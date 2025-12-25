@@ -53,6 +53,11 @@ public class PlayerPanelController : MonoBehaviour
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
         if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
+        gm.BoardInform.OnBlackUnmovable += () =>
+        {
+            enabled = false;
+            _isGameEnd = true;
+        };
         
         _myTimer = isPlayer ? gm.PlayerTimer : gm.OppositeTimer;
         _isByoyomi = _myTimer.MainTime == 0f;
@@ -109,9 +114,11 @@ public class PlayerPanelController : MonoBehaviour
         {
             em.OnOppositeTimeOut += OnTimeOut;
             em.OnOppositeByoyomiPurchase += OnByoyomiPurchase;
-        } 
+        }
         
         stoneMover.OnStoneMove += OnStoneMove;
+        _myTimer.OnTimerRevised += OnTimerRevised;
+        
         enabled = false;
     }
     
@@ -175,7 +182,7 @@ public class PlayerPanelController : MonoBehaviour
         #endregion
     }
 
-    public void CancelByoyomiUse()
+    private void CancelByoyomiUse()
     {
         if (_byoyomiUseCts != null)
         {
@@ -214,9 +221,6 @@ public class PlayerPanelController : MonoBehaviour
         if (_isGameEnd) return;
         
         enabled = isBlackTurn == _isThisBlack;
-        
-        /* TODO: 추후 서버로부터 정정된 타이머 적용 로직 추가
-         isLastByoyomi 상태에서 2회로 정정될 경우 해제 로직 빼먹지 말기!*/
 
         if (enabled)
         {
@@ -248,6 +252,38 @@ public class PlayerPanelController : MonoBehaviour
             else
             {
                 mainTimer.color = Translucent;
+            }
+        }
+    }
+
+    private void OnTimerRevised(float mainTime, int leftCount)
+    {
+        CancelByoyomiUse();
+        
+        mainTimer.text = mainTime > 0 ? $"{mainTime / 60:D2}:{mainTime % 60:D2}" : "00:00";
+        byoyomiCount.text = $"{leftCount}회";
+        
+        if (leftCount == 1)
+        {
+            OnLastByoyomi?.Invoke();
+            byoyomiCount.font = glowFont;
+        }
+        else
+        {
+            byoyomiCount.font = _originFont;
+        }
+        
+        // Player의 타이머는 역행할 일이 없음을 전제로 함.
+        if (isPlayer)
+        {
+            if (leftCount == 1)
+            {
+                StartGlowEffect(byoyomiCount.fontMaterial, loops: 2);
+                _audioSource.PlayOneShot(byoyomiWarningSound);
+            }
+            else
+            {
+                _audioSource.PlayOneShot(useByoyomiSound);
             }
         }
     }

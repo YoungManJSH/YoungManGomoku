@@ -132,6 +132,14 @@ namespace YoungManGomoku_Protocol.ClientToServer
         // Unity Transform과 무관한 보드 좌표 Read 전용
 		public byte X => Row;
 		public byte Y => Col;
+
+		public CS_PlaceStoneDTO(string idToken, UserTimer myTimer, int row, int col)
+		{
+			IDToken = idToken;
+			MyTimer = myTimer;
+			Row = (byte)row;
+			Col = (byte)col;
+		}
     }
     
     // 그밖에 인게임 요청은 IngameRequest enum값만 보내면 될 듯
@@ -140,13 +148,20 @@ namespace YoungManGomoku_Protocol.ClientToServer
     {
         public string IDToken { get; set; }
         public IngameRequest IngameRequest { get; set; }
+
+        public CS_InGameRequestDTO(string idToken, IngameRequest request)
+        {
+	        IDToken = idToken;
+	        IngameRequest = request;
+        }
     }
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
 {
     // 서버에서는 클라이언트로 \"{내용}\" 형태의 문자열 아니면 DTO를 보내게 될 것이다.
-
+    
+    /// <summary> 단순 서버 응답 요청 결과 </summary>
     public class SC_ResponseStringDTO
     {
         public string Message{ get; set; }
@@ -157,7 +172,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
             IsSuccess = isSuccess;
         }
     }
-
+    
     public class SC_MatchResultDTO
     {
         public OpponentPlayerData OpponentPlayer { get; set; }
@@ -179,7 +194,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
         }
     }
     
-    // 게임이 시작될 때 클라가 받을 타이머 설정 정보
+    ///<summary> 게임이 시작될 때 클라가 받을 타이머 설정 정보 </summary>
     public struct SC_TimerSettingDTO
     {
         public float MainTime { get; set; } // 처음에 누적하여 소모되는 자유시간
@@ -196,11 +211,14 @@ namespace YoungManGomoku_Protocol.ServerToClient
         }
     }
 
-    // 착수가 이루어질 때 상대방 클라이언트가 받을 착수 및 타이머 정보
+    /// <summary> 착수가 이루어질 때 상대방 클라이언트가 받을 착수 위치 및 타이머 정보 </summary>
     public class SC_OpponentMoveDTO
     {
+	    /// <summary> 상대방의 타이머 </summary>
         public UserTimer OpponentTimer { get; set; }
-        public GameEndCode EndCode { get; set; }
+	    
+	    /// <summary> 게임이 끝난 경우 알맞은 값을 넣어주세요 </summary>
+        public GameEndCode GameEndCode { get; set; }
 
         public byte Row { get; set; }
 	    public byte Col { get; set; }
@@ -212,17 +230,49 @@ namespace YoungManGomoku_Protocol.ServerToClient
         // 재대결 가능 알림? 일단 만들어는 봤는데... 쓸 일이 있을까?
         public bool CanRequestRematch { get; set; }
 
-        public SC_OpponentMoveDTO(byte row, byte col, UserTimer opponentTimer, GameEndCode endCode = GameEndCode.None)
+        public SC_OpponentMoveDTO(UserTimer opponentTimer, byte row, byte col, GameEndCode endCode = GameEndCode.None)
 	    {
+		    OpponentTimer = opponentTimer;
 		    Row = row;
 		    Col = col;
-		    OpponentTimer = opponentTimer;
-		    EndCode = endCode; // None or GomokuLose or BlackUnmovable
+		    GameEndCode = endCode; // None or GomokuLose or BlackUnmovable
+	    }
+    }
+
+    /// <summary> 착수 요청 이후 Timer 동기화 결과 응답 </summary>
+    public class SC_TimerSynchroResultDTO
+    {
+	    /// <summary>
+	    /// <para>true : 네 타이머 선 넘음, 서버 걸로 고쳐서 써</para>
+	    /// <para>false: 네 타이머 인정, 그대로 쓰세요</para>
+	    /// </summary>
+	    public bool IsRejected { get; set; }
+	    
+	    /// <summary>
+	    /// 클라이언트 타이머를 거부한 경우 서버가 보내주는 정정된 타이머 정보,
+	    /// IsRejected가 false이면 null 넣어주세요.
+	    /// </summary>
+	    public UserTimer ServerTimer { get; set; }
+
+	    public SC_TimerSynchroResultDTO(bool isRejected, UserTimer serverTimer)
+	    {
+		    IsRejected = isRejected;
+		    ServerTimer = serverTimer;
 	    }
     }
     
-    /* 플레이어의 타이머를 반려시킬 때 보낼 동기화용 타이머 정보는 그냥 UserTimer 바로 보내주면 될 듯?
-     * 상대방 착수 없이 게임 종료되는 케이스에는 EndCode enum값만 보내주면 될 듯? */
+    /// <summary> 인게임 특수 요청에 대한 응답, 추후 추가 및 수정 가능 </summary>
+    public class SC_IngameRequestAnswerDTO
+    {
+	    public bool IsSuccess { get; set; }
+	    public GameEndCode GameEndCode { get; set; }
+
+	    public SC_IngameRequestAnswerDTO(bool isSuccess, GameEndCode gameEndCode)
+	    {
+		    IsSuccess = isSuccess;
+		    GameEndCode = gameEndCode;
+	    }
+    }
 }
 
 

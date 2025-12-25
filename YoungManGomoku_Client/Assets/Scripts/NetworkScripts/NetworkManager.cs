@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 // OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
@@ -135,7 +136,12 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameStart", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Game Start");
 
-
+	
+	/* TODO: 내 타이머 동기화 요청
+	 * 대충 적어봤으니 컨펌 부탁. */
+	public async Awaitable<SC_TimerSynchroResultDTO> RequestTimerSynchro(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_TimerSynchroResultDTO>("GomokuIngame/Standby", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Timer Confirmed");
+	
 	/// <summary>
 	/// 착수 요청
 	/// </summary>
@@ -145,15 +151,19 @@ public class NetworkManager : MonoBehaviour
 	/// <param name="timeOutSeconds"></param>
 	/// /// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
 	/// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
-	/// <returns> 
-	/// null : 서버 터짐 
+	/// <returns>
+	/// null : 서버 터짐
 	/// </returns>
-	public async Awaitable<SC_ResponseStringDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
-	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
+	public async Awaitable<SC_OpponentMoveDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
+	=> await RequestPostServer<SC_OpponentMoveDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
 
+	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
+	public async Awaitable<GameEndCode> RequestMyTurn(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<GameEndCode>("GomokuIngame/PlaceStone",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
+	
 
-    public async Awaitable<SC_ResponseStringDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
-    => await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
+    public async Awaitable<SC_IngameRequestAnswerDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
+    => await RequestPostServer<SC_IngameRequestAnswerDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
 
 
 

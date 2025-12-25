@@ -2671,6 +2671,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 259d5d13e8e03ae439e878dbb497854e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventManager
+  oppositeHand: {fileID: 1989689724}
 --- !u!82 &663775707
 AudioSource:
   m_ObjectHideFlags: 0
@@ -5031,7 +5032,6 @@ MonoBehaviour:
   playerDisconnectedText: "\uC811\uC18D\uC774 \uB04A\uACA8 \uD328\uBC30 \uCC98\uB9AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
   drawText: "\uD310\uC744 \uBAA8\uB450 \uCC44\uC6CC \uBB34\uC2B9\uBD80 \uCC98\uB9AC\uB429\uB2C8\uB2E4."
   disconnectedText: "\uC11C\uBC84 \uD1B5\uC2E0\uC5D0 \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4."
-  matchingFailText: "\uB9E4\uCE6D\uC5D0 \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4."
   idlingTime: 10
 --- !u!1 &1041641606
 GameObject:

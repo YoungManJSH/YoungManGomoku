@@ -37,6 +37,7 @@ public abstract class StoneMover : MonoBehaviour
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
     private bool _isBlackTurn;
+    private bool _muteDeniedSound;
     
     /// <summary> 매개변수: 시작된 턴이 흑돌 턴인지 여부 </summary>
     public event Action<bool> OnStoneMove;
@@ -63,6 +64,7 @@ public abstract class StoneMover : MonoBehaviour
         _boardInform = GameManager.Instance.BoardInform;
         PrevCoord = (-1, -1);
         _isBlackTurn = true;
+        _muteDeniedSound = false;
         recentMark.SetActive(false);
         
         _ingameBoardManager.OnBoardScaled += async () => await CalcWorldValue();
@@ -115,8 +117,11 @@ public abstract class StoneMover : MonoBehaviour
 
         // 금수로 인한 착수 실패
         PlaceForbiddenMark(position);
-        _audioSource.PlayOneShot(deniedSound);
         _forbiddenCoords.Add(coord);
+        if (_muteDeniedSound is false)
+        {
+            _audioSource.PlayOneShot(deniedSound);
+        }
     }
     
     private void DisableUpdate() => enabled = false;
@@ -152,7 +157,7 @@ public abstract class StoneMover : MonoBehaviour
             Input.GetKeyDown(KeyCode.Space))
         {
             NowPreview.SetActive(false);
-            PrevCoord = (-1, -1);
+            PrevCoord = coord;
             MoveStone(coord);
             return;
         }
@@ -272,7 +277,8 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 게임 시작 시 천원점 자동 착수 </summary>
     private void OnGameStart()
     {
-        MoveStone((7, 7));
+        PrevCoord = (7, 7);
+        MoveStone(PrevCoord);
         recentMark.SetActive(true);
     }
     
@@ -289,7 +295,7 @@ public abstract class StoneMover : MonoBehaviour
     private void OnBlackUnmovable()
     {
         enabled = false;
-        _audioSource.mute = true;
+        _muteDeniedSound = true;
 
         for (int row = 0; row < Board.BoardSize; ++row)
         {
