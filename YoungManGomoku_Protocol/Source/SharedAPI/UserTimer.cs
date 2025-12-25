@@ -11,6 +11,8 @@ public class UserTimer : IComparable<UserTimer>
     public float NowByoyomiSeconds { get; private set; }
     
     public event Action OnTimeOut;
+    /// <summary> 매개변수는 MainTime, ByoyomiCount </summary>
+    public event Action<float, int> OnTimerRevised;
     private bool _isTimeOut;
 
     public UserTimer(float initMainTime, int initByoyomiCount, float byoyomiSeconds)
@@ -99,6 +101,17 @@ public class UserTimer : IComparable<UserTimer>
         ByoyomiCount = byoyomiCount;
         NowByoyomiSeconds = initByoyomiSeconds;
         _isTimeOut = false;
+        OnTimerRevised?.Invoke(MainTime, ByoyomiCount);
+    }
+
+    /// <summary> [서버, 클라이언트] 타이머 동기화 함수 </summary>
+    /// <param name="targetTimer"> 이 개체가 targetTimer로 동기화 됨 </param>
+    public void ReviseTimer(UserTimer targetTimer)
+    {
+        MainTime = targetTimer.MainTime;
+        ByoyomiCount = targetTimer.ByoyomiCount;
+        NowByoyomiSeconds = initByoyomiSeconds;
+        OnTimerRevised?.Invoke(MainTime, ByoyomiCount);
     }
 
     public void ByoyomiPurchased(int amount)

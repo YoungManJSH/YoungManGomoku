@@ -1,8 +1,12 @@
 using System;
 using UnityEngine;
+using YoungManGomoku_Protocol.ClientToServer;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class EventManager : MonoBehaviour
 {
+    [SerializeField] private BoardSweeper oppositeHand;
+    
     public event Action OnGameStart;
     public event Action OnGameEnd;
     
@@ -27,8 +31,10 @@ public class EventManager : MonoBehaviour
     public event Action OnOppositeDisconnectedWin;
     public event Action OnPlayerDisconnectedLose;
     public event Action OnTakeBack;
+    public event Action OnServerReplyFailed;
 
     public static EventManager Instance { get; private set; }
+    public bool IsGameEnd { get; private set; }
     
     private GameManager _gameManager;
     private NetworkManager _networkManager;
@@ -42,21 +48,25 @@ public class EventManager : MonoBehaviour
         _gameManager = GetComponent<GameManager>();
         _networkManager = GetComponent<NetworkManager>();
         _networkManager.OnRequestFailed += _ => OnGameEnd!.Invoke();
+        IsGameEnd = false;
     }
 
     private void OnDestroy() => Instance = null;
 
     private void Start()
     {
-        /* TODO: 서버 연결 시 해당 부분 주석 해제
+        var matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
+        
         if (matchResult.MatchingSuccess is false ||
             matchResult.MyStoneColorType is StoneColorType.Empty)
         {
+            OnServerReplyFailed!.Invoke();
             OnGameEnd!.Invoke();
             return;
-        } */
+        }
         
         // Action 개체는 Immutable이므로 구독 순서에 유의할 것!!
+        OnServerReplyFailed += OnGameEnd;
         OnGameWin += OnGameEnd;
         OnGameLose += OnGameEnd;
         OnGameDraw += OnGameEnd;
@@ -75,21 +85,89 @@ public class EventManager : MonoBehaviour
         OnPlayerDisconnectedLose += OnGameLose;
     }
 
-    public void StartGame()
+    public async void StartGame()
     {
-        /*TODO: 스타트 요청 서버 보내는 것부터 시작*/
-        OnGameStart!.Invoke();
+        try
+        {
+            var response = await _networkManager.RequestGameStartAnnounce(_gameManager.IdToken);
+
+            if (response == null || response.IsSuccess is false)
+            {
+                OnServerReplyFailed!.Invoke();
+                return;
+            }
+            
+            OnGameStart!.Invoke();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+            OnServerReplyFailed!.Invoke();
+        }
     }
     
     public void StartSweeping() => OnStartSweeping!.Invoke();
-    
-    public void PlayerSurrendered() => OnPlayerSurrender!.Invoke();
 
-    public void OppositeSurrendered() => OnOppositeSurrender!.Invoke();
+    public async void PlayerSurrendered()
+    {
+        var surrenderRequest = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequest.Surrender);
+        var reply = await _networkManager.RequestIngameAction(surrenderRequest);
+
+        Debug.Assert(reply.GameEndCode != GameEndCode.None);
+        HandleGameEndCode(reply.GameEndCode);
+    }
 
     public void PlayerByoyomiPurchase() => OnPlayerByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
 
     public void OppositeByoyomiPurchase() => OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
 
     public void TakeBack() => OnTakeBack!.Invoke();
+
+    public void HandleGameEndCode(GameEndCode gameEndCode)
+    {
+        if (IsGameEnd) return;
+        
+        switch (gameEndCode)
+        {
+            case GameEndCode.None:
+                Debug.LogWarning("GameEndCode None, but Handling Function Called!!");
+                return;
+            case GameEndCode.GomokuWin:
+                OnPlayerGomoku!.Invoke();
+                break;
+            case GameEndCode.GomokuLose:
+                OnOppositeGomoku!.Invoke();
+                break;
+            case GameEndCode.BlackUnmovable:
+                OnBlackUnmovable!.Invoke();
+                break;
+            case GameEndCode.SurrenderWin:
+                oppositeHand.Sweeping();
+                OnOppositeSurrender!.Invoke();
+                break;
+            case GameEndCode.SurrenderLose:
+                OnPlayerSurrender!.Invoke();
+                break;
+            case GameEndCode.TimeOutWin:
+                OnOppositeTimeOut!.Invoke();
+                break;
+            case GameEndCode.TimeOutLose:
+                OnPlayerTimeOut!.Invoke();
+                break;
+            case GameEndCode.DisconnectedWin:
+                OnOppositeDisconnectedWin!.Invoke();
+                break;
+            case GameEndCode.DisconnectedLose:
+                OnPlayerDisconnectedLose!.Invoke();
+                break;
+            case GameEndCode.Draw:
+                OnGameDraw!.Invoke();
+                break;
+            default:
+                Debug.LogError("Invalid GameEndCode");
+                return;
+        }
+
+        IsGameEnd = true;
+    }
 }

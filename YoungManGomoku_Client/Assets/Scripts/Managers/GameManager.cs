@@ -22,9 +22,11 @@ public class GameManager : MonoBehaviour
     public bool IsByoyomiPurchased { get; private set; }
     public BasicPlayerData MyPlayer { get; private set; }
     public BasicPlayerData OppositePlayer { get; private set; }
+    public string IdToken { get; private set; }
 
     private UserTimer _nowPlayerTimer;
     private EventManager _eventManager;
+    private NetworkManager _networkManager;
     private AudioSource _audioSource;
     private long _lastTime;
 
@@ -35,11 +37,12 @@ public class GameManager : MonoBehaviour
         if (Instance != null) Destroy(gameObject);
         Instance = this;
         _eventManager = GetComponent<EventManager>();
+        _networkManager = GetComponent<NetworkManager>();
         _audioSource = GetComponent<AudioSource>();
         BoardInform = new Board();
         IsByoyomiPurchased = false;
         
-        #region 타이머 진행 제어 (스크립트 활성화 여부)
+        #region 타이머 진행 제어 (Update 활성화 여부)
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += () => enabled = false;
         _eventManager.OnStartSweeping += () => enabled = false;
@@ -48,7 +51,9 @@ public class GameManager : MonoBehaviour
         
         _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
         _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
-        _eventManager.OnGameDraw += () => _audioSource.PlayOneShot(drawSound);
+        _eventManager.OnGameDraw += PlayDrawSound;
+        _eventManager.OnServerReplyFailed += PlayDrawSound;
+        _networkManager.OnRequestFailed += _ => PlayDrawSound();
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         
         #region 테스트용 임시 초기화
@@ -61,7 +66,8 @@ public class GameManager : MonoBehaviour
         #endregion
         
         #region 서버에서 받아온 매칭 정보로 초기화
-        /*
+        IdToken = PlayerDataFromWebServer.Instance.IDToken;
+        
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
         
@@ -86,7 +92,6 @@ public class GameManager : MonoBehaviour
         ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;
         _eventManager.OnPlayerByoyomiPurchase += PlayerTimer.ByoyomiPurchased;
         _eventManager.OnOppositeByoyomiPurchase += OppositeTimer.ByoyomiPurchased;
-        */
         #endregion
         
         #region 기보 저장
@@ -146,18 +151,7 @@ public class GameManager : MonoBehaviour
         
         // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
         // 오직 착수만 의미하는 이벤트는 OnStoneMove
-        stoneMover.OnStoneMove += isBlackTurn =>
-        {
-            _nowPlayerTimer = isBlackTurn == IsPlayerBlack ? PlayerTimer : OppositeTimer;
-            _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            
-            /* TODO: 서버에서 받은 타이머 정보로 양쪽 ReviseTimer 실행하기
-             내 돌 착수 정보 전송 시점에 OnStoneMove 이벤트를 바로 발생시켜서 내 시간이 안 가도록 해야 함*/
-            
-            // 임시 코드, 초읽기 시간 복구용
-            PlayerTimer.ReviseTimer();
-            OppositeTimer.ReviseTimer();
-        };
+        stoneMover.OnStoneMove += OnStoneMove;
     }
     
     private void OnDestroy() => Instance = null;
@@ -171,6 +165,39 @@ public class GameManager : MonoBehaviour
         _lastTime = nowTime;
     }
 
+    private void PlayDrawSound() => _audioSource.PlayOneShot(drawSound);
+
+    private async void OnStoneMove(bool isBlackTurn)
+    {
+        try
+        {
+            _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            if (isBlackTurn == IsPlayerBlack)
+            {
+                // 플레이어의 턴이 시작한 경우
+                _nowPlayerTimer = PlayerTimer;
+            }
+            else
+            {
+                // 상대방의 턴이 시작한 경우
+                _nowPlayerTimer = OppositeTimer;
+                PlayerTimer.ReviseTimer();
+
+                var result = await _networkManager.RequestTimerSynchro(IdToken);
+
+                if (result.IsRejected)
+                {
+                    PlayerTimer.ReviseTimer(result.ServerTimer);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"OnStoneMove Exception, Maybe in TimerSynchro Request : {e}");
+        }
+    }
+    
     // TODO: 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 
     public void SendTakeBackRequest()
     {

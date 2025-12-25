@@ -157,7 +157,7 @@ public abstract class StoneMover : MonoBehaviour
             Input.GetKeyDown(KeyCode.Space))
         {
             NowPreview.SetActive(false);
-            PrevCoord = (-1, -1);
+            PrevCoord = coord;
             MoveStone(coord);
             return;
         }
@@ -277,7 +277,8 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 게임 시작 시 천원점 자동 착수 </summary>
     private void OnGameStart()
     {
-        MoveStone((7, 7));
+        PrevCoord = (7, 7);
+        MoveStone(PrevCoord);
         recentMark.SetActive(true);
     }
     
