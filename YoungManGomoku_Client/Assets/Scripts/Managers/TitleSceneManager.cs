@@ -8,13 +8,12 @@ using UnityEngine.UI;
 public class TitleSceneManager : MonoBehaviour
 {
     [SerializeField] private VideoPlayer videoPlayer;
+    [SerializeField] private AudioSource audioSource;
+    
     [SerializeField] private GameObject openingVideo;
     [SerializeField] private GameObject gameTitle;
     [SerializeField] private GameObject whiteEffect;
     
-    [SerializeField] private AudioSource audioSource;
-
-
     private void OnEnable()
     {
         videoPlayer.loopPointReached += OnVideoEnd;
@@ -27,6 +26,8 @@ public class TitleSceneManager : MonoBehaviour
     
     private void Start()
     {
+        videoPlayer.clip = AssetLoadManager.Instance.GetVideoClip("타이틀시네마틱");
+        audioSource.clip = AssetLoadManager.Instance.GetAudioClip("whoosh-super-cape-390707");
         videoPlayer.Play();
     }
 

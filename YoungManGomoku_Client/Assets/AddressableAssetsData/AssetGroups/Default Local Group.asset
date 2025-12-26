@@ -14,7 +14,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Default Local Group
   m_GUID: a459d749fb2af614ea97da0d4e111e56
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 2e4fb3c511fa7b6479f7aeac5fc1294c
+    m_Address: "Assets/AddressableAssets/TitleScene/\uD0C0\uC774\uD2C0\uC2DC\uB124\uB9C8\uD2F1.mp4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91f33e156ab7ab641ae12a944f90cf6a
+    m_Address: Assets/AddressableAssets/TitleScene/whoosh-super-cape-390707.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d84387027a630b94c83549e600a21fa4
+    m_Address: Assets/AddressableAssets/Lobby/just-relax-11157.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - default
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: b4788561d0411314c8689150cffc2d23, type: 2}
   m_SchemaSet:

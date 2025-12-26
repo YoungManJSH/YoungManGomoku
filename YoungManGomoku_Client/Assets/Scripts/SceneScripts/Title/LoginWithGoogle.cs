@@ -36,7 +36,7 @@ public class LoginWithGoogle : MonoBehaviour
     private Regex nicknameRegex = new Regex("^[a-zA-Z0-9가-힣_-]+$");
     
     [Header("Platform Checker")]
-    [SerializeField] private TextMeshProUGUI platformText;
+    [SerializeField] private TextMeshProUGUI statusCheckText;
 
 
     private string imageUrl;
@@ -62,12 +62,9 @@ public class LoginWithGoogle : MonoBehaviour
 
     public async void Login()
     {
-//        platformText.text = "뭘까요?";
-#if UNITY_ANDROID && !UNITY_EDITOR || True
-        platformText.text = "안드로이드";
+#if UNITY_ANDROID && !UNITY_EDITOR
         if (!isGoogleSignInInitialized)
         {
-            platformText.text = "70줄 까지 실행";
             GoogleSignIn.Configuration = new GoogleSignInConfiguration
             {
                 RequestIdToken = true,
@@ -77,25 +74,21 @@ public class LoginWithGoogle : MonoBehaviour
             
             isGoogleSignInInitialized = true;
         }
-
-        platformText.text = "80줄 까지 실행";
+        
         GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
         {
             if (task.IsCanceled)
             {
                 Debug.LogWarning("Google sign-in was canceled.");
-                    platformText.text = "87줄 까지 실행";
                 return;
             }
 
             if (task.IsFaulted)
             {
                 Debug.LogError("Google sign-in encountered an error: " + task.Exception);
-platformText.text = "94줄 까지 실행";
                 return;
             }
-
-            platformText.text = "98줄 까지 실행";
+            
 
             GoogleSignInUser googleUser = task.Result;
 
@@ -103,7 +96,6 @@ platformText.text = "94줄 까지 실행";
 
             auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread( async authTask =>
             {
-                platformText.text = "106줄 까지 실행";
                 if (authTask.IsCanceled)
                 {
                     Debug.LogWarning("Firebase auth was canceled.");
@@ -115,40 +107,33 @@ platformText.text = "94줄 까지 실행";
                     Debug.LogError("Firebase auth failed: " + authTask.Exception);
                     return;
                 }
-                platformText.text = "118줄 까지 실행";
+
                 user = auth.CurrentUser;
-                platformText.text = "완료";
                 
                 // 파이어베이스 인증 해피패스
-                
-                platformText.text = "웹서버 통신 시작";
                 isLoginProcessing = true;
                 var loginResult = await GetComponent<NetworkManager>().LoginRequest(user.UserId);
                 isLoginProcessing = false;
         
                 if (loginResult == null)
                 {
-                    platformText.text = "서버에 아이디 없음";
                     var accountRegisterDTO = new CS_AccountRegisterDTO()
                     {
                         IdToken = user.UserId,
                         IsGuest = false,
                         UserNickname = user.DisplayName,
                     };
-        
-                    platformText.text = "서버에 등록중";
+                    
                     isRegisterProcessing = true;
                     var registerResult = await GetComponent<NetworkManager>().RegisterAccountRequest(accountRegisterDTO);
                     isRegisterProcessing = false;
         
                     if (registerResult == null)
                     {
-                        platformText.text = "등록 실패";
                         disconnectWarning.SetActive(true);
                     }
                     else
                     {
-                        platformText.text = "등록 성공";
                         PlayerDataFromWebServer.Instance.SetIDToken(user.UserId);
                         PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(registerResult);
                         MoveToLobbyScene();
@@ -156,26 +141,14 @@ platformText.text = "94줄 까지 실행";
                 }
                 else
                 {
+                    // 로그인 성공!
                     PlayerDataFromWebServer.Instance.SetIDToken(user.UserId);
                     PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(loginResult);
                     MoveToLobbyScene();
-                    //Debug.Log("로그인 성공!");
                 }
 
-        
-                //username.text = user.DisplayName;
-                //userEmail.text = user.Email;
-
-                //loginPanel.SetActive(false);
-                //userPanel.SetActive(true);
-
-                //StartCoroutine(LoadImage(CheckImageUrl(user.PhotoUrl?.ToString())));
-                //var result = await GetComponent<NetworkManager>().GoogleAccountRegisterRequest(deviceId);
             });
         });
-        
-        
-        
 
 #elif UNITY_STANDALONE || UNITY_EDITOR
         // PC로 접속하면, 게스트로 회원가입, 로그인을 진행함
