@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.SymbolStore;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
+using System.Diagnostics;
+using System.Security.Permissions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 using YoungManGomoku_WebServer.SingletoneManager;
@@ -22,42 +22,36 @@ namespace YoungManGomoku_WebServer.Sessions
 		Invalid         // ㅈ버그에요
 	}
 	
-	
-	public class PlaceStoneResult
-    {
-        public ulong WinnerUID { get; set; }
-        public PlaceStoneResultType Result { get; set; }
-		public GameEndCode EndReason { get; set; }
-        public bool GameFinished { get; set; }
-        // public GameTimerSnapshot Timer { get; set; }
-    }
-	
 	public enum GameRoomState
 	{
 		Waiting, // 대기 중, 아직 게임 시작 안 됐음
 		Playing, // 게임 중
 		Finished // 게임 끝났음, 리벤지 각?
 	}
+
     public class InGameWaitingPlayer
     {
         public ulong UID { get; set; }
-        public TaskCompletionSource<SC_OpponentMoveDTO> TaskCompSrc { get; set; }
+        public TaskCompletionSource<SC_OpponentPlaceStoneDTO> TaskCompSrc { get; set; }
         public CancellationTokenRegistration CancellationTokenRegist { get; set; }
     }
 
     public class GameRoom
 	{
 		public ulong RoomID { get; }
-		public ulong BlackPlayerUID { get; }
-		public ulong WhitePlayerUID { get; }
+
+        // 재도전 시 색 변경이 일어날 수 있다면 private set, 없다면 setter 제거
+		public ulong BlackPlayerUID { get; private set; }
+		public ulong WhitePlayerUID { get; private set; }
 
 		// 방 밖에서 방이 게임 중인지 아닌지를 결정하면 안 된다
 		public GameRoomState State { get; private set; }
 
 		// 날 건드릴 수 있는 놈이 플레이어 둘이잖냐, 락 걸어야지
-		private readonly object _lock = new object();
+        // 현재 게임 룸 전체 락
+        private readonly object _lock = new object();
 
-        // 나 자신의 방을 닫을 때 필요함
+        // 나 자신의 방을 닫을 때 필요함, 로거 꺼내올 때도 씀
 		private readonly GameRoomManager _gameRoomManager;
 
 		// 오목판
@@ -66,17 +60,24 @@ namespace YoungManGomoku_WebServer.Sessions
 		// 하트비트, n 초 이상 미 요청 시 접속 끊김으로 간주
 		private readonly Dictionary<ulong, DateTime> _lastRequestTime;
 
+        // Long Polling 대기자 명단
+
         private readonly Dictionary<ulong, InGameWaitingPlayer> _waitingMap;
 
         // 유저별 타이머 정보
         private readonly Dictionary<ulong, UserTimer> _timers;
 
+        private long _gameProgressMilliseconds;
+
+
         // 현재 이 게임 룸의 게임 종료 사유
         private GameEndCode _endReason;
+        public GameEndCode EndReason => _endReason;
 
-        // 턴, 나중에 쓸 건데 임시로 만듦
+        // 현재 턴인 사람의 UID
         private ulong _currentTurnUID;
 
+        // 승패 결정 시 승리자의 UID, 승자가 없거나 게임 도중이면 0
         private ulong _winnerUID;
 
         public bool IsFinished => _endReason != GameEndCode.None;
@@ -92,7 +93,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
             _board = new Board();
 			// 흑돌 첫 수는 무조건 중앙 고정
-            _board.TryMoveStone(7, 7);
+            _board.TryMoveStone(Board.BoardSize / 2, Board.BoardSize / 2);
 
             _board.OnBlackGomoku += OnBlackWin;
             _board.OnWhiteGomoku += OnWhiteWin;
@@ -108,13 +109,12 @@ namespace YoungManGomoku_WebServer.Sessions
             {
                 [blackPlayerUID] = new UserTimer(initMainTime: 180f, initByoyomiCount: 3, byoyomiSeconds: 30f),
                 [whitePlayerUID] = new UserTimer(initMainTime: 180f, initByoyomiCount: 3, byoyomiSeconds: 30f)
-            };                  
-            
+            };
 
             _waitingMap = new Dictionary<ulong, InGameWaitingPlayer>();
 
 
-            // 흑돌 선수
+            // 첫 수는 흑돌
             _currentTurnUID = BlackPlayerUID;
 			
 			_endReason = GameEndCode.None; // 이 방에서 게임이 끝난 이유. None은 지금 게임중이라는 뜻
@@ -126,14 +126,7 @@ namespace YoungManGomoku_WebServer.Sessions
 			};
         }
 
-        public void RegisterWaiter(InGameWaitingPlayer waitingPlayer)
-        {
-            lock (_lock)
-            {
-                _waitingMap[waitingPlayer.UID] = waitingPlayer;
-            }
-        }
-
+        // UID 대기 취소
         public void CancelWait(ulong UID)
         {
             lock (_lock)
@@ -145,25 +138,18 @@ namespace YoungManGomoku_WebServer.Sessions
                 }
             }
         }
-        private void DispatchTo(ulong UID, SC_OpponentMoveDTO OpponentMoveDTO)
-        {
-            if (_waitingMap.TryGetValue(UID, out InGameWaitingPlayer waitingPlayer))
-            {
-                waitingPlayer.TaskCompSrc.TrySetResult(OpponentMoveDTO);
-                _waitingMap.Remove(UID);
-            }
-        }
 
-
-        public Task<SC_OpponentMoveDTO> WaitNextEventAsync(ulong UID, CancellationToken ct)
+        // 대기 이벤트 등록 (Long - Polling)
+        public Task<SC_OpponentPlaceStoneDTO> WaitNextPlaceStoneAsync(ulong UID, CancellationToken ct)
         {
             lock (_lock)
             {
-                TaskCompletionSource<SC_OpponentMoveDTO> tcs
-                    = new TaskCompletionSource<SC_OpponentMoveDTO>(
+                // 대기자용 TCS 조립 (대기 결과 반환용)
+                TaskCompletionSource<SC_OpponentPlaceStoneDTO> tcs
+                    = new TaskCompletionSource<SC_OpponentPlaceStoneDTO>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
 
-
+                // 대기자 데이터 조립 및 대기 등록 (Long Poll)
                 _waitingMap[UID] = new InGameWaitingPlayer
                 {
                     UID = UID,
@@ -175,7 +161,7 @@ namespace YoungManGomoku_WebServer.Sessions
             }
         }
 
-        // 보드와 타이머 쪽에서 재대결 리벤지 정의가 안 됨
+        // 보드와 타이머 쪽에서 재대결 리벤지 정의가 안 되었기 때문에 일단 대충 구색만 맞춰둠
         /*
         private void RestartGame()
         {
@@ -195,13 +181,14 @@ namespace YoungManGomoku_WebServer.Sessions
         }
         */
 
-        // 게임 종료 작업, Dispose는 필수
+        // 게임 종료 작업, Dispose는 필수 (Unmanaged Heap)
         private void DispatchGameEndToAll()
         {
-            foreach (var waitingPlayer in _waitingMap.Values)
+            // 대기자 명단에서 대기 플레이어를 제거 및 종료 이벤트를 조립해서 던져줌
+            foreach (InGameWaitingPlayer waitingPlayer in _waitingMap.Values)
             {
-                SC_OpponentMoveDTO endEvent = new SC_OpponentMoveDTO(
-                            (byte)255, (byte)255, _timers[(GetColor(waitingPlayer.UID) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID], _endReason);
+                SC_OpponentPlaceStoneDTO endEvent = new SC_OpponentPlaceStoneDTO(
+                             _timers[(GetColor(waitingPlayer.UID) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)255, (byte)255, _endReason);
                 waitingPlayer.TaskCompSrc.TrySetResult(endEvent);
                 waitingPlayer.CancellationTokenRegist.Dispose();
             }
@@ -209,7 +196,13 @@ namespace YoungManGomoku_WebServer.Sessions
             _waitingMap.Clear();
         }
 
-        public PlaceStoneResult PlaceStone(ulong uid, int x, int y)
+        public bool TryGameStart()
+        {
+            _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            return State == GameRoomState.Waiting;
+        }
+
+        public PlaceStoneResultType PlaceStone(ulong uid, int x, int y)
 		{
 			lock (_lock)
 			{
@@ -217,60 +210,145 @@ namespace YoungManGomoku_WebServer.Sessions
 				{
 					// 게임 끝났어
 					if (IsFinished)
-						return InvalidResult();
+                        return PlaceStoneResultType.Invalid;
 
-					// 니 턴 아니야
-					if (uid != _currentTurnUID)
-						return new PlaceStoneResult { Result = PlaceStoneResultType.NotYourTurn };
+                    // 니 턴 아니야
+                    if (uid != _currentTurnUID)
+						return PlaceStoneResultType.NotYourTurn;
 				}
 
-				// 타이머 체크
-				// _timer. 어쩌고
+                // 게임 시작, 첫 수 전
+                if (_board.NowTurn == 0)
+                {
+                    // 첫 수인데 흑돌이 아니셔?
+                    if (BlackPlayerUID != uid)
+                    {
+                        // 이건 그럴 수 있음. 백돌 착수 요청이 먼저 도착할 수 있지...
+                        _gameRoomManager.Logger.LogInformation($"첫 수인데 흑돌이 아닌 {uid} 유저가 착수 요청을 했습니다!\n");
+                        return PlaceStoneResultType.Invalid; // 다른걸 생각해봐야 할 듯
+                    }
 
-				// _board의 NowTurn 값이 홀수면 백, 짝수면 흑 차례라는 뜻
-				//bool isBlack = (_board.NowTurn & 1) == 0;
+                    // 흑돌은 무조건 첫 수 정 중앙이기 때문에 이건 클라 뚜껑 딴게 맞음, 
+                    if (x != 7 || y != 7)
+                    {
+                        _gameRoomManager.Logger.LogInformation($"첫 수인데 {uid} 흑 유저가 (7,7) 위치에 두지 않았습니다...!\n");
+                        return PlaceStoneResultType.Invalid;
+                    }
+                    
+                    // 게임 대기 상태가 아닌데 첫 수라고?
+                    if (State != GameRoomState.Waiting)
+                    {
+                        // 리벤지 쪽 구현 이상하면 여기 들어올 수도 있음
+                        _gameRoomManager.Logger.LogInformation($"첫 수인데 게임 룸의 상태가 대기중이 아닙니다!\n");
+                        return PlaceStoneResultType.Invalid;
+                    }
 
+                    State = GameRoomState.Playing;
+
+                    long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    _timers[uid].ProgressExcludingTol(_gameProgressMilliseconds, nowTime);
+                    nowTime= DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                }
+
+                // 타이머 체크
+                // _timer. 어쩌고
+
+                // _board의 NowTurn 값이 홀수면 백, 짝수면 흑 차례라는 뜻
+                bool isBlack = (_board.NowTurn & 1) == 0;
+                _gameRoomManager.Logger.LogTrace($"{_board.NowTurn}턴 시작 : {(isBlack ? "Black" : "White")} [{_currentTurnUID}] 차례");
 				// TryMoveStone이 true일 시 착수 성공. 내부적으로 승패 처리까지 동작하며 _board에 등록한 event들이 실행됨
                 if (_board.TryMoveStone(x, y) == false)
 				{
                     // 빈 곳이 아닌데 두려고 시도했거나, 흑돌이 금수 위치에 두려고 시도함. 클라 변조 체크
-                    return new PlaceStoneResult { Result = PlaceStoneResultType.Occupied };
+                    return PlaceStoneResultType.Occupied;
                 }
+                // 착수 성공 및 게임 결과 처리
+                _gameRoomManager.Logger.LogTrace($"{_board.NowTurn}턴 종료");
 
-				// 착수 성공 및 게임 결과 처리
                 _lastRequestTime[uid] = DateTime.UtcNow;
+
                 ulong opponent = GetOpponent(uid);
 
+                // 수정 예정
+                switch(_endReason)
+                {                   
+                    case GameEndCode.GomokuWin:
+                        {
+                            // 오목 승리자가 흑인가? (이번 턴이 흑)
+                            if (_winnerUID == BlackPlayerUID)
+                            {
+                                // 화이트 플레이어가 대기중인가?
+                                if (_waitingMap.TryGetValue(WhitePlayerUID, out InGameWaitingPlayer waitingPlayer))
+                                {
+                                    // 블랙의 타이머 정보와 착수 정보, 그리고 당신의 패배
+                                    waitingPlayer.TaskCompSrc.TrySetResult(
+                                        new SC_OpponentPlaceStoneDTO(
+                                            _timers[BlackPlayerUID].SyncData, (byte)x, (byte)y, GameEndCode.GomokuLose));
+                                    // DTO 조립하고 결과를 넣어 줬으니 상대의 대기는 끝났고 응답을 보내줘야지
+                                    _waitingMap.Remove(opponent);
+                                }
+                            }
+                            // 오목 승리자가 백인가? (이번 턴이 백)
+                            if (_winnerUID == WhitePlayerUID)
+                            {
+                                // 블랙 플레이어가 대기중인가?
+                                if (_waitingMap.TryGetValue(BlackPlayerUID, out InGameWaitingPlayer waitingPlayer))
+                                {
+                                    // 화이트의 타이머 정보와 착수 정보, 그리고 당신의 패배
+                                    waitingPlayer.TaskCompSrc.TrySetResult(
+                                        new SC_OpponentPlaceStoneDTO(
+                                            _timers[WhitePlayerUID].SyncData, (byte)x, (byte)y, GameEndCode.GomokuLose));
+                                    // DTO 조립하고 결과를 넣어 줬으니 상대의 대기는 끝났고 응답을 보내줘야지
+                                    _waitingMap.Remove(opponent);
+                                }
+                            }
 
-                // 상대가 대기 중이면 이벤트 전달
-                if (_waitingMap.TryGetValue(opponent, out InGameWaitingPlayer waitingPlayer))
-                {
-                    waitingPlayer.TaskCompSrc.TrySetResult(
-                        new SC_OpponentMoveDTO(
-                            (byte)x, (byte)y, _timers[(GetColor(uid) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID]));
-                    
-                    _waitingMap.Remove(opponent);
+                        }
+                        break;
+                    // 게임 진행중, 무승부 등 현재 싸잡아서 처리
+                    default:
+                        {
+                            // 내 상대가 대기 중이면 내가 착수한 정보를 대기중인 상대 이벤트로 등록해서 응답시켜줌
+                            if (_waitingMap.TryGetValue(opponent, out InGameWaitingPlayer waitingPlayer))
+                            {
+                                waitingPlayer.TaskCompSrc.TrySetResult(
+                                    new SC_OpponentPlaceStoneDTO(
+                                        _timers[(GetColor(uid) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)x, (byte)y, _endReason));
+                                // DTO 조립하고 결과를 넣어 줬으니 상대의 대기는 끝났고 응답을 보내줘야지
+                                _waitingMap.Remove(opponent);
+                            }
+                        }
+                        break;
                 }
 
-                // 게임 시작 처리
-                if (State == GameRoomState.Waiting)
-                    State = GameRoomState.Playing;
-
                 // 게임 안 끝났네, 상대 턴으로 넘김
-                if (_winnerUID == 0UL)
+                if (State != GameRoomState.Finished && _winnerUID == 0UL)
+                {
+                    _gameRoomManager.Logger.LogTrace($"{_currentTurnUID}턴 에서 {GetOpponent(uid)}으로 턴 교체");
                     _currentTurnUID = GetOpponent(uid);
+                }
 
 
-                return new PlaceStoneResult
-				{
-					Result = PlaceStoneResultType.Success,
-					GameFinished = IsFinished,
-					EndReason = _endReason,
-					WinnerUID = _winnerUID, // 승자가 없으면 0
-					//Timer = _timer.Snapshot()
-				};
+                return PlaceStoneResultType.Success;
 			}
 		}
+
+        public TimerSyncData SynchronizeTimer(ulong uid, int turn)
+        {
+            if (_board.NowTurn == turn)
+            {
+                _gameRoomManager.Logger.LogTrace($"CS DTO : {uid}, {turn} Sync Req - now Turn : {_board.NowTurn}");
+            }
+
+            if(_timers.TryGetValue(uid, out var timer) == false)
+            {
+                return new TimerSyncData(0f, 0);
+            }
+
+            return timer.SyncData;
+        }
+
 
 		public StoneColorType GetColor(ulong uid)
 		{
@@ -278,7 +356,9 @@ namespace YoungManGomoku_WebServer.Sessions
 				return StoneColorType.Black;
 			if (uid == WhitePlayerUID) 
 				return StoneColorType.White;
-			return StoneColorType.Empty;
+            // 있을 수 없는 일일까? Assert를 걸어야 할까? 하지만 서버는 Assert 걸면 안 된다.
+            _gameRoomManager.Logger.LogWarning($"[{uid}]유저의 돌 색이 이상하다.");
+            return StoneColorType.Empty;
 		}
 
 		// 구버전 코드기는 한데 혹시 몰라서 일단 저장, 추후 제거할듯
@@ -335,9 +415,5 @@ namespace YoungManGomoku_WebServer.Sessions
 
 		private ulong GetOpponent(ulong uid)
 			=> uid == BlackPlayerUID ? WhitePlayerUID : BlackPlayerUID;
-
-		// 니 턴 아닌데 착수 요청이 들어옴, 제정신이 아님
-		private PlaceStoneResult InvalidResult()
-			=> new PlaceStoneResult { Result = PlaceStoneResultType.Invalid };
 	}
 }

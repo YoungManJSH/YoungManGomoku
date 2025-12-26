@@ -69,5 +69,4 @@ namespace YoungManGomoku_WebServer.Sessions
 			LastActionTime = DateTime.UtcNow;
 		}
 	}
-
 }
