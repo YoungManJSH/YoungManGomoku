@@ -118,7 +118,7 @@ public class UserTimer : IComparable<UserTimer>, IComparable<TimerSyncData>
         NowByoyomiSeconds = initByoyomiSeconds;
     }
 
-    #region endregionIComparable 구현부
+    #region IComparable 구현부
     public int CompareTo(UserTimer other)
         => CompareTo(other.SyncData);
     

@@ -58,6 +58,7 @@ public class GameManager : MonoBehaviour
         _networkManager.OnRequestFailed += _ => PlayDrawSound();
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         
+        /*
         #region 테스트용 임시 초기화
         IsPlayerBlack = true;
         MyPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f);
@@ -66,6 +67,7 @@ public class GameManager : MonoBehaviour
         OppositeTimer = new UserTimer(15f, 2, 15f);
         ByoyomiPurchaseAmount = 2;
         #endregion
+        */
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
