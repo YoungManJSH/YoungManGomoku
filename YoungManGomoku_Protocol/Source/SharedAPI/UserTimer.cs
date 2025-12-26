@@ -1,18 +1,24 @@
 using System;
+using YoungManGomoku_Protocol;
 
-public class UserTimer : IComparable<UserTimer>
+public class UserTimer : IComparable<UserTimer>, IComparable<TimerSyncData>
 {
     private const int TOLERANCE = 400; // ms 단위
     
     public readonly float initByoyomiSeconds; 
     
-    public float MainTime { get; private set; } // 처음에 누적하여 소모되는 자유시간
-    public int ByoyomiCount { get; private set; } // 남아있는 초읽기 개수
+    /// <summary> 처음에 누적하여 소모되는 자유시간 </summary>
+    public float MainTime { get; private set; }
+    /// <summary> 남아있는 초읽기의 수 </summary>
+    public int ByoyomiCount { get; private set; }
+    /// <summary> 실시간으로 계산되는 초읽기 타이머 </summary>
     public float NowByoyomiSeconds { get; private set; }
+    /// <summary> 타이머 동기화용 DTO </summary>
+    public TimerSyncData SyncData => new TimerSyncData(MainTime, ByoyomiCount);
     
     public event Action OnTimeOut;
     /// <summary> 매개변수는 MainTime, ByoyomiCount </summary>
-    public event Action<float, int> OnTimerRevised;
+    public event Action<float, int> OnTimerSynchro;
     private bool _isTimeOut;
 
     public UserTimer(float initMainTime, int initByoyomiCount, float byoyomiSeconds)
@@ -93,60 +99,68 @@ public class UserTimer : IComparable<UserTimer>
         NowByoyomiSeconds = initByoyomiSeconds;
         _isTimeOut = false;
     }
-    
-    /// <summary> [서버,클라이언트] 타이머 동기화 함수 </summary>
-    public void ReviseTimer(float mainTime, int byoyomiCount)
-    {
-        MainTime = mainTime;
-        ByoyomiCount = byoyomiCount;
-        NowByoyomiSeconds = initByoyomiSeconds;
-        _isTimeOut = false;
-        OnTimerRevised?.Invoke(MainTime, ByoyomiCount);
-    }
 
     /// <summary> [서버, 클라이언트] 타이머 동기화 함수 </summary>
-    /// <param name="targetTimer"> 이 개체가 targetTimer로 동기화 됨 </param>
-    public void ReviseTimer(UserTimer targetTimer)
+    /// <param name="targetData"> 이 개체가 targetData로 동기화 됨 </param>
+    public void SynchroTimer(TimerSyncData targetData)
     {
-        MainTime = targetTimer.MainTime;
-        ByoyomiCount = targetTimer.ByoyomiCount;
+        MainTime = targetData.MainTime;
+        ByoyomiCount = targetData.ByoyomiCount;
         NowByoyomiSeconds = initByoyomiSeconds;
-        OnTimerRevised?.Invoke(MainTime, ByoyomiCount);
+        OnTimerSynchro?.Invoke(MainTime, ByoyomiCount);
     }
 
+    /// <summary> 초읽기 구매 적용, 1회 남은 상태임을 전제 </summary>
+    /// <param name="amount"> 초읽기 구매 수량 </param>
     public void ByoyomiPurchased(int amount)
     {
-        // 초읽기 구매는 1개 남은 상황에서만 이루어진다고 전제함
         ByoyomiCount = amount + 1;
         NowByoyomiSeconds = initByoyomiSeconds;
     }
 
+    #region endregionIComparable 구현부
     public int CompareTo(UserTimer other)
+        => CompareTo(other.SyncData);
+    
+    public int CompareTo(TimerSyncData syncData)
     {
-        if (ReferenceEquals(other, null)) return 1;
-
         // 내 자유시간 남아있으면 자유시간으로 비교
-        if (MainTime > 0f) return MainTime.CompareTo(other.MainTime);
+        if (MainTime > 0f) return MainTime.CompareTo(syncData.MainTime);
         
-        // other만 자유시간이 있는 경우 내가 더 적음
-        if (other.MainTime > 0f) return -1;
-
+        // syncData만 자유시간이 있는 경우 내가 더 적음
+        if (syncData.MainTime > 0f) return -1;
+        
         // 둘 다 자유시간 없으면 남은 초읽기 개수로 비교
-        return ByoyomiCount.CompareTo(other.ByoyomiCount);
+        return ByoyomiCount.CompareTo(syncData.ByoyomiCount);
     }
-
-    // Comparer<UserTimer>.Default 대신 이쪽으로 구현
-    // Why? 우리 프로그램에서 null과 비교하는 상황이 나오면 명백한 코딩 실수
-    // 따라서 터뜨리는 게 바람직하므로 CompareTo로 직접 구현
+    #endregion
+    
+    #region 비교 연산자 재정의
+    /* Comparer<UserTimer>.Default 대신 이쪽으로 구현
+     * Why? 우리 프로그램에서 null과 비교하는 상황이 나오면 명백한 코딩 실수
+     * 따라서 터뜨리는 게 바람직하므로 CompareTo로 직접 구현 */
     public static bool operator <(UserTimer a, UserTimer b)
-        => a.CompareTo(b) < 0;
-    
+        => a < b.SyncData;
+
     public static bool operator >(UserTimer a, UserTimer b)
-        => a.CompareTo(b) > 0;
-    
+        => a > b.SyncData;
+
     public static bool operator <=(UserTimer a, UserTimer b)
-        => a.CompareTo(b) <= 0;
+        => a <= b.SyncData;
 
     public static bool operator >=(UserTimer a, UserTimer b)
+        => a >= b.SyncData;
+
+    public static bool operator <(UserTimer a, TimerSyncData b)
+        => a.CompareTo(b) < 0;
+    
+    public static bool operator >(UserTimer a, TimerSyncData b)
+        => a.CompareTo(b) > 0;
+
+    public static bool operator <=(UserTimer a, TimerSyncData b)
+        => a.CompareTo(b) <= 0;
+    
+    public static bool operator >=(UserTimer a, TimerSyncData b)
         => a.CompareTo(b) >= 0;
+    #endregion
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 
@@ -25,6 +26,7 @@ public class GameManager : MonoBehaviour
     public string IdToken { get; private set; }
 
     private UserTimer _nowPlayerTimer;
+    private CS_RequestTimerSynchroDTO _timerSynchroDto; 
     private EventManager _eventManager;
     private NetworkManager _networkManager;
     private AudioSource _audioSource;
@@ -67,6 +69,7 @@ public class GameManager : MonoBehaviour
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
+        _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
@@ -184,11 +187,15 @@ public class GameManager : MonoBehaviour
                 _nowPlayerTimer = OppositeTimer;
                 PlayerTimer.ReviseTimer();
 
-                var result = await _networkManager.RequestTimerSynchro(IdToken);
+                if (BoardInform.NowTurn == 1) return;
+                
+                _timerSynchroDto.NowTurn = BoardInform.NowTurn;
+                TimerSyncData serverTimer =
+                    await _networkManager.RequestTimerSynchro(_timerSynchroDto);
 
-                if (result.IsRejected)
+                if (PlayerTimer > serverTimer)
                 {
-                    PlayerTimer.ReviseTimer(result.ServerTimer);
+                    PlayerTimer.SynchroTimer(serverTimer);
                 }
             }
         }

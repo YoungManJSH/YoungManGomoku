@@ -132,32 +132,33 @@ public class NetworkManager : MonoBehaviour
         => await RequestPostServer<SC_ResponseStringDTO>("Matching/Cancel", $"\"{idToken}\"", timeOutSeconds, "Match Cancel");
 
 
-    // 
+    /// <summary> 게임 시작 요청 </summary>
 	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameStart", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Game Start");
 
 	
 	/* TODO: 내 타이머 동기화 요청
 	 * 대충 적어봤으니 컨펌 부탁. */
-	public async Awaitable<SC_TimerSynchroResultDTO> RequestTimerSynchro(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<SC_TimerSynchroResultDTO>("GomokuIngame/Standby", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Timer Confirmed");
-	
-	/// <summary>
-	/// 착수 요청
-	/// </summary>
-	/// <param name="placeStoneDTO"></param>
-	/// 클라이언트 인증용 ID Token, 착수 (x,y) 위치 좌표, Client Timer 정보
-	/// UserTimer의 경우 너무 크기 때문에 추후 Timer 정보에서 서버 전송에 필요한 것들만 따로 선별할 필요성 있음
-	/// <param name="timeOutSeconds"></param>
-	/// /// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
-	/// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
+	/// <summary> 타이머 검증 요청, RequestPlaceStone과 함께 보내는 요청 </summary>
 	/// <returns>
-	/// null : 서버 터짐
+	/// <para> 클라이언트 타이머 승인: false, 서버 타이머 데이터 혹은 이상 감지값 </para>
+	/// <para> 클라이언트 타이머 반려: true, 서버 타이머 데이터 </para>
 	/// </returns>
-	public async Awaitable<SC_OpponentMoveDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
-	=> await RequestPostServer<SC_OpponentMoveDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
-
+	public async Awaitable<TimerSyncData> RequestTimerSynchro(CS_RequestTimerSynchroDTO requestSynchroDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<TimerSyncData>("GomokuIngame/Standby", JsonConvert.SerializeObject(requestSynchroDTO), timeOutSeconds, "Gomoku Ingame : Timer Synchro Data");
+	
+	/// <summary> 착수 요청 </summary>
+	/// <param name="placeStoneDTO"> IdToken, 착수 위치, 본인 타이머 정보 </param>
+	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
+	/// <returns>
+	/// <para> null : 서버 터짐 </para>
+	/// <para> not null : 상대방 착수 정보 (롱 폴링으로 송신됨) </para>
+	/// </returns>
+	public async Awaitable<SC_OpponentPlaceStoneDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
+	=> await RequestPostServer<SC_OpponentPlaceStoneDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
+	
 	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
+	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
 	public async Awaitable<GameEndCode> RequestMyTurn(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<GameEndCode>("GomokuIngame/PlaceStone",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
 	
@@ -173,10 +174,8 @@ public class NetworkManager : MonoBehaviour
     /// 웹 서버에 하트 비트 요청 (접속 여부 확인)
     /// 서버에서는 클라의 마지막 요청 시간과 하트비트가 날아온 시간차를 비교해 유효한 연결인지 계산
     /// </summary>
-    /// <param name="timeOutSeconds"></param>
-    /// 웹서버로부터 지정된 시간까지 응답이 없다면 Connection Error를 띄움
-    /// 0이나 음수 값 설정 시 Connection Error 없이 무한 응답 대기
-    /// <returns></returns>
+    /// <param name="idToken"> 플레이어의 idToken </param>
+    /// <param name="timeOutSeconds"> 대기 한계시간, 이 값을 넘으면 Connection Error, 0 이하면 무한 대기 </param>
     public async Awaitable<string> RequestHeartbeat(string idToken, int timeOutSeconds = 10)
 		=> await RequestPostServer<string>("Heartbeat", $"\"{idToken}\"", timeOutSeconds, "=== Heart Beat Success ===");
 

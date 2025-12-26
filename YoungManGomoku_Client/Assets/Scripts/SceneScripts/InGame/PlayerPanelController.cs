@@ -117,7 +117,7 @@ public class PlayerPanelController : MonoBehaviour
         }
         
         stoneMover.OnStoneMove += OnStoneMove;
-        _myTimer.OnTimerRevised += OnTimerRevised;
+        _myTimer.OnTimerSynchro += OnTimerSynchro;
         
         enabled = false;
     }
@@ -256,7 +256,7 @@ public class PlayerPanelController : MonoBehaviour
         }
     }
 
-    private void OnTimerRevised(float mainTime, int leftCount)
+    private void OnTimerSynchro(float mainTime, int leftCount)
     {
         CancelByoyomiUse();
         
