@@ -81,6 +81,13 @@ public class StoneMoverMulti : StoneMover
                 var opponentMove =
                     await _networkManager.RequestPlaceStone(_placeStoneDto);
 
+                if (opponentMove == null)
+                {
+                    // 나머지는 OnRequestFailed 이벤트로 처리됨
+                    Debug.LogError("Error in Receive Opponent Move");
+                    return;
+                }
+                
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
 
                 if (opponentMove.GameEndCode != GameEndCode.None)
@@ -93,6 +100,7 @@ public class StoneMoverMulti : StoneMover
         }
         catch (Exception e)
         {
+            _eventManager.ServerReplyFailed();
             Debug.LogError($"Multi Stone Mover Error, in Turn Change Logic : {e}");
         }
     }
