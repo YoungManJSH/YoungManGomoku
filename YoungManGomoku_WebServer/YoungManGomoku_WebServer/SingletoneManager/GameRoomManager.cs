@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
@@ -6,8 +7,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 {
 	public class GameRoomManager
 	{
-		// Key : Room UID
-		private readonly ConcurrentDictionary<ulong, GameRoom> _rooms;
+        private readonly ILogger<GameRoomManager> _logger;
+		public ILogger<GameRoomManager> Logger => _logger;
+
+        // Key : Room UID
+        private readonly ConcurrentDictionary<ulong, GameRoom> _rooms;
 
 		// 이 플레이어가 어느 방에서 게임 중인지
 		// Key : Player UID / Value : Room UID
@@ -15,8 +19,9 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
 		private readonly IServerContext _serverContext;
 
-		public GameRoomManager(IServerContext serverContext)
+		public GameRoomManager(ILogger<GameRoomManager> logger, IServerContext serverContext)
 		{
+			_logger = logger;
 			_rooms = new ConcurrentDictionary<ulong, GameRoom>();
 			_roomByPlayer = new ConcurrentDictionary<ulong, ulong>();
 			_serverContext = serverContext;

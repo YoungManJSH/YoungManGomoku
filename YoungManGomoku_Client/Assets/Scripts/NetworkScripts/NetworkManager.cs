@@ -45,7 +45,7 @@ class BypassCertificate : CertificateHandler
 public class NetworkManager : MonoBehaviour
 {
     // 나중에 바꿀 예정
-    [SerializeField] private const string baseURL = "https://192.168.200.158:5001"; //"https://localhost:5001";
+    [SerializeField] private const string baseURL = "https://192.168.200.156:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -145,7 +145,7 @@ public class NetworkManager : MonoBehaviour
 	/// <para> 클라이언트 타이머 반려: true, 서버 타이머 데이터 </para>
 	/// </returns>
 	public async Awaitable<TimerSyncData> RequestTimerSynchro(CS_RequestTimerSynchroDTO requestSynchroDTO, int timeOutSeconds = 0)
-		=> await RequestPostServer<TimerSyncData>("GomokuIngame/Standby", JsonConvert.SerializeObject(requestSynchroDTO), timeOutSeconds, "Gomoku Ingame : Timer Synchro Data");
+		=> await RequestPostServer<TimerSyncData>("GomokuIngame/TimerSynchronize", JsonConvert.SerializeObject(requestSynchroDTO), timeOutSeconds, "Gomoku Ingame : Timer Synchronize Success");
 	
 	/// <summary> 착수 요청 </summary>
 	/// <param name="placeStoneDTO"> IdToken, 착수 위치, 본인 타이머 정보 </param>
@@ -160,7 +160,7 @@ public class NetworkManager : MonoBehaviour
 	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
 	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
 	public async Awaitable<GameEndCode> RequestMyTurn(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<GameEndCode>("GomokuIngame/PlaceStone",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
+		=> await RequestPostServer<GameEndCode>("GomokuIngame/MyTurnGameEnd",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
 	
 
     public async Awaitable<SC_IngameRequestAnswerDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
