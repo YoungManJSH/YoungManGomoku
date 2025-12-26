@@ -7691,7 +7691,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 362523411}
         m_TargetAssemblyTypeName: LobbySceneManager, Assembly-CSharp
-        m_MethodName: CancleMatchMaking
+        m_MethodName: CancelMatchMaking
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

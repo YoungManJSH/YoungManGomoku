@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class LobbySceneManager : MonoBehaviour
 {
@@ -41,15 +42,21 @@ public class LobbySceneManager : MonoBehaviour
         
         var matchData = await GetComponent<NetworkManager>().RegisterMatchingRequest(playerDataFromWebServer.IDToken);
 
-        if (matchData != null)
+        if (matchData.MatchingSuccess is false)
+            return;
+
+        if (matchData == null)
         {
-            PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
-            Destroy(SoundManager.instance.gameObject); 
-            SceneManager.LoadScene("InGameScene");
+            matchMakePanel.SetActive(false);
+            return;
         }
+        
+        PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
+        Destroy(SoundManager.instance.gameObject);
+        SceneManager.LoadScene("InGameScene");
     }
     
-    public async void CancleMatchMaking()
+    public async void CancelMatchMaking()
     {
         matchMakePanel.SetActive(false);
         

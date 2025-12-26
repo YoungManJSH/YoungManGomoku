@@ -48,15 +48,17 @@ public class LobbyUIController : MonoBehaviour
         {
             if (matchMakingPanel.activeSelf)
             {
-                LobbySceneManager.Instance.CancleMatchMaking();
+                LobbySceneManager.Instance.CancelMatchMaking();
                 return;
             }
-            else if (replayPanel.activeSelf)
+            
+            if (replayPanel.activeSelf)
             {
                 replayPanel.SetActive(false);
                 return;
             }
-            else if (settingPanel.activeSelf)
+            
+            if (settingPanel.activeSelf)
             {
                 settingPanel.SetActive(false);
                 return;
