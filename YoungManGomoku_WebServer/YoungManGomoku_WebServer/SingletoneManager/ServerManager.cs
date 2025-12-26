@@ -107,7 +107,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     DisconnectCount = playerSession.Account.GomokuBattleRecord.DisconnectCount
                 };
             }
-            _logger.LogWarning($"[{DateTime.UtcNow}] Failed : ComposePlayerData By UID ({UID}).\nPlayerSession has not UID Data.");
+            _logger.LogWarning($"[{DateTime.Now}] Failed : ComposePlayerData By UID ({UID}).\nPlayerSession has not UID Data.");
             return null;
 		}
 

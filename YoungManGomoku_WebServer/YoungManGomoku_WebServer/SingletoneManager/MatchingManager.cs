@@ -72,7 +72,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.Now}] Thread{Thread.CurrentThread.ManagedThreadId}: enqueue {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.Now}] Thread {Thread.CurrentThread.ManagedThreadId} enqueue {playerIDToken}");
 
                 if (_waitingMap.Count >= MAX_WAITING)
                 {
@@ -88,7 +88,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (_waitingMap.ContainsKey(playerIDToken))
                 {
-                    _logger.LogDebug($"[{DateTime.Now}] Already Matching: {_waitingMap[playerIDToken]}");
+                    _logger.LogDebug($"[{DateTime.Now}] Already Matching : {_waitingMap[playerIDToken]}");
                     //throw new InvalidOperationException("Already matching");
                     return Task.FromResult(
                         new MatchResult
@@ -106,15 +106,15 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     = new TaskCompletionSource<MatchResult>(
                     TaskCreationOptions.RunContinuationsAsynchronously);
 
-                WaitingPlayer wp = new WaitingPlayer
+                WaitingPlayer waitingPlayer = new WaitingPlayer
                 {
                     PlayerIdToken = playerIDToken,
                     TaskCompSrc = tcs,
                     CancellationTokenRegist = ct.Register(() => Cancel(playerIDToken))
                 };
 
-                _matchingQueue.Enqueue(wp);
-                _waitingMap[playerIDToken] = wp;
+                _matchingQueue.Enqueue(waitingPlayer);
+                _waitingMap[playerIDToken] = waitingPlayer;
 
                 TryMatch();
 
@@ -144,14 +144,13 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 // Queue에서 제거는 lazy (매칭 시 스킵)
                 _waitingMap.Remove(playerIDToken);
-                
             }
         }
 
         // 항상 lock 안에서 실행되어야 하는 함수
         private void TryMatch()
         {
-            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try");
+            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try - Begin()");
             // 아직 레이팅이고 뭐고 신경쓰기 싫다는 코드
             // 동시다발적 매칭 신청이 있으면 3 이상일 수 있다
             while (_matchingQueue.Count >= 2)
@@ -175,7 +174,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     }
                     if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
-                        _logger.LogTrace($"[{DateTime.Now}] Matching - discover other player [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogTrace($"[{DateTime.Now}] Matching - 다른 플레이어 발견 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
                         p2 = candidate;
                         break;
                     }
@@ -196,6 +195,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 Random random = new Random();
                 int colorRandomValue = random.Next(0, 2);
+
+                // 매칭에 성공한 두 플레이어에게 각각의 게임을 위한 정보 (색, 방번호) 전달 및 클라이언트로 응답
                 p1.TaskCompSrc.TrySetResult(
                     new MatchResult
                     (
@@ -227,7 +228,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 );
             }
 
-            _logger.LogTrace($"[{DateTime.UtcNow}] Matching End");
+            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try - End()");
         }
     }
 }
