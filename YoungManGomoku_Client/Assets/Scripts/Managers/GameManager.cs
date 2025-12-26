@@ -187,15 +187,37 @@ public class GameManager : MonoBehaviour
                 _nowPlayerTimer = OppositeTimer;
                 PlayerTimer.ReviseTimer();
 
+                // 자동 착수되는 첫 수에는 타이머 동기화 요청을 보내지 않음
                 if (BoardInform.NowTurn == 1) return;
                 
                 _timerSynchroDto.NowTurn = BoardInform.NowTurn;
                 TimerSyncData serverTimer =
                     await _networkManager.RequestTimerSynchro(_timerSynchroDto);
 
+                if (serverTimer.IsDefault)
+                {
+                    /* case 1: OnRequestFailed
+                     * case 2: 서버 연산 로직 버그 */
+
+                    // 이 조건은 OnRequestFailed가 아닌 경우 = 서버 버그 의심
+                    if (_eventManager.IsGameEnd is false)
+                    {
+                        _eventManager.ServerReplyFailed();
+                        Debug.LogError("Invalid Timer Synchro Data");
+                    }
+                    
+                    Debug.LogError("Error in Timer Synchro Request");
+                    return;
+                }
+                
                 if (PlayerTimer > serverTimer)
                 {
                     PlayerTimer.SynchroTimer(serverTimer);
+                    Debug.Log("플레이어의 타이머가 서버로부터 반려됨, 서버 정보로 동기화 완료");
+                }
+                else
+                {
+                    Debug.Log("플레이어의 타이머가 승인됨");
                 }
             }
         }

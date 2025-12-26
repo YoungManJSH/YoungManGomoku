@@ -123,6 +123,8 @@ namespace YoungManGomoku_Protocol
 		    MainTime = mainTime;
 		    ByoyomiCount = byoyomiCount;
 	    }
+	    
+	    public bool IsDefault => MainTime == 0 && ByoyomiCount == 0;
     }
 }
 

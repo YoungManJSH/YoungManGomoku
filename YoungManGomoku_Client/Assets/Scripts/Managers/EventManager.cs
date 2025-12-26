@@ -47,7 +47,13 @@ public class EventManager : MonoBehaviour
         Instance = this;
         _gameManager = GetComponent<GameManager>();
         _networkManager = GetComponent<NetworkManager>();
-        _networkManager.OnRequestFailed += _ => OnGameEnd!.Invoke();
+        _networkManager.OnRequestFailed += _ =>
+        {
+            IsGameEnd = true;
+            OnGameEnd!.Invoke();
+        };
+
+        OnServerReplyFailed += () => IsGameEnd = true;
         IsGameEnd = false;
     }
 
@@ -89,9 +95,16 @@ public class EventManager : MonoBehaviour
     {
         try
         {
-            var response = await _networkManager.RequestGameStartAnnounce(_gameManager.IdToken);
+            var response = await _networkManager.RequestGameStartAnnounce(_gameManager.IdToken, timeOutSeconds: 3);
 
-            if (response == null || response.IsSuccess is false)
+            if (response == null)
+            {
+                // 나머지는 OnRequestFailed 이벤트로 처리됨
+                Debug.LogError("Error in Start Game Response");
+                return;
+            }
+            
+            if (response.IsSuccess is false)
             {
                 OnServerReplyFailed!.Invoke();
                 return;
@@ -101,21 +114,39 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError(e);
             OnServerReplyFailed!.Invoke();
+            Debug.LogError(e);
         }
     }
     
-    public void StartSweeping() => OnStartSweeping!.Invoke();
-
     public async void PlayerSurrendered()
     {
-        var surrenderRequest = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequest.Surrender);
-        var reply = await _networkManager.RequestIngameAction(surrenderRequest);
+        try
+        {
+            // 기권은 어차피 판당 한 번만 발생함. 캐싱해둘 필요가 없음
+            var surrenderRequest = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequest.Surrender);
+            var reply = await _networkManager.RequestIngameAction(surrenderRequest, timeOutSeconds: 3);
+            
+            if (reply == null)
+            {
+                // 나머지는 OnRequestFailed 이벤트로 처리됨
+                Debug.LogError("Error in Surrender Response");
+                return;
+            }
 
-        Debug.Assert(reply.GameEndCode != GameEndCode.None);
-        HandleGameEndCode(reply.GameEndCode);
+            Debug.Assert(reply.GameEndCode != GameEndCode.None);
+            HandleGameEndCode(reply.GameEndCode);
+        }
+        catch (Exception e)
+        {
+            OnServerReplyFailed!.Invoke();
+            Debug.LogError($"PlayerSurrender Error : {e}");
+        }
     }
+
+    public void ServerReplyFailed() => OnServerReplyFailed!.Invoke();
+    
+    public void StartSweeping() => OnStartSweeping!.Invoke();
 
     public void PlayerByoyomiPurchase() => OnPlayerByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
 
