@@ -43,6 +43,13 @@ public class SoundManager : MonoBehaviour
 
     private void Start()
     {
+        if (soundData.MasterVolume == 0)
+        {
+            soundData.MasterVolume = 0.5f;
+            soundData.BGMVolume = 0.5f;
+            soundData.SFXVolume = 0.5f;
+        }
+        
         audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
         audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
         audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
