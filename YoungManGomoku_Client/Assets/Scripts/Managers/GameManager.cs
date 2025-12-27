@@ -196,7 +196,7 @@ public class GameManager : MonoBehaviour
                 TimerSyncData serverTimer =
                     await _networkManager.RequestTimerSynchro(_timerSynchroDto);
 
-                if (serverTimer.IsDefault)
+                if (serverTimer.IsDefault())
                 {
                     /* case 1: OnRequestFailed
                      * case 2: 서버 연산 로직 버그 */

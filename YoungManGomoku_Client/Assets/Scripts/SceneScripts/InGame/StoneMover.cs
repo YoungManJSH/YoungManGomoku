@@ -58,9 +58,6 @@ public abstract class StoneMover : MonoBehaviour
         _forbiddenParent.SetParent(transform);
         _forbiddenCoords = new HashSet<(int row, int col)>();
         
-        PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
-        CreatePreview();
-        
         _boardInform = GameManager.Instance.BoardInform;
         PrevCoord = (-1, -1);
         _isBlackTurn = true;
@@ -79,7 +76,9 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnTakeBack += TakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
+        PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
         OnAwake(); // 자식 클래스에서 추가적으로 정의한 Awake 로직
+        CreatePreview(); // 추상 함수는 OnAwake 다음으로 순서 보장
     }
 
     /// <summary> 자식 클래스에서 추가적으로 실행할 Awake </summary>

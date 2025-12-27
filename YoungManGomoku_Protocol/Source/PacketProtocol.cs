@@ -124,7 +124,8 @@ namespace YoungManGomoku_Protocol
 		    ByoyomiCount = byoyomiCount;
 	    }
 	    
-	    public bool IsDefault => MainTime == 0 && ByoyomiCount == 0;
+	    // 프로퍼티로 만들면 직렬화되어 날아가므로 주의
+	    public bool IsDefault() => MainTime == 0 && ByoyomiCount == 0;
     }
 }
 
