@@ -11,23 +11,16 @@ public class MessageBoxManager : MonoBehaviour
 
     private Action _requestedAction;
     private RectTransform _rect;
-    private bool _isGameEnded;
 
     private void Awake()
     {
         _rect = GetComponent<RectTransform>();
-        _isGameEnded = false;
         EventManager.Instance.OnGameEnd += OnGameEnd;
         EventManager.Instance.OnStartSweeping += OnGameEnd;
         gameObject.SetActive(false);
     }
     
     private void OnEnable() => OnOpened!.Invoke();
-
-    private void OnDisable()
-    {
-        if (_isGameEnded is false) TurnBackToGame!.Invoke();
-    }
 
     private void Update()
     {
@@ -79,14 +72,15 @@ public class MessageBoxManager : MonoBehaviour
     {
         _requestedAction?.Invoke();
         gameObject.SetActive(false);
+        TurnBackToGame!.Invoke();
     }
 
     public void OnCancel()
-        => gameObject.SetActive(false);
+    {
+        gameObject.SetActive(false);
+        TurnBackToGame!.Invoke();
+    }
 
     private void OnGameEnd()
-    {
-        _isGameEnded = true;
-        gameObject.SetActive(false);
-    }
+        => gameObject.SetActive(false);
 }
