@@ -144,10 +144,9 @@ namespace YoungManGomoku_Protocol.ClientToServer
 		public TimerSyncData MyTimer { get; set; }
 		public byte Row { get; set; }
         public byte Col { get; set; }
-        
-        // Unity Transform과 무관한 보드 좌표 Read 전용
-		public byte X => Row;
-		public byte Y => Col;
+
+        /// <summary> JSON 역직렬화용 기본 생성자 </summary>
+        public CS_PlaceStoneDTO() { }
 
 		public CS_PlaceStoneDTO(string idToken, TimerSyncData myTimer, int row, int col)
 		{
@@ -163,6 +162,9 @@ namespace YoungManGomoku_Protocol.ClientToServer
 	    public string IDToken { get; set; }
 	    public int NowTurn { get; set; }
 
+        /// <summary> JSON 역직렬화를 위한 기본 생성자</summary>
+        public CS_RequestTimerSynchroDTO() { }
+
 	    public CS_RequestTimerSynchroDTO(string idToken, int nowTurn)
 	    {
 		    IDToken = idToken;
@@ -174,6 +176,9 @@ namespace YoungManGomoku_Protocol.ClientToServer
     {
         public string IDToken { get; set; }
         public IngameRequest IngameRequest { get; set; }
+
+        /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
+        public CS_InGameRequestDTO() { }
 
         public CS_InGameRequestDTO(string idToken, IngameRequest request)
         {
@@ -248,10 +253,6 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
         public byte Row { get; set; }
 	    public byte Col { get; set; }
-
-        // Unity Transform과 무관한 보드 좌표 Read 전용
-        public byte X => Row;
-        public byte Y => Col;
 
         // 재대결 가능 알림? 일단 만들어는 봤는데... 쓸 일이 있을까?
         public bool CanRequestRematch { get; set; }
