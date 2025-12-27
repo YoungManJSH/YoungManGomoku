@@ -83,4 +83,10 @@ public class LobbyUIController : MonoBehaviour
         bool isActive = replayPanel.activeSelf;
         replayPanel.SetActive(!isActive);
     }
+    
+    public void OpenCloseSettingPanel()
+    {
+        bool isActive = settingPanel.activeSelf;
+        settingPanel.SetActive(!isActive);
+    }
 }
