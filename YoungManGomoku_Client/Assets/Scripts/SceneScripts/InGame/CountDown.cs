@@ -67,20 +67,15 @@ public class CountDown : MonoBehaviour
                 
                 _countDownText.enabled = false;
                 EventManager.Instance.StartGame();
-                enabled = false;
-                Destroy(gameObject, t: 3f);
+                gameObject.SetActive(false);
             }
             
             _elapsedSecond = elapsed;
         }
     }
 
-    private void OnDestroy()
-    {
-        NetworkManager.Instance.OnRequestFailed -= OnRequestFailed;
-        EventManager.Instance.OnGameEnd -= OnGameEnd;
-        _tween?.Kill();
-    }
+    private void OnDisable() => _tween?.Kill();
+    
     private void DoTextAnim(string text)
     {
         _countDownText.text = text;
@@ -91,6 +86,6 @@ public class CountDown : MonoBehaviour
             endValue: _originFontSize, duration: 1f).SetEase(Ease.OutSine);
     }
 
-    private void OnRequestFailed(RequestError e) => Destroy(gameObject);
-    private void OnGameEnd() => Destroy(gameObject);
+    private void OnRequestFailed(RequestError e) => gameObject.SetActive(false);
+    private void OnGameEnd() => gameObject.SetActive(false);
 }

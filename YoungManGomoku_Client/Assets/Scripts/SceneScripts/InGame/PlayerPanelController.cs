@@ -259,8 +259,9 @@ public class PlayerPanelController : MonoBehaviour
     private void OnTimerSynchro(float mainTime, int leftCount)
     {
         CancelByoyomiUse();
-        
-        mainTimer.text = mainTime > 0 ? $"{mainTime / 60:D2}:{mainTime % 60:D2}" : "00:00";
+
+        int mainTimeToInt = Mathf.CeilToInt(mainTime);
+        mainTimer.text = mainTime > 0 ? $"{mainTimeToInt / 60:D2}:{mainTimeToInt % 60:D2}" : "00:00";
         byoyomiCount.text = $"{leftCount}회";
         
         if (leftCount == 1)
