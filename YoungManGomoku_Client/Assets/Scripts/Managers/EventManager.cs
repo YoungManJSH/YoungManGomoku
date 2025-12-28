@@ -47,13 +47,8 @@ public class EventManager : MonoBehaviour
         Instance = this;
         _gameManager = GetComponent<GameManager>();
         _networkManager = GetComponent<NetworkManager>();
-        _networkManager.OnRequestFailed += _ =>
-        {
-            IsGameEnd = true;
-            OnGameEnd!.Invoke();
-        };
-
-        OnServerReplyFailed += () => IsGameEnd = true;
+        _networkManager.OnRequestFailed += OnRequestFailed;
+        
         IsGameEnd = false;
     }
 
@@ -143,9 +138,13 @@ public class EventManager : MonoBehaviour
             Debug.LogError($"PlayerSurrender Error : {e}");
         }
     }
-
-    public void ServerReplyFailed() => OnServerReplyFailed!.Invoke();
     
+    public void ServerReplyFailed()
+    {
+        IsGameEnd = true;
+        OnServerReplyFailed!.Invoke();
+    }
+
     public void StartSweeping() => OnStartSweeping!.Invoke();
 
     public void PlayerByoyomiPurchase() => OnPlayerByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
@@ -200,5 +199,14 @@ public class EventManager : MonoBehaviour
         }
 
         IsGameEnd = true;
+    }
+
+    private void OnRequestFailed(RequestError _)
+    {
+        if (IsGameEnd is false)
+        {
+            IsGameEnd = true;
+            OnGameEnd!.Invoke();
+        }
     }
 }
