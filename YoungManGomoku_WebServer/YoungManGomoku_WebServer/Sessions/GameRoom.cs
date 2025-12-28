@@ -92,8 +92,8 @@ namespace YoungManGomoku_WebServer.Sessions
             _gameRoomManager = roomManager;
 
             _board = new Board();
-			// 흑돌 첫 수는 무조건 중앙 고정
-            _board.TryMoveStone(Board.BoardSize / 2, Board.BoardSize / 2);
+			// 흑돌 첫 수는 무조건 중앙 고정, 그런데 첫수는 착수 요청으로 들어올 것임
+            //_board.TryMoveStone(Board.BoardSize / 2, Board.BoardSize / 2);
 
             _board.OnBlackGomoku += OnBlackWin;
             _board.OnWhiteGomoku += OnWhiteWin;
