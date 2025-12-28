@@ -1,5 +1,4 @@
 using UnityEngine;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 /// <summary> 2인용 플레이 착수 제어 클래스 </summary>
 public sealed class StoneMoverSingle : StoneMover

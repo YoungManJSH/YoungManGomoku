@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Button = UnityEngine.UI.Button;
 
 public class ButtonManager : MonoBehaviour
@@ -89,13 +88,7 @@ public class ButtonManager : MonoBehaviour
         => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
 
     public void ExitInput()
-    {
-#if UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - PC");
-#elif UNITY_ANDROID
-        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - Android");
-#endif
-    }
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
     
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     

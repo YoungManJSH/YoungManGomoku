@@ -1,5 +1,3 @@
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Video;
 using DG.Tweening;
@@ -31,7 +29,7 @@ public class TitleSceneManager : MonoBehaviour
         videoPlayer.Play();
     }
 
-    private void OnVideoEnd(VideoPlayer videoPlayer)
+    private void OnVideoEnd(VideoPlayer _)
     {
         openingVideo.SetActive(false);
         gameTitle.SetActive(true);

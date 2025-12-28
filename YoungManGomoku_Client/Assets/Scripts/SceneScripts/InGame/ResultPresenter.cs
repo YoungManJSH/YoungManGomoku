@@ -1,7 +1,6 @@
 using TMPro;
 using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ResultPresenter : MonoBehaviour
@@ -98,13 +97,13 @@ public class ResultPresenter : MonoBehaviour
     public void OpenReplay()
     {
         /*TODO: 추후 재대국 신청 취소 처리*/
-        SceneManager.LoadScene("Scenes/3.InGame/GiboPlayScene");
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene);
     }
 
     public void AcceptRematch()
     {
         /*TODO: 추후 재대국 신청 수락 동작*/
-        SceneManager.LoadScene("Scenes/3.InGame/InGameScene");
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene);
     }
 
     private void DisableRematch()

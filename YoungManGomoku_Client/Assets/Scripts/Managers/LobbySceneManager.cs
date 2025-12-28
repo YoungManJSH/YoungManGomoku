@@ -1,8 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using YoungManGomoku_Protocol;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class LobbySceneManager : MonoBehaviour
 {
@@ -52,8 +48,8 @@ public class LobbySceneManager : MonoBehaviour
         }
         
         PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
-        Destroy(SoundManager.instance.gameObject);
-        SceneManager.LoadScene("InGameScene");
+        Destroy(SoundManager.Instance.gameObject);
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene);
     }
     
     public async void CancelMatchMaking()

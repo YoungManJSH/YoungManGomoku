@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using YoungManGomoku_Protocol;
 
 public class ShopUIController : MonoBehaviour
@@ -61,11 +60,5 @@ public class ShopUIController : MonoBehaviour
     }
 
     public void MoveSceneToLobby()
-    {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        SceneManager.LoadScene("LobbyScene - Android");
-#elif UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("LobbyScene - PC");
-#endif
-    }
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
 }

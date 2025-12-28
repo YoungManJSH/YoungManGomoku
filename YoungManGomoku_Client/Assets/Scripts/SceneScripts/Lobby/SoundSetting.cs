@@ -13,15 +13,15 @@ public class SoundSetting : MonoBehaviour
     
     private void Start()
     {
-        SoundManager.instance.InitializeSoundManager(masterVolumeImage, BGMVolumeImage, SFXVolumeImage,
+        SoundManager.Instance.InitializeSoundManager(masterVolumeImage, BGMVolumeImage, SFXVolumeImage,
             masterVolumeSlider, BGMVolumeSlider, SFXVolumeSlider);
         
-        masterVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.instance.ChangeVolumeState(VolumeType.Master));
-        BGMVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.instance.ChangeVolumeState(VolumeType.BGM));
-        SFXVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.instance.ChangeVolumeState(VolumeType.SFX));
+        masterVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.Instance.ChangeVolumeState(VolumeType.Master));
+        BGMVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.Instance.ChangeVolumeState(VolumeType.BGM));
+        SFXVolumeImage.GetComponent<Button>().onClick.AddListener(()=>SoundManager.Instance.ChangeVolumeState(VolumeType.SFX));
         
-        masterVolumeSlider.onValueChanged.AddListener(SoundManager.instance.SetMasterVolume);
-        BGMVolumeSlider.onValueChanged.AddListener(SoundManager.instance.SetBGMVolume);
-        SFXVolumeSlider.onValueChanged.AddListener(SoundManager.instance.SetSFXVolume);
+        masterVolumeSlider.onValueChanged.AddListener(SoundManager.Instance.SetMasterVolume);
+        BGMVolumeSlider.onValueChanged.AddListener(SoundManager.Instance.SetBGMVolume);
+        SFXVolumeSlider.onValueChanged.AddListener(SoundManager.Instance.SetSFXVolume);
     }
 }
