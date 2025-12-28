@@ -86,8 +86,12 @@ namespace YoungManGomoku_WebServer.Controllers
             // 내 돌은 두었고, 그 결과가 return됨
             PlaceStoneResultType result = room.PlaceStone(player.Account.UID, userPlaceStoneDTO.Row, userPlaceStoneDTO.Col);
 
-            // 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
-            if (result != PlaceStoneResultType.Success)
+            // 이번 착수로 내가 승리했기 때문에 상대방 착수를 대기할 필요가 없으니 즉시 return
+			if (result == PlaceStoneResultType.NowWin)
+				return Ok(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), userPlaceStoneDTO.Row, userPlaceStoneDTO.Col, room.GetEndCode(player.Account.UID)));
+			
+			// 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
+			if (result != PlaceStoneResultType.Success)
                 return Unauthorized($"Place Stone Result : {result}");
 
             // 내 돌 착수에 성공했으면 다음 이벤트(상대방 착수)까지 대기 후 상대방이 착수하면 await해서 정보를 받아옴
