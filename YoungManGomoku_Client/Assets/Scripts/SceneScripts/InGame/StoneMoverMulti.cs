@@ -100,8 +100,8 @@ public class StoneMoverMulti : StoneMover
         }
         catch (Exception e)
         {
-            _eventManager.ServerReplyFailed();
             Debug.LogError($"Multi Stone Mover Error, in Turn Change Logic : {e}");
+            _eventManager.ServerReplyFailed();
         }
     }
 }
