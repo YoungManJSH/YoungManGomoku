@@ -652,10 +652,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSceneManager
   videoPlayer: {fileID: 490067100}
+  audioSource: {fileID: 337946385}
   openingVideo: {fileID: 1858476480}
   gameTitle: {fileID: 1846786526}
   whiteEffect: {fileID: 744883501}
-  audioSource: {fileID: 337946385}
 --- !u!4 &219424413
 Transform:
   m_ObjectHideFlags: 0
@@ -775,7 +775,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 3277197445890604349, guid: a6834a4154c6b1c4b9f17977ca0b79b6, type: 2}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 91f33e156ab7ab641ae12a944f90cf6a, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -1174,7 +1174,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 490067099}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: 2e4fb3c511fa7b6479f7aeac5fc1294c, type: 3}
+  m_VideoClip: {fileID: 0}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
