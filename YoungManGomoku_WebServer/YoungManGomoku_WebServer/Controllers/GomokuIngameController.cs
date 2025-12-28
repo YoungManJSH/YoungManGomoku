@@ -49,8 +49,8 @@ namespace YoungManGomoku_WebServer.Controllers
 				return BadRequest("Not in game");
 
 			// 아직 이 방 게임 대기 중이 아닌데??? 미쳐버린거냐
-			if (room.State != GameRoomState.Waiting)
-                return BadRequest("Not Game Wait");
+            // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
+			// if (room.State != GameRoomState.Waiting)return BadRequest("Not Game Wait");
 
             _gameRoomManager.Logger.LogTrace($"[Gomoku Controller] Game Start Request - ID Token {idToken}");
 
@@ -112,7 +112,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             player.LastRequestTime = DateTime.UtcNow;
 
-			_gameRoomManager.Logger.LogTrace($"[Gomoku Controller] Req Timer Sync By : {reqTimerSyncDTO.IDToken}");
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Req Timer Sync By : {reqTimerSyncDTO.IDToken}");
 
 			// 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
@@ -135,7 +135,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             player.LastRequestTime = DateTime.UtcNow;
 
-			_gameRoomManager.Logger.LogTrace($"[Gomoku Controller] Response Game End By : {idToken}");
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {idToken}");
 
 			// 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)

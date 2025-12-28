@@ -51,7 +51,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://192.168.0.20:5001"; //"https://localhost:5001";
+	[SerializeField] private const string baseURL = "https://61.84.104.11:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -166,7 +166,7 @@ public class NetworkManager : MonoBehaviour
 	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
 	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
 	public async Awaitable<GameEndCode> RequestMyTurn(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<GameEndCode>("GomokuIngame/MyTurnGameEnd",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
+		=> await RequestPostServer<GameEndCode>("GomokuIngame/ResponseGameEnd",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
 	
 
     public async Awaitable<SC_IngameRequestAnswerDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
