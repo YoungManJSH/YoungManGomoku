@@ -68,12 +68,13 @@ namespace YoungManGomoku_WebServer.Sessions
         // 유저별 타이머 정보
         private readonly Dictionary<ulong, UserTimer> _timers;
 
-        private long _gameProgressMilliseconds;
+		private readonly Dictionary<ulong, GameEndCode> _userEndCodes;
+
+		private long _gameProgressMilliseconds;
 
 
         // 현재 이 게임 룸의 게임 종료 사유
-        private GameEndCode _endReason;
-        public GameEndCode EndReason => _endReason;
+        // private GameEndCode _endReason;
 
         // 현재 턴인 사람의 UID
         private ulong _currentTurnUID;
@@ -81,7 +82,7 @@ namespace YoungManGomoku_WebServer.Sessions
         // 승패 결정 시 승리자의 UID, 승자가 없거나 게임 도중이면 0
         private ulong _winnerUID;
 
-        public bool IsFinished => _endReason != GameEndCode.None;
+        public bool IsFinished => _userEndCodes[BlackPlayerUID] != GameEndCode.None && _userEndCodes[WhitePlayerUID] != GameEndCode.None;
 
 		public GameRoom(ulong roomID, ulong blackPlayerUID, ulong whitePlayerUID, GameRoomManager roomManager)
 		{
@@ -117,8 +118,15 @@ namespace YoungManGomoku_WebServer.Sessions
 
             // 첫 수는 흑돌
             _currentTurnUID = BlackPlayerUID;
-			
-			_endReason = GameEndCode.None; // 이 방에서 게임이 끝난 이유. None은 지금 게임중이라는 뜻
+
+			// _endReason = GameEndCode.None; // 이 방에서 게임이 끝난 이유. None은 지금 게임중이라는 뜻
+
+
+			_userEndCodes = new Dictionary<ulong, GameEndCode>
+            {
+                [blackPlayerUID] = GameEndCode.None,
+                [whitePlayerUID] = GameEndCode.None
+            };
 
 			_lastRequestTime = new Dictionary<ulong, DateTime>
 			{
@@ -193,7 +201,7 @@ namespace YoungManGomoku_WebServer.Sessions
 			foreach (InGameWaitingPlayer waitingPlayer in _waitingMap.Values)
             {
                 SC_OpponentPlaceStoneDTO endEvent = new SC_OpponentPlaceStoneDTO(
-                             _timers[(GetColor(waitingPlayer.UID) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)255, (byte)255, _endReason);
+                             _timers[(GetColor(waitingPlayer.UID) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)255, (byte)255, _userEndCodes[waitingPlayer.UID]);
                 waitingPlayer.TaskCompSrc.TrySetResult(endEvent);
                 waitingPlayer.CancellationTokenRegist.Dispose();
             }
@@ -203,7 +211,8 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public bool TryGameStart()
         {
-			_gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (_gameProgressMilliseconds == 0)
+			    _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 			_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] {RoomID} 방에서 게임 시작 작업 수행\n시작 ms : {_gameProgressMilliseconds}");
 			return true;
 			// return State == GameRoomState.Waiting; // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
@@ -250,19 +259,19 @@ namespace YoungManGomoku_WebServer.Sessions
                         return PlaceStoneResultType.Invalid;
                     }
 
+                    // 흑돌 첫 수 두는 순간 게임이 시작됨 (이 이후 백돌의 시작 요청이 올 수 있음)
                     State = GameRoomState.Playing;
-
-                    long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    _timers[uid].ProgressExcludingTol(_gameProgressMilliseconds, nowTime);
-                    nowTime= DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
                 }
+				long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                // [흑].프로그레스(흑턴 시작 시간, 흑턴 착수 정보가 온 시간)
+				_timers[uid].ProgressExcludingTol(_gameProgressMilliseconds, nowTime);
+				_gameProgressMilliseconds = nowTime;
 
-                // 타이머 체크
-                // _timer. 어쩌고
+				// 타이머 체크
+				// _timer. 어쩌고
 
-                // _board의 NowTurn 값이 홀수면 백, 짝수면 흑 차례라는 뜻
-                bool isBlack = (_board.NowTurn & 1) == 0;
+				// _board의 NowTurn 값이 홀수면 백, 짝수면 흑 차례라는 뜻
+				bool isBlack = (_board.NowTurn & 1) == 0;
                 _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_board.NowTurn}턴 시작 : {(isBlack ? "Black" : "White")} [{_currentTurnUID}] 차례");
 				// TryMoveStone이 true일 시 착수 성공. 내부적으로 승패 처리까지 동작하며 _board에 등록한 event들이 실행됨
                 if (_board.TryMoveStone(x, y) == false)
@@ -278,7 +287,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 ulong opponent = GetOpponent(uid);
 
                 // 수정 예정
-                switch(_endReason)
+                switch(_userEndCodes[uid])
                 {                   
                     case GameEndCode.GomokuWin:
                         {
@@ -321,7 +330,7 @@ namespace YoungManGomoku_WebServer.Sessions
                             {
                                 waitingPlayer.TaskCompSrc.TrySetResult(
                                     new SC_OpponentPlaceStoneDTO(
-                                        _timers[(GetColor(uid) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)x, (byte)y, _endReason));
+                                        _timers[(GetColor(uid) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData, (byte)x, (byte)y, _userEndCodes[uid]));
                                 // DTO 조립하고 결과를 넣어 줬으니 상대의 대기는 끝났고 응답을 보내줘야지
                                 _waitingMap.Remove(opponent);
                             }
@@ -332,12 +341,12 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 게임 안 끝났네, 상대 턴으로 넘김
                 if (State != GameRoomState.Finished && _winnerUID == 0UL)
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_currentTurnUID}턴 에서 {GetOpponent(uid)}으로 턴 교체");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_currentTurnUID} 차례에서 {GetOpponent(uid)}으로 턴 교체");
                     _currentTurnUID = GetOpponent(uid);
                 }
 
 
-                return PlaceStoneResultType.Success;
+				return PlaceStoneResultType.Success;
 			}
 		}
 
@@ -404,7 +413,9 @@ namespace YoungManGomoku_WebServer.Sessions
 
         private void OnBlackWin()
 		{
-			_endReason = GameEndCode.GomokuWin;
+			//_endReason = GameEndCode.GomokuWin;
+			_userEndCodes[BlackPlayerUID] = GameEndCode.GomokuWin;
+			_userEndCodes[WhitePlayerUID] = GameEndCode.GomokuLose;
 			_winnerUID = BlackPlayerUID;
 
         }
@@ -412,13 +423,15 @@ namespace YoungManGomoku_WebServer.Sessions
 
 		private void OnWhiteWin()
 		{
-			_endReason = GameEndCode.GomokuWin;
+			//_endReason = GameEndCode.GomokuWin;
+			_userEndCodes[WhitePlayerUID] = GameEndCode.GomokuWin;
+			_userEndCodes[BlackPlayerUID] = GameEndCode.GomokuLose;
 			_winnerUID = WhitePlayerUID;
         }
 
 		private void OnDraw()
 		{
-            _endReason = GameEndCode.Draw;
+			_userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.Draw;
         }
 
 		private ulong GetOpponent(ulong uid)

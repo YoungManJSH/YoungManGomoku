@@ -52,7 +52,7 @@ namespace YoungManGomoku_WebServer.Controllers
             // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
 			// if (room.State != GameRoomState.Waiting)return BadRequest("Not Game Wait");
 
-            _gameRoomManager.Logger.LogTrace($"[Gomoku Controller] Game Start Request - ID Token {idToken}");
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] Game Start Request - ID Token {idToken}");
 
             // 상대방도 게임시작 요청을 해서 둘 다 게임 시작하면 돌아옴
             // SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(player.Account.UID, ct);
@@ -112,7 +112,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             player.LastRequestTime = DateTime.UtcNow;
 
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Req Timer Sync By : {reqTimerSyncDTO.IDToken}");
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] Req Timer Sync By : {reqTimerSyncDTO.IDToken}");
 
 			// 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
@@ -141,7 +141,7 @@ namespace YoungManGomoku_WebServer.Controllers
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
                 return BadRequest("Not in game");
 
-            return Ok(room.EndReason);
+            return Ok(room.GetEndCode(player.Account.UID));
         }
 
         // Long Polling
