@@ -12,3 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39d2fce837e4e61469449084ddea8cf6, type: 3}
   m_Name: PlayerSoundData
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
+  isMuteMasterVolume: 0
+  isMuteBGMVolume: 0
+  isMuteSFXVolume: 0
+  MasterVolume: 0.50268966
+  BGMVolume: 0.5
+  SFXVolume: 0.5

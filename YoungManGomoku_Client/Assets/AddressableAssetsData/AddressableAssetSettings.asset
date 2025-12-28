@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: a459d749fb2af614ea97da0d4e111e56
   m_currentHash:
     serializedVersion: 2
-    Hash: 6d0c2172e1876b416c5ce5aae18f6600
+    Hash: 5f0d16df77b15b7dd113176d7e44e511
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 1
   m_CatalogRequestsTimeout: 0
@@ -73,11 +73,11 @@ MonoBehaviour:
       - m_Id: 120b0256c0596dc4d917e8084d1214b9
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
       - m_Id: 6973971f6800582489ddb326781f2218
-        m_Value: 'https://rubbe-unity-addressable-bucket-2025-11-29.s3.ap-northeast-2.amazonaws.com/[BuildTarget]'
+        m_Value: https://rubbe-unity-addressable-bucket-2025-11-29.s3.ap-northeast-2.amazonaws.com/StandaloneWindows64
       - m_Id: 6ea5e4907e2f8a64a921241316b6ba34
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
       - m_Id: b93b8a1f353e52b4a988cc20c378c303
-        m_Value: 'ServerData/[BuildTarget]'
+        m_Value: ServerData/StandaloneWindows64
       - m_Id: c39350f0e17d77348ac1110112dbc392
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
     m_ProfileEntryNames:
