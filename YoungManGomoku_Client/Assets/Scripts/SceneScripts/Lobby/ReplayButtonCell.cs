@@ -49,6 +49,5 @@ public class ReplayButtonCell : MonoBehaviour
     {
         GiboFileManager.GiboFileName = _fileName;
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene);
-        Destroy(SoundManager.Instance.gameObject);
     }
 }

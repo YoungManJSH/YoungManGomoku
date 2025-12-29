@@ -48,7 +48,6 @@ public class LobbySceneManager : MonoBehaviour
         }
         
         PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
-        Destroy(SoundManager.Instance.gameObject);
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene);
     }
     
