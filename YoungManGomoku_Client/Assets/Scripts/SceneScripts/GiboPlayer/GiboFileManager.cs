@@ -53,7 +53,7 @@ public static class GiboFileManager
     // goto 대안 1 : 함수 초입에 모든 변수 default로 초기화 (**)
     // goto 대안 2 : 모든 매개변수 struct로 묶어서 하나로 만들기 (*****)
     // goto 대안 3 : 콜백 구조 (??)
-    public static bool TryReadGiboFile(out (int row, int col)[] recordData, out DateTime dateTime,
+    public static bool TryReadGiboFile(out (int row, int col)[] moveStoneData, out DateTime dateTime,
         out BasicPlayerData blackData, out BasicPlayerData whiteData, out string result)
     {
         if (IsGiboFileExists is false)
@@ -120,7 +120,7 @@ public static class GiboFileManager
         #endregion
         
         #region 착수 정보 처리 : 4번째 줄 이후
-        recordData = new (int row, int col)[lastTurn];
+        moveStoneData = new (int row, int col)[lastTurn];
 
         for (int turn = 0; turn < lastTurn; ++turn)
         {
@@ -129,7 +129,7 @@ public static class GiboFileManager
                 int.TryParse(turnTexts[0], out int row) && int.TryParse(turnTexts[1], out int col) &&
                 0 <= row && row <= Board.MaxCoord && 0 <= col && col <= Board.MaxCoord)
             {
-                recordData[turn] = (row, col);
+                moveStoneData[turn] = (row, col);
             }
             else
             {
@@ -142,7 +142,7 @@ public static class GiboFileManager
         return true;
         
         ReadFailed:
-        recordData = null;
+        moveStoneData = null;
         dateTime = default;
         blackData = default;
         whiteData = default;

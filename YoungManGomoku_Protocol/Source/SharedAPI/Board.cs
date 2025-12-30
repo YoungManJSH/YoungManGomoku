@@ -11,6 +11,15 @@ public class Board
     private readonly JudgeType[,] _blackJudges;
     private readonly List<(int row, int col)> _record;
 
+    /// <summary> 마지막 백돌 착수 시점 기준으로 흑돌이 지정한 좌표에 착수할 경우 오목 또는 금수인지를 반환 </summary>
+    /// <param name="coord"> 확인할 좌표 </param>
+    /// <returns>
+    /// <para>None: 오목 또는 금수 자리가 아님, 혹은 이미 착수되어 있는 자리</para>
+    /// <para>Gomoku: 오목이 되는 자리</para>
+    /// <para>Forbidden: 금수인 자리</para>
+    /// </returns>
+    public JudgeType BlackJudge((int row, int col) coord)
+        => _blackJudges[coord.row, coord.col];
     /// <summary> 기보를 방어적 복사로 전달하는 프로퍼티 </summary>
     public List<(int row, int col)> Record => new List<(int row, int col)>(_record); // C# 8
 
