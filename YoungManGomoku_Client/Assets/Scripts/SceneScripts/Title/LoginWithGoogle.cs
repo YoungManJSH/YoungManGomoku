@@ -1,17 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Firebase.Extensions;
 using Google;
-using System.Threading.Tasks;
 using UnityEngine;
 using TMPro;
 using Firebase.Auth;
-using UnityEngine.UI;
-using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
-using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 
 public class LoginWithGoogle : MonoBehaviour
@@ -233,11 +225,5 @@ public class LoginWithGoogle : MonoBehaviour
     }
 
     private void MoveToLobbyScene()
-    {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        SceneManager.LoadScene("LobbyScene - Android");
-#elif UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("LobbyScene - PC");
-#endif
-    }
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
 }

@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using YoungManGomoku_Protocol;
 
 public class LobbyUIController : MonoBehaviour
@@ -68,15 +65,9 @@ public class LobbyUIController : MonoBehaviour
             menuPanel.SetActive(!isActive);
         }
     }
-    
+
     public void MoveSceneToShop()
-    {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        SceneManager.LoadScene("ShopScene - Android");
-#elif UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("ShopScene - PC");
-#endif
-    }
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.ShopScene);
 
     public void OpenCloseReplayPanel()
     {

@@ -1,7 +1,6 @@
 using System.Threading;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GiboButtonManager : MonoBehaviour
@@ -165,8 +164,11 @@ public class GiboButtonManager : MonoBehaviour
     public void Exit()
     {
         CancelAutoPlay();
-        messageBox.MessageBoxOpen(exitMessage, LoadLobby);
+        messageBox.MessageBoxOpen(exitMessage, LoadLobbyScene);
     }
+
+    private void LoadLobbyScene()
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
     
     private void SetSpeed(AutoPlaySpeed speed)
     {
@@ -241,15 +243,6 @@ public class GiboButtonManager : MonoBehaviour
             ButtonActivate(_lastTurnSet);
             ButtonActivate(_autoPlaySet);
         }
-    }
-    
-    private void LoadLobby()
-    {
-#if UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - PC");
-#elif UNITY_ANDROID
-        SceneManager.LoadScene("Scenes/2.Lobby/LobbyScene - Android");
-#endif
     }
     
     private void ButtonInactivate((Button button, TextMeshProUGUI buttonText) buttonSet)

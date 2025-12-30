@@ -223,13 +223,7 @@ public class CheckData : MonoBehaviour
     /// 현재 플랫폼에 맞춰 다른 씬을 로드한다.
     /// </summary>
     private void LoadSceneViaPlatform()
-    {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        SceneManager.LoadScene("TitleScene - Android");
-#elif UNITY_STANDALONE || UNITY_EDITOR
-        SceneManager.LoadScene("TitleScene - PC");
-#endif
-    }
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.TitleScene);
 
     /// <summary>
     /// 다운로드 실패시, 리턴값으로 알려주며, 안내창을 띄운다.

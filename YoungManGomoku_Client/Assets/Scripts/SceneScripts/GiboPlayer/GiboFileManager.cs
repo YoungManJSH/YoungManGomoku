@@ -5,9 +5,28 @@ using UnityEngine;
 
 public static class GiboFileManager
 {
+    public readonly struct GiboTitleData
+    {
+        public string FileName { get; }
+        public DateTime DateTime { get; }
+        public string BlackPlayer { get; }
+        public string WhitePlayer { get; }
+        public string Result { get; }
+
+        public GiboTitleData(string fileName, DateTime dateTime, string blackPlayer, string whitePlayer, string result)
+        {
+            FileName = fileName;
+            DateTime = dateTime;
+            BlackPlayer = blackPlayer;
+            WhitePlayer = whitePlayer;
+            Result = result;
+        }
+    }
+    
     private const int META_LINE_COUNT = 3;
     
     public static string GiboFileName { private get; set; }
+    
     private static string GiboFolderPath { get; }
     private static string GiboFilePath => Path.Combine(GiboFolderPath, GiboFileName);
     private static bool IsGiboFolderExists => Directory.Exists(GiboFolderPath);
@@ -129,6 +148,53 @@ public static class GiboFileManager
         whiteData = default;
         result = null;
         return false;
+    }
+    
+    public static void ReadGiboList(out List<GiboTitleData> giboList)
+    {
+        giboList = new List<GiboTitleData>();
+        
+        try
+        {
+            if (IsGiboFolderExists is false) return;
+
+            string[] giboFiles = Directory.GetFiles(GiboFolderPath, "*.gibo");
+            // 읽기 실패하는 기보 파일이 있을 수 있으므로 List 자료구조가 유효함
+            giboList.Capacity = giboFiles.Length;
+
+            foreach (string fileName in giboFiles)
+            {
+                using StreamReader reader = new StreamReader(fileName);
+                
+                string titleLine = reader.ReadLine();
+                string blackInformLine = reader.ReadLine();
+                string whiteInformLine = reader.ReadLine();
+
+                if (titleLine == null || blackInformLine == null || whiteInformLine == null)
+                    continue;
+
+                string[] titleInforms = titleLine.Split(',');
+                string[] blackInforms = blackInformLine.Split(',');
+                string[] whiteInforms = whiteInformLine.Split(',');
+
+                if (titleInforms.Length != 3 || blackInforms.Length != 5 || whiteInforms.Length != 5 ||
+                    DateTime.TryParse(titleInforms[0], out DateTime dateTime) is false)
+                    continue;
+
+                giboList.Add(new GiboTitleData(fileName, dateTime,
+                    blackPlayer: blackInforms[0], whitePlayer: whiteInforms[0], result: titleInforms[2]));
+            }
+            
+            // 최신 기보를 앞쪽으로 정렬
+            giboList.Sort(comparison: (a,b) => b.DateTime.CompareTo(a.DateTime));
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"기보 리스트 읽기 실패! : {e}");
+            /* 읽어오던 도중에 예외가 터지면 그 전까지 읽었던 내용들은 유지됨
+             * giboList를 null로 바꿔주지 않는 것은 의도된 설계
+             * Why? 성공적으로 읽은 부분들은 사용자에게 보여줘도 문제되지 않음 */
+        }
     }
     
     public static void CreateGiboFile(List<(int row, int col)> record, BasicPlayerData blackData, BasicPlayerData whiteData, string result)
