@@ -90,13 +90,12 @@ namespace YoungManGomoku_WebServer.Controllers
 			if (result == PlaceStoneResultType.NowWin)
 				return Ok(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), userPlaceStoneDTO.Row, userPlaceStoneDTO.Col, room.GetEndCode(player.Account.UID)));
 			
-			// 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
+			// 내가 승리한 상황이 아닌데 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
 			if (result != PlaceStoneResultType.Success)
                 return Unauthorized($"Place Stone Result : {result}");
 
             // 내 돌 착수에 성공했으면 다음 이벤트(상대방 착수)까지 대기 후 상대방이 착수하면 await해서 정보를 받아옴
-            SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(player.Account.UID, ct);
-            return Ok(response);
+            return Ok(room.WaitNextPlaceStoneAsync(player.Account.UID, ct));
 		}
 
         [HttpPost("TimerSynchronize")]
@@ -122,7 +121,7 @@ namespace YoungManGomoku_WebServer.Controllers
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
                 return BadRequest("Not in game");            
 
-            return Ok(room.SynchronizeTimer(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
+            return Ok(room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
 
 
@@ -130,14 +129,14 @@ namespace YoungManGomoku_WebServer.Controllers
          * TODO
             (내가 상대 착수 정보를 받음)(내 턴 시작)
 
-            RequestMyTurn (내 턴이 진행하는 동안 응답 대기용 요청) : 롱폴링임
-            요걸 언제 응답하냐?
-            1. 중간에 게임 끝났을 때 (시간승, 시간패, 기권승 , 기권패)
+            RequestMyTurn (내 턴이 진행하는 동안 응답 대기용 요청) : 롱 폴링
+            이건 언제 응답해야 하는가?
+            1. 중간에 게임 끝났을 때 (시간승, 시간패, 기권승, 기권패)
             2. 상대방 착수 정보 보내줄 때 이거 응답도 그냥 None으로 같이 보내줘야 함. 
-            3. (Opponent DTO 조립할 때 얘도 None으로 이벤트 던져야 함
+            3. Opponent DTO 조립할 때 얘도 None으로 이벤트 던져야 함
          */
         [HttpPost("ResponseGameEnd")]
-        public IActionResult ResponseGameEnd([FromBody] string idToken)
+        public async Task<IActionResult> ResponseGameEnd([FromBody] string idToken)
         {
             // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
             PlayerSession player = _serverManager.GetPlayerSession(idToken);
@@ -155,6 +154,8 @@ namespace YoungManGomoku_WebServer.Controllers
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
                 return BadRequest("Not in game");
 
+
+            // await
             return Ok(room.GetEndCode(player.Account.UID));
         }
 
