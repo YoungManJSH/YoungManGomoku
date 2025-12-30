@@ -122,7 +122,7 @@ namespace YoungManGomoku_WebServer.Controllers
 			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
                 return BadRequest("Not in game");            
 
-            return Ok(room.SynchronizeTimer(player.Account.UID, reqTimerSyncDTO.NowTurn));
+            return Ok(room.SynchronizeTimer(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
 
         // 원래 롱 폴링해서 게임 종료될때까지 받아오기로 했었나? 그거 좀 구린거 같은데...
