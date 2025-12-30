@@ -1289,7 +1289,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &641290679
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1793,6 +1793,7 @@ MonoBehaviour:
   openingVideo: {fileID: 642554086}
   gameTitle: {fileID: 806355787}
   whiteEffect: {fileID: 972562414}
+  gameStartButton: {fileID: 641290678}
 --- !u!4 &898025037
 Transform:
   m_ObjectHideFlags: 0
