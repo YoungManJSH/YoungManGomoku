@@ -246,5 +246,5 @@ public class CheckData : MonoBehaviour
     /// 다운로드 에셋 실패시 나오는 버튼에 할당되어, 씬을 다시 시작하도록 한다.
     /// </summary>
     public void ReloadNowScene()
-        => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene);
 }
