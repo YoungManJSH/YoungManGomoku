@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,8 @@ public class CheckData : MonoBehaviour
     /// 씬에서 참조해 지정할 변수들
     /// UI로 정보 전달이 목적인 변수들이다.
     /// </summary>
-    [Header("UI")] [SerializeField] private GameObject waitMessage;
+    [Header("UI")] 
+    [SerializeField] private GameObject waitMessage;
     [SerializeField] private GameObject downMessage;
     [SerializeField] private GameObject downloadErrorMessage;
     [SerializeField] private Slider downSlider;
@@ -24,14 +26,20 @@ public class CheckData : MonoBehaviour
     /// <summary>
     /// 다운 받을 파일 그룹
     /// </summary>
-    [Header("Label")] [SerializeField] private AssetLabelReference defaultLabel;
+    [Header("Label")] 
+    [SerializeField] private AssetLabelReference defaultLabel;
 
     /// <summary>
     /// 다운 받을 용량의 총 사이즈 및 패치 받을 파일 관리할 딕셔너리
     /// </summary>
     private long patchSize;
 
-    private Dictionary<string, long> patchMap = new Dictionary<string, long>();
+    private Dictionary<string, long> patchMap;
+
+    private void Awake()
+    {
+        patchMap = new Dictionary<string, long>();
+    }
 
     private void Start()
     {
@@ -99,26 +107,26 @@ public class CheckData : MonoBehaviour
     /// <returns></returns>
     private string GetFileSize(long byteCnt)
     {
-        string size = "0 Bytes";
+        string patchSize = "0 Bytes";
 
         if (byteCnt >= 1073741824.0)
         {
-            size = string.Format("{0:##.##}", byteCnt / 1073741824.0) + " GB";
+            patchSize = string.Format("{0:##.##}", byteCnt / 1073741824.0) + " GB";
         }
         else if (byteCnt >= 1048576.0)
         {
-            size = string.Format("{0:##.##}", byteCnt / 1048576.0) + " MB";
+            patchSize = string.Format("{0:##.##}", byteCnt / 1048576.0) + " MB";
         }
         else if (byteCnt >= 1024.0)
         {
-            size = string.Format("{0:##.##}", byteCnt / 1024.0) + " KB";
+            patchSize = string.Format("{0:##.##}", byteCnt / 1024.0) + " KB";
         }
         else if (0 < byteCnt && byteCnt <= 1024.0)
         {
-            size = $"{byteCnt} Bytes";
+            patchSize = $"{byteCnt} Bytes";
         }
 
-        return size;
+        return patchSize;
     }
 
     /// <summary>
@@ -186,23 +194,23 @@ public class CheckData : MonoBehaviour
 
     IEnumerator CheckDownLoad()
     {
-        var total = 0f;
+        var totalDownloadedSize = 0f;
         downValueText.text = "0 %";
 
         while (true)
         {
-            total += patchMap.Sum(tmp => tmp.Value);
+            totalDownloadedSize += patchMap.Sum(tmp => tmp.Value);
 
-            downSlider.value = total / patchSize;
+            downSlider.value = totalDownloadedSize / patchSize;
             downValueText.text = (int)(downSlider.value * 100) + " %";
 
-            if (total == patchSize)
+            if (Mathf.Approximately(totalDownloadedSize, patchSize))
             {
                 yield return new WaitForSeconds(1f);
                 CacheData();
             }
 
-            total = 0f;
+            totalDownloadedSize = 0f;
             yield return new WaitForEndOfFrame();
         }
     }

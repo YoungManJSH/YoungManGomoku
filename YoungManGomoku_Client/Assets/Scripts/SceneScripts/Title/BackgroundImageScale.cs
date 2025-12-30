@@ -8,7 +8,7 @@ public class BackgroundImageScale : MonoBehaviour
         FitByHeight();
     }
 
-    // 배경 이미지에 보통 사용
+    // 배경 이미지에 사용
     // 가로 세로 스트레치 상태일 때, 가로 비율이 원본 이미지에 비해 좁다면 비율을 맞춰줌
     private void FitByHeight()
     {
