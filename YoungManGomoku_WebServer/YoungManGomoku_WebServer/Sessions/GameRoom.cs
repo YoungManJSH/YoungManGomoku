@@ -300,6 +300,19 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 게임 룸 타이머 갱신
                 _gameProgressMilliseconds = nowTime;
                 
+                if(_timers.TryGetValue(opponent, out UserTimer opponentTimer) == false)
+                {
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 상대 타이머가 없습니다!!! 크아악");
+                }
+
+                // 데드라인값 : 착수 응답을 보내는 놈의 시간패 시각
+                long oppoWaitingTime = opponentTimer.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds; // 기다렸다가 시간패 하도록 예약을 해뒀다가
+                // 지금 가장 큰 문제는 타이머를 착수를 받을 때마다 갱신하는데
+                // 시간패라는건 이새기가 착수를 안 했어. 이때 시간패임.
+
+                // oppoWaitingTime만큼 기다렸다가 양 유저에게 시간패/시간승 처리를 하는 함수 실행 (이거랑은 비동기)
+                // 그걸 착수 정보가 들어올 때마다 시간패 예약은 취소
+
                 // 내 상대가 대기 중이면 내가 착수한 정보를 대기중인 상대 이벤트로 등록해서 응답시켜줌
                 if (_waitingMap.TryGetValue(opponent, out InGameWaitingPlayer waitingPlayer))
                 {

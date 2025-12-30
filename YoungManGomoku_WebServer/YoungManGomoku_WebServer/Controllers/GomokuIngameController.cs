@@ -125,7 +125,17 @@ namespace YoungManGomoku_WebServer.Controllers
             return Ok(room.SynchronizeTimer(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
 
-        // 원래 롱 폴링해서 게임 종료될때까지 받아오기로 했었나? 그거 좀 구린거 같은데...
+
+        /*
+         * TODO
+            (내가 상대 착수 정보를 받음)(내 턴 시작)
+
+            RequestMyTurn (내 턴이 진행하는 동안 응답 대기용 요청) : 롱폴링임
+            요걸 언제 응답하냐?
+            1. 중간에 게임 끝났을 때 (시간승, 시간패, 기권승 , 기권패)
+            2. 상대방 착수 정보 보내줄 때 이거 응답도 그냥 None으로 같이 보내줘야 함. 
+            3. (Opponent DTO 조립할 때 얘도 None으로 이벤트 던져야 함
+         */
         [HttpPost("ResponseGameEnd")]
         public IActionResult ResponseGameEnd([FromBody] string idToken)
         {
