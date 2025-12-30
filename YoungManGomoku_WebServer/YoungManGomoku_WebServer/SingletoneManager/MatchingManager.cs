@@ -150,12 +150,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         // 항상 lock 안에서 실행되어야 하는 함수
         private void TryMatch()
         {
-            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try - Begin()");
+            _logger.LogTrace($"[{DateTime.Now}] Matching Try - Begin()");
             // 아직 레이팅이고 뭐고 신경쓰기 싫다는 코드
             // 동시다발적 매칭 신청이 있으면 3 이상일 수 있다
             while (_matchingQueue.Count >= 2)
             {
-                _logger.LogTrace($"[{DateTime.UtcNow}] Matching Game : {_matchingQueue.Count}");
+                _logger.LogTrace($"[{DateTime.Now}] Matching Game : {_matchingQueue.Count}");
                 WaitingPlayer p1 = _matchingQueue.Dequeue();
 
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
@@ -228,7 +228,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 );
             }
 
-            _logger.LogTrace($"[{DateTime.UtcNow}] Matching Try - End()");
+            _logger.LogTrace($"[{DateTime.Now}] Matching Try - End()");
         }
     }
 }

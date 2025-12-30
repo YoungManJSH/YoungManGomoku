@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Threading;
@@ -71,6 +72,8 @@ namespace YoungManGomoku_WebServer.Sessions
         private readonly Dictionary<ulong, UserTimer> _timers;
 
 		private readonly Dictionary<ulong, GameEndCode> _userEndCodes;
+
+
 
 		private long _gameProgressMilliseconds;
 
@@ -196,9 +199,14 @@ namespace YoungManGomoku_WebServer.Sessions
 			// 대기자 명단에서 대기 플레이어를 제거 및 종료 이벤트를 조립해서 던져줌
 			foreach (InGameWaitingPlayer waitingPlayer in _waitingMap.Values)
             {
-                SC_OpponentPlaceStoneDTO endEvent = new SC_OpponentPlaceStoneDTO(
-                             _timers[(GetColor(waitingPlayer.UID) == StoneColorType.Black) ? BlackPlayerUID : WhitePlayerUID].SyncData,
-                             (byte)255, (byte)255, _userEndCodes[waitingPlayer.UID]);
+                if (_timers.TryGetValue(waitingPlayer.UID, out UserTimer waitingUserTimer) == false)
+                {
+                    // 큰일나는 예외 상황, Assert 상황이지만 있을 수 있음
+                    _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]의 타이머를 찾을 수 없었습니다!");
+                }
+                
+                _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 종료 이벤트 넘김");
+                SC_OpponentPlaceStoneDTO endEvent = new SC_OpponentPlaceStoneDTO(waitingUserTimer.SyncData, 255, 255, _userEndCodes[waitingPlayer.UID]);
                 waitingPlayer.TaskCompSrc.TrySetResult(endEvent);
                 waitingPlayer.CancellationTokenRegist.Dispose();
             }
@@ -208,7 +216,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public bool TryGameStart()
         {
-            if (_gameProgressMilliseconds == 0)
+            if (_gameProgressMilliseconds == 0) // 백돌 첫 턴 시작 시간 갱신용
 			    _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 			_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] {RoomID} 방에서 게임 시작 작업 수행\n시작 ms : {_gameProgressMilliseconds}");
 			return true;
@@ -219,6 +227,7 @@ namespace YoungManGomoku_WebServer.Sessions
 		{
 			lock (_lock)
 			{
+                _lastRequestTime[uid] = DateTime.UtcNow;
 				// 클라 변조 유효성 체크, 클라에서 제대로 요청이 들어왔다면 여기 들어올 일이 없음
 				{
 					// 게임 끝났어
@@ -261,18 +270,17 @@ namespace YoungManGomoku_WebServer.Sessions
                 }
 
 
-				// 타이머 체크
+				// 타이머 진행
 				long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 // [흑].프로그레스(흑턴 시작 시간, 흑턴 착수 정보가 온 시간)
                 if (_timers.TryGetValue(uid, out UserTimer myTimer))
                 {
                     myTimer.ProgressExcludingTol(_gameProgressMilliseconds, nowTime);
-                    myTimer.DeadLine(_gameProgressMilliseconds);
-
+                    //myTimer.DeadLine(_gameProgressMilliseconds);
                 }
-				_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {uid} 타이머 체크 : {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
+                
 
-				_gameProgressMilliseconds = nowTime;
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [{uid}] 타이머 체크 : {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
 
 				// _board의 NowTurn 값이 홀수면 백, 짝수면 흑 차례라는 뜻
 				bool isBlack = (_board.NowTurn & 1) == 0;
@@ -287,14 +295,15 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 착수 성공 및 게임 결과 처리
                 _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_board.NowTurn}턴 종료");
 
-                _lastRequestTime[uid] = DateTime.UtcNow;
-
-                ulong opponent = GetOpponent(uid);				
-
-				// 내 상대가 대기 중이면 내가 착수한 정보를 대기중인 상대 이벤트로 등록해서 응답시켜줌
-				if (_waitingMap.TryGetValue(opponent, out InGameWaitingPlayer waitingPlayer))
+                ulong opponent = GetOpponent(uid);
+                
+                // 게임 룸 타이머 갱신
+                _gameProgressMilliseconds = nowTime;
+                
+                // 내 상대가 대기 중이면 내가 착수한 정보를 대기중인 상대 이벤트로 등록해서 응답시켜줌
+                if (_waitingMap.TryGetValue(opponent, out InGameWaitingPlayer waitingPlayer))
                 {
-                    if (_userEndCodes.TryGetValue(uid, out GameEndCode endReason))
+                    if (_userEndCodes.TryGetValue(opponent, out GameEndCode endReason))
                     {
                         waitingPlayer.TaskCompSrc.TrySetResult(
                         new SC_OpponentPlaceStoneDTO(myTimer.SyncData, (byte)x, (byte)y, endReason));
@@ -306,7 +315,8 @@ namespace YoungManGomoku_WebServer.Sessions
 				// 이번 착수로 네가 지금 즉시 승리했음
 				if (uid == _winnerUID)
 				{
-					FinishGame();
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {uid} 차례에서 승리");
+                    FinishGame();
 					return PlaceStoneResultType.NowWin;
 				}
 
@@ -327,16 +337,32 @@ namespace YoungManGomoku_WebServer.Sessions
 			}
 		}
 
-        public TimerSyncData SynchronizeTimer(ulong uid, int turn)
+        public TimerSyncData SynchronizeTimer(ulong uid, int turn, TimerSyncData clientTimerData)
         {
-            if (_board.NowTurn == turn)
-            {
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] CS DTO : {uid}, {turn} Sync Req - now Turn : {_board.NowTurn}");
-            }
+            _gameRoomManager.Logger.LogDebug($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
-            if(_timers.TryGetValue(uid, out var timer) == false)
+            int whileCount = 0;
+            while (_board.NowTurn != turn)
+            {
+                //gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] while Loop... 서버 턴과 클라 턴이 같을 때 까지");
+                // TODO : 클라가 보낸 턴이 현재 나의 턴보다 뒤의 턴이면, board 작업이 아직 마무리되지 않았다는 의미
+                // 보드 작업이 마무리되고 Turn이 서로 맞춰지면 그때 아래 응답을 보내줘야 함.
+
+                //1초 기다려
+                ++whileCount;
+            }
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 서버 턴과 클라 턴 동기화를 위한 while 반복 횟수 : {whileCount}");
+
+            if (_timers.TryGetValue(uid, out UserTimer timer) == false)
             {
                 return new TimerSyncData(0f, 0);
+            }
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {uid} 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
+
+            if (timer >= clientTimerData)
+            {
+                // 클라 거 승인
+                timer.SynchroTimer(clientTimerData);
             }
 
             return timer.SyncData;

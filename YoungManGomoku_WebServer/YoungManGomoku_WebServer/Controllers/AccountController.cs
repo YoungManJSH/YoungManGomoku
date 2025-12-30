@@ -99,7 +99,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 return Conflict("Can't Find ID Token. Login Failed!");
             }
 
-            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success");
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success\nLogin : {_serverManager.UserInfo(findAccount.UID)}");
 
             // DB Column Update
             findAccount.LastLoginDate = DateTime.Now;

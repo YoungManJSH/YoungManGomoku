@@ -161,14 +161,16 @@ namespace YoungManGomoku_Protocol.ClientToServer
     {
 	    public string IDToken { get; set; }
 	    public int NowTurn { get; set; }
+        public TimerSyncData MyTimer { get; set; }
 
         /// <summary> JSON 역직렬화를 위한 기본 생성자</summary>
         public CS_RequestTimerSynchroDTO() { }
 
-	    public CS_RequestTimerSynchroDTO(string idToken, int nowTurn)
+	    public CS_RequestTimerSynchroDTO(string idToken, int nowTurn, TimerSyncData myTimer)
 	    {
 		    IDToken = idToken;
 		    NowTurn = nowTurn;
+            MyTimer = myTimer;
 	    }
     }
     
