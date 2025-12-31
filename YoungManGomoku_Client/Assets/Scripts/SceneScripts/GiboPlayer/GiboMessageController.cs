@@ -6,13 +6,16 @@ public class GiboMessageController : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private GiboBoardManager boardManager;
+    [SerializeField] private string readFailedText;
+    [SerializeField] private string deleteFailedText;
+    [SerializeField] private string simulationFailedText;
 
     private Action _requestedAction;
     
     private void Awake()
     {
-        boardManager.OnReadFailed += () =>
-            MessageBoxOpen("선택한 파일이 없거나\n올바른 양식이 아닙니다.\n로비로 이동할까요?", LoadLobbyScene);
+        boardManager.OnReadFailed += OnReadFailed;
+        boardManager.OnSimulationCompleted += OnSimulationCompleted;
         
         gameObject.SetActive(false);
     }
@@ -33,6 +36,24 @@ public class GiboMessageController : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void LoadLobbyScene()
+    private void OnReadFailed()
+        => MessageBoxOpen(readFailedText, TryDeleteFile);
+
+    private void OnSimulationCompleted(bool isSuccess)
+    {
+        if (isSuccess is false)
+            MessageBoxOpen(simulationFailedText);
+    }
+
+    private void TryDeleteFile()
+    {
+        if (GiboFileManager.TryDeleteGiboFile())
+            BackToList();
+        else
+            MessageBoxOpen(deleteFailedText, BackToList);
+    }
+
+    // TODO: 로비씬 이동하면서 리스트 열려 있도록 수정
+    private void BackToList()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
 }

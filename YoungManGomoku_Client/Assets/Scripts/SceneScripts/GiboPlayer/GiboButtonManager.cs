@@ -38,9 +38,12 @@ public class GiboButtonManager : MonoBehaviour
     [SerializeField] private Button autoPlayHalfSpeed;
     [SerializeField] private Button autoPlayOriginSpeed;
     [SerializeField] private Button autoPlayDoubleSpeed;
+    [SerializeField] private Button markForbiddenButton;
     [SerializeField] private Button exitButton;
     [SerializeField] private TMP_FontAsset glowFont;
     [SerializeField] private AutoPlayDelay autoPlayDelay;
+    [SerializeField, Tooltip("10턴 이동, 마지막 턴 이동 시 적용할 딜레이")]
+    private float moveJumpingDelay;
     [SerializeField] private string exitMessage;
     
     private (Button button, TextMeshProUGUI buttonText) _zeroTurnSet;
@@ -51,6 +54,7 @@ public class GiboButtonManager : MonoBehaviour
     private (Button button, TextMeshProUGUI buttonText) _lastTurnSet;
     private (Button button, TextMeshProUGUI buttonText) _autoPlaySet;
     private (Button button, TextMeshProUGUI buttonText)[] _speedSets;
+    private (Button button, TextMeshProUGUI buttonText) _markForbiddenSets;
 
     private CancellationTokenSource _autoPlayCancelToken;
     private TMP_FontAsset _defaultFont;
@@ -66,6 +70,7 @@ public class GiboButtonManager : MonoBehaviour
         _next10Set = (next10Button, next10Button.GetComponentInChildren<TextMeshProUGUI>());
         _lastTurnSet = (lastTurnButton, lastTurnButton.GetComponentInChildren<TextMeshProUGUI>());
         _autoPlaySet = (autoPlayButton, autoPlayButton.GetComponentInChildren<TextMeshProUGUI>());
+        _markForbiddenSets = (markForbiddenButton, markForbiddenButton.GetComponentInChildren<TextMeshProUGUI>());
         _speedSets = new (Button button, TextMeshProUGUI buttonText)[(int)AutoPlaySpeed.Max];
         
         _speedSets[(int)AutoPlaySpeed.Half] = (autoPlayHalfSpeed, autoPlayHalfSpeed.GetComponentInChildren<TextMeshProUGUI>());
@@ -79,6 +84,7 @@ public class GiboButtonManager : MonoBehaviour
         ButtonInactivate(_next10Set);
         ButtonInactivate(_lastTurnSet);
         ButtonInactivate(_autoPlaySet);
+        ButtonInactivate(_markForbiddenSets);
         foreach (var speedButton in _speedSets)
         {
             ButtonInactivate(speedButton);
@@ -90,6 +96,7 @@ public class GiboButtonManager : MonoBehaviour
 
         boardManager.OnReadSucceed += OnReadSucceed;
         boardManager.OnTurnChanged += OnTurnChanged;
+        boardManager.OnSimulationCompleted += OnSimulationCompleted;
     }
 
     private void OnDestroy() => CancelAutoPlay();
@@ -133,30 +140,48 @@ public class GiboButtonManager : MonoBehaviour
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
-        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, moveCount: 10, isNext: true).Cancel();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay,
+            moveCount: 10, isNext: true).Cancel();
     }
 
     public void MovePrev10Turn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
-        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, moveCount: 10, isNext: false).Cancel();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay,
+            moveCount: 10, isNext: false).Cancel();
     }
 
     public void MoveLastTurn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
-        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, isNext: true).Cancel();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay, isNext: true).Cancel();
     }
 
     public void MoveZeroTurn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
-        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, delay: 0.05f, isNext: false).Cancel();
+        boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay, isNext: false).Cancel();
     }
 
+    public void ToggleMarkForbidden()
+    {
+        boardManager.ToggleMarkForbidden();
+
+        if (boardManager.IsMarkForbidden)
+        {
+            _markForbiddenSets.buttonText.color = Color.white;
+            _markForbiddenSets.buttonText.text = "흑돌 금수 표시 중";
+        }
+        else
+        {
+            _markForbiddenSets.buttonText.color = Color.aquamarine;
+            _markForbiddenSets.buttonText.text = "흑돌 금수 표시하기";
+        }
+    }
+    
     public void SetSpeedHalf() => SetSpeed(AutoPlaySpeed.Half);
     public void SetSpeedOrigin() => SetSpeed(AutoPlaySpeed.Origin);
     public void SetSpeedDouble() => SetSpeed(AutoPlaySpeed.Double);
@@ -167,6 +192,7 @@ public class GiboButtonManager : MonoBehaviour
         messageBox.MessageBoxOpen(exitMessage, LoadLobbyScene);
     }
 
+    // Todo: 기보 리스트 열려있도록 수정
     private void LoadLobbyScene()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
     
@@ -209,6 +235,15 @@ public class GiboButtonManager : MonoBehaviour
         ButtonActivate(_next10Set);
         ButtonActivate(_lastTurnSet);
         ButtonActivate(_autoPlaySet);
+    }
+
+    private void OnSimulationCompleted(bool isSuccess)
+    {
+        if (isSuccess)
+        {
+            ButtonActivate(_markForbiddenSets);
+            ToggleMarkForbidden();
+        }
     }
     
     private void OnTurnChanged(int turn)

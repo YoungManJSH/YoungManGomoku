@@ -495,7 +495,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -60, y: -30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &250244883
 MonoBehaviour:
@@ -547,9 +547,9 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 10
+  m_fontSizeMax: 40
   m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -631,7 +631,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -60, y: -30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &316080750
 MonoBehaviour:
@@ -683,9 +683,9 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 10
+  m_fontSizeMax: 40
   m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -2051,13 +2051,15 @@ MonoBehaviour:
   autoPlayHalfSpeed: {fileID: 1633151607}
   autoPlayOriginSpeed: {fileID: 141152949}
   autoPlayDoubleSpeed: {fileID: 1456378511}
+  markForbiddenButton: {fileID: 1925784703}
   exitButton: {fileID: 373960746}
   glowFont: {fileID: 11400000, guid: 5d063449ea5cb71449e32a0000755838, type: 2}
   autoPlayDelay:
     halfSpeedDelay: 1
     originSpeedDelay: 0.5
     doubleSpeedDelay: 0.25
-  exitMessage: "\uC7AC\uC0DD\uC744 \uC885\uB8CC\uD558\uACE0 \uB098\uAC08\uAE4C\uC694?"
+  moveJumpingDelay: 0.05
+  exitMessage: "\uC885\uB8CC\uD558\uACE0 \uB9AC\uC2A4\uD2B8\uB85C \uC774\uB3D9\uD560\uAE4C\uC694?"
 --- !u!1 &570569474
 GameObject:
   m_ObjectHideFlags: 0
@@ -3349,7 +3351,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -60, y: -30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &801854001
 MonoBehaviour:
@@ -3401,9 +3403,9 @@ MonoBehaviour:
   m_fontSize: 40
   m_fontSizeBase: 40
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 10
+  m_fontSizeMax: 40
   m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -3543,6 +3545,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GiboMessageController
   messageText: {fileID: 1687899451}
   boardManager: {fileID: 1549436739}
+  readFailedText: "\uC62C\uBC14\uB978 \uC591\uC2DD\uC774 \uC544\uB2D9\uB2C8\uB2E4.\\n\uC774
+    \uD30C\uC77C\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?"
+  deleteFailedText: "\uC0AD\uC81C\uB97C \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4.\\n\uB9AC\uC2A4\uD2B8\uB85C
+    \uC774\uB3D9\uD560\uAE4C\uC694?"
+  simulationFailedText: "\uC62C\uBC14\uB974\uC9C0 \uC54A\uC740 \uCC29\uC218 \uC815\uBCF4\uAC00\\n\uD0D0\uC9C0\uB418\uC5C8\uC2B5\uB2C8\uB2E4.\\n\uAE08\uC218
+    \uD45C\uC2DC \uAE30\uB2A5\uC740 \uC81C\uD55C\uB429\uB2C8\uB2E4."
 --- !u!1 &917484613
 GameObject:
   m_ObjectHideFlags: 0
@@ -5970,10 +5978,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 833283640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 30}
-  m_SizeDelta: {x: 700, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 50}
+  m_SizeDelta: {x: -100, y: -140}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1687899451
 MonoBehaviour:
@@ -5997,8 +6005,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD14C\uC2A4\uD2B8 \uBA54\uC2DC\uC9C0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
-  m_sharedMaterial: {fileID: -8723602951677602281, guid: 3245d4f3036fb5e40825ddf683a8151f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8c1191508d710f648b29727b01e96796, type: 2}
+  m_sharedMaterial: {fileID: 283971294621689602, guid: 8c1191508d710f648b29727b01e96796, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -6025,16 +6033,16 @@ MonoBehaviour:
   m_fontSize: 45
   m_fontSizeBase: 45
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 10
+  m_fontSizeMax: 45
   m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 10
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -6364,7 +6372,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925784704}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 553377827}
+        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
+        m_MethodName: ToggleMarkForbidden
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1925784704
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -73,7 +73,8 @@ public static class GiboFileManager
         #region 첫 번째 줄 처리 : dateTime, 총 수순, 결과
         string[] firstLine = giboFileLines[0].Split(',');
 
-        if (firstLine.Length != 3 || int.TryParse(firstLine[1], out int lastTurn) is false)
+        if (firstLine.Length != 3 || int.TryParse(firstLine[1], out int lastTurn) is false ||
+            lastTurn <= 0 || Board.BoardSize * Board.BoardSize < lastTurn)
         {
             Debug.LogError("기보 파일의 메타 정보 양식이 잘못되었음!");
             goto ReadFailed;
@@ -232,6 +233,28 @@ public static class GiboFileManager
         {
             Debug.LogError($"기보 저장 실패! : {e}");
             FailedSaveRecord?.Invoke("Gibo File Save Failed");
+        }
+    }
+
+    /// <summary> 현재 세팅되어 있는 GiboFileName 파일을 삭제 </summary>
+    /// <returns>
+    /// <para> true: 해당 파일이 이미 존재하지 않거나 삭제에 성공함 </para>
+    /// <para> false: 삭제 시도 중 예외 발생 </para>
+    /// </returns> 
+    public static bool TryDeleteGiboFile()
+    {
+        try
+        {
+            if (IsGiboFileExists) File.Delete(GiboFilePath);
+            else Debug.LogWarning("이미 파일이 존재하지 않음!");
+            
+            // 예외 발생 이외에는 모두 true 반환
+            return true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"삭제 과정에서 예외 발생: {e}");
+            return false;
         }
     }
 }
