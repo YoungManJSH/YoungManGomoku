@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +8,33 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class GiboBoardManager : MonoBehaviour
 {
+    private readonly struct ForbiddenRecords
+    {
+        private readonly HashSet<(int row, int col)>[] _records;
+        private readonly HashSet<(int row, int col)> _empty;
+
+        public ForbiddenRecords(int lastTurn)
+        {
+            // 6수까지는 금수가 존재할 수 없음
+            if (lastTurn > 6)
+            {
+                _records = new HashSet<(int row, int col)>[lastTurn - 6];
+
+                for (int i = 0; i < _records.Length; ++i)
+                {
+                    _records[i] = new HashSet<(int row, int col)>();
+                }
+            }
+            else _records = null;
+
+            _empty = new HashSet<(int row, int col)>();
+        }
+
+        /// <summary>7수 미만은 금수가 존재할 수 없으므로 항상 비어있는 것이 반환됨</summary>
+        public HashSet<(int row, int col)> this[int turn]
+            => turn < 7 ? _empty : _records[turn - 7];
+    }
+    
     [SerializeField] private BoardImageData boardData;
     [SerializeField] private RectTransform blackPrefab;
     [SerializeField] private RectTransform whitePrefab;
@@ -48,7 +74,7 @@ public class GiboBoardManager : MonoBehaviour
     private string _result;
     private RectTransform[] _recordStones;
     private RectTransform[,] _forbiddenMarks;
-    private HashSet<(int row, int col)>[] _forbiddenRecords;
+    private ForbiddenRecords _forbiddenRecords;
     private int _nowTurn;
 
     private void Awake()
@@ -63,6 +89,7 @@ public class GiboBoardManager : MonoBehaviour
 
     private void Start() => StartAsync().Cancel();
 
+    /// <summary> Start 단계에서 비동기로 진행할 초기화 로직 </summary>
     private async Awaitable StartAsync()
     {
         if (GiboFileManager.TryReadGiboFile(out _moveStoneData, out _giboDateTime,
@@ -86,6 +113,7 @@ public class GiboBoardManager : MonoBehaviour
         OnSimulationCompleted?.Invoke(await TrySimulation());
     }
 
+    /// <summary> 기보 재생을 위한 gameObject 생성 </summary>
     private async Awaitable PlaceStones()
     {
         /* EndOfFrameAsync: Canvas Scaler 반영이 끝나고 렌더링 직전에 연산 */
@@ -123,35 +151,40 @@ public class GiboBoardManager : MonoBehaviour
     }
 
     /// <summary>백그라운드에서 비동기로 금수 위치 시뮬레이션</summary>
-    /// <returns>bool: Simulation이 정상적으로 완료되었는지를 의미</returns>
+    /// <returns>
+    /// <para>true: 시뮬레이션 완료, 흑돌 금수 정보를 구하였음</para>
+    /// <para>false: 비정상적인 착수 정보가 확인되어 시뮬레이션을 중단하였음</para>
+    /// </returns>
     private async Awaitable<bool> TrySimulation()
     {
         // 순수 C# 로직이고 약간 무거운 연산들이므로 백그라운드로...
         await Awaitable.BackgroundThreadAsync();
         
-        _forbiddenRecords = new HashSet<(int row, int col)>[LastTurn];
         Board simulator = new Board();
         bool isEnded = false;
         void Ended() => isEnded = true;
+        
         simulator.OnBlackGomoku += Ended;
         simulator.OnWhiteGomoku += Ended;
         simulator.OnBlackUnmovable += Ended;
         // OverMaxTurn 이벤트는 파일 읽기 단계에서 걸러지므로 체크 불필요
 
+        _forbiddenRecords = new ForbiddenRecords(LastTurn);
+        
         #region 착수 데이터를 토대로 시뮬레이션하며 계산
         
-        int turn;
-
-        for (turn = 0; turn < LastTurn; ++turn)
+        int turn = 0;
+        
+        while(turn < LastTurn)
         {
-            if (isEnded || simulator.TryMoveStone(_moveStoneData[turn].row, _moveStoneData[turn].col) is false)
-                break;
+            if (simulator.TryMoveStone(_moveStoneData[turn].row, _moveStoneData[turn].col))
+            { ++turn; }
+            else break; // 유효하지 않은 착수 정보가 있는 상황
 
-            _forbiddenRecords[turn] = new HashSet<(int row, int col)>();
-
-            // 여기서 simulator.NowTurn == turn + 1임에 유의
+            if (isEnded && turn < LastTurn) break; // 종료 이벤트가 발생했는데 LastTurn이 아닌 경우
+            
             if (simulator.NowTurn < 7) continue; // 7수 이후부터 금수가 생길 수 있음
-
+            
             for (int row = 0; row < Board.BoardSize; ++row)
             {
                 for (int col = 0; col < Board.BoardSize; ++col)
@@ -178,11 +211,19 @@ public class GiboBoardManager : MonoBehaviour
         /* 중간에 시뮬레이션이 break 된 경우 turn < LastTurn
          * 오목, 금수패 이벤트 이후에도 착수 데이터 있음 or 유효하지 않은 착수 데이터 */
         if (turn < LastTurn)
-            Debug.LogWarning($"{(isEnded ? "종료 이벤트 이후의 착수 데이터 존재" : "유효하지 않은 착수 데이터 존재")}");
+            Debug.LogWarning($"{(isEnded ? "종료 이벤트 이후 착수 정보 존재" : "유효하지 않은 착수 정보 존재")}");
         
         return turn == LastTurn;
     }
 
+    /// <summary> 시간 간격을 두고 연속적으로 턴 이동 </summary>
+    /// <param name="token"> 캔슬 토큰 </param>
+    /// <param name="delay"> 시간 간격 (초 단위) </param>
+    /// <param name="moveCount"> 이동할 개수, 입력하지 않으면 끝까지 </param>
+    /// <param name="isNext">
+    /// <para>true[기본]: 다음 수순으로 이동(재생)</para>
+    /// <para>false: 이전 수순으로 이동(되감기)</para>
+    /// </param>
     public async Awaitable MoveTurnWithDelay(CancellationToken token, float delay,
         int moveCount = Board.BoardSize * Board.BoardSize, bool isNext = true)
     {
@@ -197,9 +238,7 @@ public class GiboBoardManager : MonoBehaviour
                 moveTurn.Invoke();
             }
         }
-        catch (OperationCanceledException)
-        {
-        }
+        catch (OperationCanceledException) {}
     }
 
     public void MoveNextTurn()
@@ -214,18 +253,20 @@ public class GiboBoardManager : MonoBehaviour
 
         if (IsMarkForbidden is false) return;
         
-        // 현재 턴 금수 마크 활성화
+        /* 아래 로직에서 HashSet 차집합 구하기는 GC 자폭임
+         * 최적화 하려면 TrySimulation 단계에서 차집합까지 미리 구해 캐싱해 두어야 함.
+         * 하지만 아래 로직을 그대로 돌려도 퍼포먼스에 하자가 없으므로 일단 그대로 둠. */
+        
+        /* 순서 주의! 활성화 → 비활성화 순서라면 겹치는 좌표가 비활성화 됨 */
+        // 이전 턴 금수 마크를 비활성화
         foreach (var coord in _forbiddenRecords[_nowTurn - 1])
         {
-            _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(true);
-        }
-        
-        // 이전 턴 금수 마크를 비활성화
-        if (_nowTurn == 1) return;
-        
-        foreach (var coord in _forbiddenRecords[_nowTurn - 2])
-        {
             _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(false);
+        }
+        // 현재 턴 금수 마크 활성화
+        foreach (var coord in _forbiddenRecords[_nowTurn])
+        {
+            _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(true);
         }
     }
 
@@ -241,16 +282,14 @@ public class GiboBoardManager : MonoBehaviour
         
         if (IsMarkForbidden is false) return;
         
+        /* 순서 주의! 활성화 → 비활성화 순서라면 겹치는 좌표가 비활성화 됨 */
         // 되감기 전 금수 마크를 비활성화
-        foreach (var coord in _forbiddenRecords[_nowTurn])
+        foreach (var coord in _forbiddenRecords[_nowTurn + 1])
         {
             _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(false);
         }
-
         // 현재 턴 금수 마크 활성화
-        if (_nowTurn == 0) return;
-        
-        foreach (var coord in _forbiddenRecords[_nowTurn - 1])
+        foreach (var coord in _forbiddenRecords[_nowTurn])
         {
             _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(true);
         }

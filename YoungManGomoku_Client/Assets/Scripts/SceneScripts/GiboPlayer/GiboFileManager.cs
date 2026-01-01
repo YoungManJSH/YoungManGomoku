@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 public static class GiboFileManager
 {
@@ -56,92 +57,114 @@ public static class GiboFileManager
     public static bool TryReadGiboFile(out (int row, int col)[] moveStoneData, out DateTime dateTime,
         out BasicPlayerData blackData, out BasicPlayerData whiteData, out string result)
     {
-        if (IsGiboFileExists is false)
+        try
         {
-            Debug.LogError("지정된 기보 파일이 존재하지 않음!");
-            goto ReadFailed;
-        }
-        
-        string[] giboFileLines = File.ReadAllLines(GiboFilePath);
-
-        if (giboFileLines.Length <= META_LINE_COUNT)
-        {
-            Debug.LogError("기보 파일의 길이가 충분하지 않음!");
-            goto ReadFailed;
-        }
-        
-        #region 첫 번째 줄 처리 : dateTime, 총 수순, 결과
-        string[] firstLine = giboFileLines[0].Split(',');
-
-        if (firstLine.Length != 3 || int.TryParse(firstLine[1], out int lastTurn) is false ||
-            lastTurn <= 0 || Board.BoardSize * Board.BoardSize < lastTurn)
-        {
-            Debug.LogError("기보 파일의 메타 정보 양식이 잘못되었음!");
-            goto ReadFailed;
-        }
-        
-        if (giboFileLines.Length != lastTurn + META_LINE_COUNT)
-        {
-            Debug.LogError("기보 파일의 길이가 메타 정보와 일치하지 않음!");
-            goto ReadFailed;
-        }
-        
-        if (DateTime.TryParse(firstLine[0], out dateTime) is false)
-        {
-            Debug.LogError("기보 파일의 dateTime 양식이 올바르지 않음");
-            goto ReadFailed;
-        }
-
-        result = firstLine[2];
-        #endregion
-        
-        # region 흑백 유저 정보 처리 : 2~3번째 줄
-        string[] blackInforms = giboFileLines[1].Split(',');
-        string[] whiteInforms = giboFileLines[2].Split(',');
-
-        if (blackInforms.Length != 5 || whiteInforms.Length != 5)
-        {
-            Debug.LogError("유저 정보 양식이 올바르지 않음!");
-            goto ReadFailed;
-        }
-
-        if (uint.TryParse(blackInforms[1], out uint blackWin) && uint.TryParse(blackInforms[2], out uint blackDraw) &&
-            uint.TryParse(blackInforms[3], out uint blackLose) && float.TryParse(blackInforms[4], out float blackRating) &&
-            uint.TryParse(whiteInforms[1], out uint whiteWin)  && uint.TryParse(whiteInforms[2], out uint whiteDraw) &&
-            uint.TryParse(whiteInforms[3], out uint whiteLose) && float.TryParse(whiteInforms[4], out float whiteRating))
-        {
-            blackData = new BasicPlayerData(blackInforms[0], blackWin, blackDraw, blackLose, blackRating);
-            whiteData = new BasicPlayerData(whiteInforms[0], whiteWin, whiteDraw, whiteLose, whiteRating);
-        }
-        else
-        {
-            Debug.LogError("유저 정보 양식이 올바르지 않음!");
-            goto ReadFailed;
-        }
-        #endregion
-        
-        #region 착수 정보 처리 : 4번째 줄 이후
-        moveStoneData = new (int row, int col)[lastTurn];
-
-        for (int turn = 0; turn < lastTurn; ++turn)
-        {
-            string[] turnTexts = giboFileLines[turn + META_LINE_COUNT].Split(',');
-            if (turnTexts.Length == 2 &&
-                int.TryParse(turnTexts[0], out int row) && int.TryParse(turnTexts[1], out int col) &&
-                0 <= row && row <= Board.MaxCoord && 0 <= col && col <= Board.MaxCoord)
+            if (IsGiboFileExists is false)
             {
-                moveStoneData[turn] = (row, col);
+                Debug.LogError("지정된 기보 파일이 존재하지 않음!");
+                goto ReadFailed;
+            }
+
+            string[] giboFileLines = File.ReadAllLines(GiboFilePath);
+
+            if (giboFileLines.Length <= META_LINE_COUNT)
+            {
+                Debug.LogError("기보 파일의 길이가 충분하지 않음!");
+                goto ReadFailed;
+            }
+
+            #region 첫 번째 줄 처리 : dateTime, 총 수순, 결과
+
+            string[] firstLine = giboFileLines[0].Split(',');
+
+            if (firstLine.Length != 3 || int.TryParse(firstLine[1], out int lastTurn) is false ||
+                lastTurn <= 0 || Board.BoardSize * Board.BoardSize < lastTurn)
+            {
+                Debug.LogError("기보 파일의 메타 정보 양식이 잘못되었음!");
+                goto ReadFailed;
+            }
+
+            if (giboFileLines.Length != lastTurn + META_LINE_COUNT)
+            {
+                Debug.LogError("기보 파일의 길이가 메타 정보와 일치하지 않음!");
+                goto ReadFailed;
+            }
+
+            if (DateTime.TryParse(firstLine[0], out dateTime) is false)
+            {
+                Debug.LogError("기보 파일의 dateTime 양식이 올바르지 않음");
+                goto ReadFailed;
+            }
+
+            result = firstLine[2];
+
+            #endregion
+
+            # region 흑백 유저 정보 처리 : 2~3번째 줄
+
+            string[] blackInforms = giboFileLines[1].Split(',');
+            string[] whiteInforms = giboFileLines[2].Split(',');
+
+            if (blackInforms.Length != 6 || whiteInforms.Length != 6)
+            {
+                Debug.LogError("유저 정보 양식이 올바르지 않음!");
+                goto ReadFailed;
+            }
+
+            if (uint.TryParse(blackInforms[1], out uint blackWin) &&
+                uint.TryParse(blackInforms[2], out uint blackDraw) &&
+                uint.TryParse(blackInforms[3], out uint blackLose) &&
+                float.TryParse(blackInforms[4], out float blackRating) &&
+                uint.TryParse(whiteInforms[1], out uint whiteWin) &&
+                uint.TryParse(whiteInforms[2], out uint whiteDraw) &&
+                uint.TryParse(whiteInforms[3], out uint whiteLose) &&
+                float.TryParse(whiteInforms[4], out float whiteRating) &&
+                Enum.TryParse<ProfileImageType>(blackInforms[5], out var blackProfile) &&
+                Enum.IsDefined(typeof(ProfileImageType), blackProfile) &&
+                Enum.TryParse<ProfileImageType>(whiteInforms[5], out var whiteProfile) &&
+                Enum.IsDefined(typeof(ProfileImageType), whiteProfile))
+            {
+                blackData = new BasicPlayerData(blackInforms[0], blackWin, blackDraw, blackLose, blackRating,
+                    blackProfile);
+                whiteData = new BasicPlayerData(whiteInforms[0], whiteWin, whiteDraw, whiteLose, whiteRating,
+                    whiteProfile);
             }
             else
             {
-                Debug.LogError("좌표 양식이 잘못되었음!");
+                Debug.LogError("유저 정보 양식이 올바르지 않음!");
                 goto ReadFailed;
             }
+
+            #endregion
+
+            #region 착수 정보 처리 : 4번째 줄 이후
+
+            moveStoneData = new (int row, int col)[lastTurn];
+
+            for (int turn = 0; turn < lastTurn; ++turn)
+            {
+                string[] turnTexts = giboFileLines[turn + META_LINE_COUNT].Split(',');
+                if (turnTexts.Length == 2 &&
+                    int.TryParse(turnTexts[0], out int row) && int.TryParse(turnTexts[1], out int col) &&
+                    0 <= row && row <= Board.MaxCoord && 0 <= col && col <= Board.MaxCoord)
+                {
+                    moveStoneData[turn] = (row, col);
+                }
+                else
+                {
+                    Debug.LogError("좌표 양식이 잘못되었음!");
+                    goto ReadFailed;
+                }
+            }
+            #endregion
+
+            return true;
         }
-        #endregion
-        
-        return true;
-        
+        catch (Exception e)
+        {
+            Debug.LogError($"기보 파일 읽는 중 예외 발생: {e}");
+        }
+
         ReadFailed:
         moveStoneData = null;
         dateTime = default;
@@ -178,7 +201,7 @@ public static class GiboFileManager
                 string[] blackInforms = blackInformLine.Split(',');
                 string[] whiteInforms = whiteInformLine.Split(',');
 
-                if (titleInforms.Length != 3 || blackInforms.Length != 5 || whiteInforms.Length != 5 ||
+                if (titleInforms.Length != 3 || blackInforms.Length != 6 || whiteInforms.Length != 6 ||
                     DateTime.TryParse(titleInforms[0], out DateTime dateTime) is false)
                     continue;
 
@@ -221,8 +244,8 @@ public static class GiboFileManager
             using StreamWriter writer = new StreamWriter(GiboFilePath);
             
             writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss},{record.Count},{result}");
-            writer.WriteLine($"{blackData.name},{blackData.win},{blackData.draw},{blackData.lose},{blackData.rating}");
-            writer.WriteLine($"{whiteData.name},{whiteData.win},{whiteData.draw},{whiteData.lose},{whiteData.rating}");
+            writer.WriteLine($"{blackData.name},{blackData.win},{blackData.draw},{blackData.lose},{blackData.rating},{(int)blackData.imageNum}");
+            writer.WriteLine($"{whiteData.name},{whiteData.win},{whiteData.draw},{whiteData.lose},{whiteData.rating},{(int)whiteData.imageNum}");
 
             foreach ((int row, int col) in record)
             {

@@ -74,7 +74,7 @@ public class GameManager : MonoBehaviour
         _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
-        MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
+        MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
         
         SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
         if (matchResult.MatchingSuccess is false ||
@@ -89,7 +89,8 @@ public class GameManager : MonoBehaviour
         IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
+        OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount,
+            opponent.LoseCount, opponent.Rating, opponent.EquipProfile);
 
         SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
         PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);

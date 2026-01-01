@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 public class PlayerPanelController : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI byoyomiCount;
     [SerializeField] private Image stoneImage;
     [SerializeField] private Image clockIcon;
+    [SerializeField] private Image profile;
     [SerializeField] private TextMeshProUGUI nicknameText;
     [SerializeField] private TextMeshProUGUI recordText;
     [SerializeField] private StoneMover stoneMover;
@@ -24,6 +26,8 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private TMP_FontAsset glowFont;
     [SerializeField, Tooltip("플레이어가 백일 경우 교체할 돌 스프라이트")]
     private Sprite otherColorStone;
+    [SerializeField, Tooltip("적용할 프로필 이미지들")]
+    private ProfileImages profileImages;
     [SerializeField] private bool isPlayer;
 
     private const float TOLERANCE = 0.7f;
@@ -95,7 +99,7 @@ public class PlayerPanelController : MonoBehaviour
         byoyomiTimer.text = _initByoyomiSecondText;
         
         BasicPlayerData myUser = isPlayer ? gm.MyPlayer : gm.OppositePlayer;
-        InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating);
+        InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating, myUser.imageNum);
         
         EventManager em = EventManager.Instance;
         em.OnGameEnd += () =>
@@ -192,10 +196,11 @@ public class PlayerPanelController : MonoBehaviour
         }
     }
 
-    private void InputUserInform(string nickname, uint win, uint draw, uint lose, float rating)
+    private void InputUserInform(string nickname, uint win, uint draw, uint lose, float rating, ProfileImageType imageNum)
     {
         nicknameText.text = nickname;
         recordText.text = $"{win}승 {draw}무 {lose}패 ({rating:F1}pt)";
+        profile.sprite = profileImages[imageNum];
     }
     
     private void StartGlowEffect(Material fontMat, int loops)

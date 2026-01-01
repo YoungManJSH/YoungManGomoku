@@ -97,6 +97,8 @@ public class GiboButtonManager : MonoBehaviour
         boardManager.OnReadSucceed += OnReadSucceed;
         boardManager.OnTurnChanged += OnTurnChanged;
         boardManager.OnSimulationCompleted += OnSimulationCompleted;
+
+        _markForbiddenSets.buttonText.text = "시뮬레이션 중";
     }
 
     private void OnDestroy() => CancelAutoPlay();
@@ -243,6 +245,10 @@ public class GiboButtonManager : MonoBehaviour
         {
             ButtonActivate(_markForbiddenSets);
             ToggleMarkForbidden();
+        }
+        else
+        {
+            _markForbiddenSets.buttonText.text = "시뮬레이션 실패";
         }
     }
     
