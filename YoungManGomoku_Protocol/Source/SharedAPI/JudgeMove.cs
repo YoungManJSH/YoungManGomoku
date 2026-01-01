@@ -1,4 +1,5 @@
-﻿using YoungManGomoku_Protocol.TypeEnum.InGame;
+﻿using System.Collections.Generic;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 using LineDir = YoungManGomoku_Protocol.TypeEnum.InGame.LineDirection;
 public static class JudgeMove
@@ -99,6 +100,65 @@ public static class JudgeMove
         return false;
     }
 
+    /// <summary>
+    /// coord가 오목 위치라면 coord와 오목을 이루는 모든 좌표를 반환
+    /// </summary>
+    /// <param name="board"> 오목판 정보 개체 </param>
+    /// <param name="coord"> 탐색할 좌표 </param>
+    /// <param name="stoneColor"> 흑돌, 백돌 선택 </param>
+    /// <returns>
+    /// <para>stoneColor is Black: 오목을 이루는 모든 좌표(장목 제외)</para>
+    /// <para>stoneColor is White: 오목 또는 장목을 이루는 모든 좌표</para>
+    /// <para>stoneColor is Empty: null</para> 
+    /// </returns>
+    public static HashSet<(int row, int col)> OmokLineCoords(Board board,
+        (int row, int col) coord, StoneColorType stoneColor)
+    {
+        if (stoneColor == StoneColorType.Empty) return null;
+
+        HashSet<(int row, int col)> coordSet = new HashSet<(int row, int col)>();
+        
+        for (LineDir dir = 0; dir < LineDir.Max; ++dir)
+        {
+            (int row, int col) startCoord = coord;
+            (int row, int col) endCoord = coord;
+            
+            while (CoordinateMove(ref startCoord, dir, -1))
+            {
+                if (board[startCoord.row, startCoord.col] != stoneColor)
+                {
+                    CoordinateMove(ref startCoord, dir, +1);
+                    break;
+                }
+            }
+
+            while (CoordinateMove(ref endCoord, dir, +1))
+            {
+                if (board[endCoord.row, endCoord.col] != stoneColor)
+                {
+                    CoordinateMove(ref endCoord, dir, -1);
+                    break;
+                }
+            }
+
+            int interval = dir == LineDir.Vertical
+                ? endCoord.row - startCoord.row : endCoord.col - startCoord.col;
+
+            if (interval < 4 ||
+                (stoneColor == StoneColorType.Black && interval > 4))
+                continue;
+            
+            while (startCoord != endCoord)
+            {
+                coordSet.Add(startCoord);
+                CoordinateMove(ref startCoord, dir, +1);
+            }
+            coordSet.Add(endCoord);
+        }
+
+        return coordSet;
+    }
+    
     /// <summary>
     /// 흑돌의 [row,col] 위치 착수가 오목 혹은 장목인지 판정
     /// </summary>
