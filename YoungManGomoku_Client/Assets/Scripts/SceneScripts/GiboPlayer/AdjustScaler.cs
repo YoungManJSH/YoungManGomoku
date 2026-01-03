@@ -5,15 +5,16 @@ public class AdjustScaler : MonoBehaviour
 {
     [SerializeField] private RectTransform bottomPanel;
 
+    private const float BASE_RATIO = 1080f / 2200f;
+    private const float WIDE_RATIO = 1.5f;
+    
     private CanvasScaler _canvasScaler;
-    private float _baseRatio;
     private int _lastWidth;
     private int _lastHeight;
 
     private void Awake()
     {
         _canvasScaler = GetComponent<CanvasScaler>();
-        _baseRatio = _canvasScaler.referenceResolution.x / _canvasScaler.referenceResolution.y;
         AdjustScale();
     }
 
@@ -30,6 +31,6 @@ public class AdjustScaler : MonoBehaviour
         _lastWidth = Screen.width;
         _lastHeight = Screen.height;
 
-        _canvasScaler.matchWidthOrHeight = (float)_lastWidth / _lastHeight > _baseRatio ? 1f : 0f;
+        _canvasScaler.matchWidthOrHeight = (float)_lastWidth / _lastHeight > BASE_RATIO ? 1f : 0f;
     }
 }

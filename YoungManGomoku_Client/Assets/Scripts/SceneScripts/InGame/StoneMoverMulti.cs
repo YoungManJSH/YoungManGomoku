@@ -36,7 +36,7 @@ public class StoneMoverMulti : StoneMover
         if (NowPreview.activeSelf)
         {
             NowPreview.SetActive(false);
-            MoveStone(PrevCoord);
+            MoveStone(NowCoord);
         }
 #endif
     }
@@ -75,8 +75,8 @@ public class StoneMoverMulti : StoneMover
             else
             {
                 _placeStoneDto.MyTimer = _playerTimer.SyncData;
-                _placeStoneDto.Row = (byte)PrevCoord.row;
-                _placeStoneDto.Col = (byte)PrevCoord.col;
+                _placeStoneDto.Row = (byte)NowCoord.row;
+                _placeStoneDto.Col = (byte)NowCoord.col;
                 
                 var opponentMove =
                     await _networkManager.RequestPlaceStone(_placeStoneDto);

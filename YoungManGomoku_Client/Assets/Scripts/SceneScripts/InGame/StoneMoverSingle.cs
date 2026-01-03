@@ -25,12 +25,12 @@ public sealed class StoneMoverSingle : StoneMover
         if (_blackPreview.activeSelf)
         {
             _blackPreview.SetActive(false);
-            MoveStone(PrevCoord);
+            MoveStone(NowCoord);
         }
         else if (_whitePreview.activeSelf)
         {
             _whitePreview.SetActive(false);
-            MoveStone(PrevCoord);
+            MoveStone(NowCoord);
         }
 #endif
     }

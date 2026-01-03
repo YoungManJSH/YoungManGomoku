@@ -1256,7 +1256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoardDrawer
   boardData: {fileID: 11400000, guid: 18a2fd7eb0fa3424bb7e1faa52e4a232, type: 2}
-  boardPosRatio: 0.55
+  boardPosY: 0.55
   canvasScaler: {fileID: 1273775194}
 --- !u!82 &362371477
 AudioSource:
@@ -5713,7 +5713,7 @@ MonoBehaviour:
   resultPanel: {fileID: 1031425032}
   startCountDown: {fileID: 929990831}
   boardRenderer: {fileID: 362371473}
-  ingameBoardManager: {fileID: 362371475}
+  ingameBoardScaler: {fileID: 362371475}
   mainCamera: {fileID: 519420031}
 --- !u!1 &1348904662
 GameObject:
