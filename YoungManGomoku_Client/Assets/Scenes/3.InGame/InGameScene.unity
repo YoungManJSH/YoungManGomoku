@@ -1256,7 +1256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoardDrawer
   boardData: {fileID: 11400000, guid: 18a2fd7eb0fa3424bb7e1faa52e4a232, type: 2}
-  boardPosY: 0.55
+  uiPos: {fileID: 11400000, guid: bd361e3fe168521499363c1cc511ed16, type: 2}
 --- !u!82 &362371477
 AudioSource:
   m_ObjectHideFlags: 0
