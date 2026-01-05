@@ -7,12 +7,12 @@ namespace YoungManGomoku_WebServer.Data
 {
     public class ApplicationDBContext : DbContext
     {
-        internal DbSet<PlayerAccount> PlayerAccountTable { get; set; }       
-        internal DbSet<PlayerStatus> PlayerStatusTable { get; set; }
-        internal DbSet<PlayerBattleRecord> PlayerGomokuBattleRecordTable { get; set; }
-        internal DbSet<PlayerMoney> PlayerMoneyTable { get; set; }
-        internal DbSet<PlayerEquip> PlayerEquipItemStateTable { get; set; }
-        internal DbSet<PlayerInventoryItem> PlayerInventoryTable { get; set; }
+        public DbSet<PlayerAccount> PlayerAccountTable { get; set; }
+		public DbSet<PlayerStatus> PlayerStatusTable { get; set; }
+		public DbSet<PlayerBattleRecord> PlayerGomokuBattleRecordTable { get; set; }
+		public DbSet<PlayerMoney> PlayerMoneyTable { get; set; }
+		public DbSet<PlayerEquip> PlayerEquipItemStateTable { get; set; }
+		public DbSet<PlayerInventoryItem> PlayerInventoryTable { get; set; }
               
 		public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options)
             : base(options)
@@ -26,8 +26,12 @@ namespace YoungManGomoku_WebServer.Data
             modelBuilder.Entity<PlayerAccount>()
                 .HasKey(p => p.UID);
 
-            // AuthToken is Unique
-            modelBuilder.Entity<PlayerAccount>()
+			modelBuilder.Entity<PlayerAccount>()
+	            .Property(p => p.AuthToken)
+	            .HasMaxLength(190); // MySql Safe Line 191
+
+			// AuthToken is Unique
+			modelBuilder.Entity<PlayerAccount>()
                 .HasIndex(p => p.AuthToken)
                 .IsUnique();
 

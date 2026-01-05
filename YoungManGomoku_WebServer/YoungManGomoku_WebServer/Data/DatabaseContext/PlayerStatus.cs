@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {
-    internal class PlayerStatus
+	public class PlayerStatus
     {
         [Key]
         public ulong UID { get; set; }

@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using YoungManGomoku_WebServer.Data;
 
@@ -15,59 +14,58 @@ namespace YoungManGomoku_WebServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "3.1.19")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerAccount", b =>
                 {
-                    b.Property<decimal>("UID")
+                    b.Property<ulong>("UID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(20,0)");
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<int>("AuthLevel")
                         .HasColumnType("int");
 
                     b.Property<string>("AuthToken")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("varchar(190) CHARACTER SET utf8mb4")
+                        .HasMaxLength(190);
 
                     b.Property<DateTime>("LastLoginDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("LastPlayDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Nickname")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("RegisterDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("UID");
 
                     b.HasIndex("AuthToken")
-                        .IsUnique()
-                        .HasFilter("[AuthToken] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("PlayerAccountTable");
                 });
 
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerBattleRecord", b =>
                 {
-                    b.Property<decimal>("UID")
-                        .HasColumnType("decimal(20,0)");
+                    b.Property<ulong>("UID")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<long>("DisconnectCount")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("DisconnectCount")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("DrawCount")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("DrawCount")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("LoseCount")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("LoseCount")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("WinCount")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("WinCount")
+                        .HasColumnType("int unsigned");
 
                     b.HasKey("UID");
 
@@ -76,17 +74,17 @@ namespace YoungManGomoku_WebServer.Migrations
 
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerEquip", b =>
                 {
-                    b.Property<decimal>("UID")
-                        .HasColumnType("decimal(20,0)");
+                    b.Property<ulong>("UID")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<long>("EquipBoardSkin")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("EquipBoardSkin")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("EquipProfile")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("EquipProfile")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("EquipStoneSkin")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("EquipStoneSkin")
+                        .HasColumnType("int unsigned");
 
                     b.HasKey("UID");
 
@@ -97,20 +95,19 @@ namespace YoungManGomoku_WebServer.Migrations
                 {
                     b.Property<long>("InventoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("AcquiredDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<long>("ItemId")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("ItemId")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<long>("ItemType")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("ItemType")
+                        .HasColumnType("int unsigned");
 
-                    b.Property<decimal>("UID")
-                        .HasColumnType("decimal(20,0)");
+                    b.Property<ulong>("UID")
+                        .HasColumnType("bigint unsigned");
 
                     b.HasKey("InventoryId");
 
@@ -122,8 +119,8 @@ namespace YoungManGomoku_WebServer.Migrations
 
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerMoney", b =>
                 {
-                    b.Property<decimal>("UID")
-                        .HasColumnType("decimal(20,0)");
+                    b.Property<ulong>("UID")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<int>("CashMoney")
                         .HasColumnType("int");
@@ -138,8 +135,8 @@ namespace YoungManGomoku_WebServer.Migrations
 
             modelBuilder.Entity("YoungManGomoku_WebServer.Data.DatabaseContext.PlayerStatus", b =>
                 {
-                    b.Property<decimal>("UID")
-                        .HasColumnType("decimal(20,0)");
+                    b.Property<ulong>("UID")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<int>("ExperiencePoint")
                         .HasColumnType("int");
@@ -151,7 +148,7 @@ namespace YoungManGomoku_WebServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<float>("Rating")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.HasKey("UID");
 

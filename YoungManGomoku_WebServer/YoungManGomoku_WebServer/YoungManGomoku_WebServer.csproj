@@ -2,17 +2,39 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
 
+    <!-- ===============================
+       DB Provider 선택 (하나만 활성화)
+       #define을 프로젝트 전체에 적용, 다른 define들은 주석 처리
+       =============================== -->
+    <!-- <DefineConstants>$(DefineConstants);USE_AWS_MYSQL</DefineConstants> -->  <!--AWS EC2 Linux 배포용, 로컬 빌드 시 반드시 주석 처리 -->
+    <DefineConstants>$(DefineConstants);USE_URL_MSSQL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsIISExpress)' == 'true'">
+    <DefineConstants>$(DefineConstants);USE_URL_MSSQL_IIS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Migrations\20251228165343_YoungManGomokuDB.Designer.cs" />
+    <Compile Remove="Migrations\20260105202900_InitMySqlSchema.cs" />
+    <Compile Remove="Migrations\20260105202900_InitMySqlSchema.Designer.cs" />
+    <Compile Remove="Migrations\20260105203605_InitMySqlSchema.cs" />
+    <Compile Remove="Migrations\20260105203605_InitMySqlSchema.Designer.cs" />
+  </ItemGroup>
+  
+  
   <ItemGroup>
     <PackageReference Include="ConcurrentPriorityQueue" Version="3.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.5">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.19" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.19">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.5" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.19" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.19" />
+    
+    <!-- MySQL -->
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.2.7" />
+
   </ItemGroup>
 
   <ItemGroup>
