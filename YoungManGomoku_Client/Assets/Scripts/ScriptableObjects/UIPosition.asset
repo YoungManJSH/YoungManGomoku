@@ -33,18 +33,18 @@ MonoBehaviour:
     y: 0.1
     width: 0.7
     height: 0.25
-  topYLimit: 0.9
+  topMarginRatio: 0.07
   resultWideAnchors:
     serializedVersion: 2
-    x: 0.2
-    y: 0.375
-    width: 0.6
-    height: 0.25
+    x: 0.15
+    y: 0.4
+    width: 0.7
+    height: 0.4
   messageWideAnchors:
     serializedVersion: 2
-    x: 0.3
-    y: 0.2
-    width: 0.4
-    height: 0.15
+    x: 0.2
+    y: 0.15
+    width: 0.6
+    height: 0.25
   topHeight: 0.12
   bottomHeight: 0.35

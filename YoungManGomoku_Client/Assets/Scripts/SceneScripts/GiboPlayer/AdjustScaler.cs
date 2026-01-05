@@ -4,6 +4,10 @@ using UnityEngine.UI;
 public class AdjustScaler : MonoBehaviour
 {
     [SerializeField] private UIPosition uiPos;
+    [SerializeField] private RectTransform boardPanel;
+    [SerializeField] private RectTransform messagePanel;
+    [SerializeField] private RectTransform topPanel;
+    [SerializeField] private RectTransform bottomPanel;
     
     private CanvasScaler _canvasScaler;
     private int _lastWidth;
@@ -19,15 +23,17 @@ public class AdjustScaler : MonoBehaviour
     {
         if (Screen.width != _lastWidth || Screen.height != _lastHeight)
         {
+            _lastWidth = Screen.width;
+            _lastHeight = Screen.height;
             AdjustScale();
         }
     }
 
     private  void AdjustScale()
     {
-        _lastWidth = Screen.width;
-        _lastHeight = Screen.height;
-
-        _canvasScaler.matchWidthOrHeight = (float)_lastWidth / _lastHeight > uiPos.TallRatio ? 1f : 0f;
+        float nowAspect = (float)Screen.width / Screen.height;
+        _canvasScaler.matchWidthOrHeight = nowAspect > uiPos.TallRatio ? 1f : 0f;
+        
+        uiPos.PanelMovingAndScaling(boardPanel, messagePanel, topPanel, bottomPanel, nowAspect);
     }
 }

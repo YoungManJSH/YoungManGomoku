@@ -61,7 +61,6 @@ public class IngameBoardScaler : MonoBehaviour
         float boardSize = _mainCamera.orthographicSize * 2f *
                          (nowAspect < uiPos.WideRatio ? Mathf.Min(nowAspect, uiPos.TallRatio) : 1f);
         
-        
         float scale = boardSize / _worldSize;
         transform.localScale = new Vector3(scale, scale, 1f);
         
