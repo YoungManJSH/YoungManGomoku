@@ -5695,8 +5695,10 @@ MonoBehaviour:
   forbiddenPrefab: {fileID: 9179119595325755313, guid: a363d5fc2f8b36e45acdb8e7cabffcc9, type: 3}
   recentMark: {fileID: 1779600546}
   waitingText: {fileID: 769331828}
+  messagePanel: {fileID: 833283640}
   stoneSound: {fileID: 8300000, guid: 055204ca47c517f439d5cea758a2ed73, type: 3}
   turnBackSound: {fileID: 8300000, guid: a59f2ace2467e2c498053f825255d207, type: 3}
+  scaler: {fileID: 1273775197}
 --- !u!82 &1549436740
 AudioSource:
   m_ObjectHideFlags: 0

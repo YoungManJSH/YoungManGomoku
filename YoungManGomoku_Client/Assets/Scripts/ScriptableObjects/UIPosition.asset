@@ -46,5 +46,5 @@ MonoBehaviour:
     y: 0.15
     width: 0.6
     height: 0.25
-  topHeight: 0.12
-  bottomHeight: 0.35
+  topHeight: 0.15
+  bottomHeight: 0.4

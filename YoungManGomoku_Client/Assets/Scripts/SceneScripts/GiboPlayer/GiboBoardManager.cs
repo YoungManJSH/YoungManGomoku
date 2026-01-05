@@ -41,8 +41,10 @@ public class GiboBoardManager : MonoBehaviour
     [SerializeField] private RectTransform forbiddenPrefab;
     [SerializeField] private RectTransform recentMark;
     [SerializeField] private TextMeshProUGUI waitingText;
+    [SerializeField] private RectTransform messagePanel;
     [SerializeField] private AudioClip stoneSound;
     [SerializeField] private AudioClip turnBackSound;
+    [SerializeField] private AdjustScaler scaler;
 
     public int LastTurn => _moveStoneData.Length;
     public DateTime GiboDateTime => _giboDateTime;
@@ -118,20 +120,22 @@ public class GiboBoardManager : MonoBehaviour
     {
         /* EndOfFrameAsync: Canvas Scaler 반영이 끝나고 렌더링 직전에 연산 */
         await Awaitable.EndOfFrameAsync();
-        
-        const float center = Board.MaxCoord / 2f; // 중앙 좌표값
-        float cellSize = boardData.CellSize * _boardRect.rect.width / boardData.TotalPixel;
 
+        float marginRatio = (float)boardData.MarginSize / boardData.TotalPixel;
+        float cellRatio = (float)boardData.CellSize / boardData.TotalPixel;
+        
         /* 현재 단계에서 분할 루프 방식은 사용하지 않음.
          * Why? 아래 반복문들은 모두 상수 시간 복잡도 [O(1)]이며,
          * 테스트 과정에서 순식간에 완료되는 것을 확인하였음. */
         
-        // Anchor, Pivot 모두 중앙일 때를 전제한 좌표 계산
+        // Pivot이 중앙일 때를 전제한 anchor 계산
         for (int i = 0; i < _moveStoneData.Length; ++i)
         {
             _recordStones[i] = Instantiate(i % 2 == 0 ? blackPrefab : whitePrefab, _boardRect);
-            _recordStones[i].anchoredPosition =
-                new Vector2(_moveStoneData[i].col - center, center - _moveStoneData[i].row) * cellSize;
+            _recordStones[i].anchorMin = _recordStones[i].anchorMax =
+                new Vector2(marginRatio + cellRatio * _moveStoneData[i].col,
+                    marginRatio + cellRatio * (Board.MaxCoord - _moveStoneData[i].row));
+            _recordStones[i].anchoredPosition = Vector2.zero;
             _recordStones[i].gameObject.SetActive(false);
         }
 
@@ -143,11 +147,19 @@ public class GiboBoardManager : MonoBehaviour
             for (int col = 0; col < Board.BoardSize; ++col)
             {
                 _forbiddenMarks[row, col] = Instantiate(forbiddenPrefab, _boardRect);
-                _forbiddenMarks[row, col].anchoredPosition =
-                    new Vector2(col - center, center - row) * cellSize;
+                _forbiddenMarks[row, col].anchorMin = _forbiddenMarks[row, col].anchorMax =
+                    new Vector2(marginRatio + cellRatio * col,
+                        marginRatio + cellRatio * (Board.MaxCoord - row));
+                _forbiddenMarks[row, col].anchoredPosition = Vector2.zero;
                 _forbiddenMarks[row, col].gameObject.SetActive(false);
             }
         }
+        // 메시지 박스를 마지막 자식으로 설정하여 돌 위에 그려지도록
+        messagePanel.SetAsLastSibling();
+        
+        if (scaler.IsWide) ChangeStoneScaleByAspect(true);
+        // stone 및 금수 마크 생성 완료 후 이벤트 등록
+        scaler.OnChangeAspect += ChangeStoneScaleByAspect;
     }
 
     /// <summary>백그라운드에서 비동기로 금수 위치 시뮬레이션</summary>
@@ -162,11 +174,13 @@ public class GiboBoardManager : MonoBehaviour
         
         Board simulator = new Board();
         bool isEnded = false;
+        bool isBlackGomoku = false;
         void Ended() => isEnded = true;
         
         simulator.OnBlackGomoku += Ended;
         simulator.OnWhiteGomoku += Ended;
         simulator.OnBlackUnmovable += Ended;
+        simulator.OnBlackGomoku += () => isBlackGomoku = true;
         // OverMaxTurn 이벤트는 파일 읽기 단계에서 걸러지므로 체크 불필요
 
         _forbiddenRecords = new ForbiddenRecords(LastTurn);
@@ -200,6 +214,44 @@ public class GiboBoardManager : MonoBehaviour
 
                     if (judgeType == JudgeType.Forbidden)
                         _forbiddenRecords[turn].Add((row, col));
+                }
+            }
+        }
+
+        // 흑돌 오목인 경우 인접 2자리 금수 목록에서 제외
+        if (isBlackGomoku && turn == LastTurn)
+        {
+            var gomokuInform = JudgeMove.OmokLineInforms(simulator,
+                _moveStoneData[LastTurn - 1], StoneColorType.Black);
+
+            foreach (var keyValue in gomokuInform)
+            {
+                (int row, int col) firstCoord = keyValue.Value[0];
+                (int row, int col) lastCoord = keyValue.Value[^1];
+                
+                switch (keyValue.Key)
+                {
+                    /* 유효하지 않은 좌표를 Remove 해도 안전함.
+                     * HashSet의 Remove는 요소가 없으면 그냥 넘어가기 때문 */
+                    case LineDirection.Horizontal:
+                        _forbiddenRecords[LastTurn].Remove((firstCoord.row, firstCoord.col - 1));
+                        _forbiddenRecords[LastTurn].Remove((lastCoord.row, lastCoord.col + 1));
+                        break;
+                    case LineDirection.Vertical:
+                        _forbiddenRecords[LastTurn].Remove((firstCoord.row - 1, firstCoord.col));
+                        _forbiddenRecords[LastTurn].Remove((lastCoord.row + 1, lastCoord.col));
+                        break;
+                    case LineDirection.DiagonalUp:
+                        _forbiddenRecords[LastTurn].Remove((firstCoord.row + 1, firstCoord.col - 1));
+                        _forbiddenRecords[LastTurn].Remove((lastCoord.row - 1, lastCoord.col + 1));
+                        break;
+                    case LineDirection.DiagonalDown:
+                        _forbiddenRecords[LastTurn].Remove((firstCoord.row - 1, firstCoord.col - 1));
+                        _forbiddenRecords[LastTurn].Remove((lastCoord.row + 1, lastCoord.col + 1));
+                        break;
+                    default:
+                        Debug.LogError("유효하지 않은 오목 정보!");
+                        break;
                 }
             }
         }
@@ -246,7 +298,8 @@ public class GiboBoardManager : MonoBehaviour
         if (_nowTurn >= LastTurn) return;
         
         _recordStones[_nowTurn].gameObject.SetActive(true);
-        recentMark.anchoredPosition = _recordStones[_nowTurn].anchoredPosition;
+        recentMark.anchorMin = recentMark.anchorMax = _recordStones[_nowTurn].anchorMin;
+        recentMark.anchoredPosition = Vector2.zero;
         _audioSource.PlayOneShot(stoneSound);
         ++_nowTurn;
         OnTurnChanged?.Invoke(_nowTurn);
@@ -276,7 +329,8 @@ public class GiboBoardManager : MonoBehaviour
         
         --_nowTurn;
         _recordStones[_nowTurn].gameObject.SetActive(false);
-        recentMark.anchoredPosition = _recordStones[_nowTurn].anchoredPosition;
+        recentMark.anchorMin = recentMark.anchorMax = _recordStones[_nowTurn].anchorMin;
+        recentMark.anchoredPosition = Vector2.zero;
         _audioSource.PlayOneShot(turnBackSound);
         OnTurnChanged?.Invoke(_nowTurn);
         
@@ -305,5 +359,22 @@ public class GiboBoardManager : MonoBehaviour
         {
             _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(IsMarkForbidden);
         }
+    }
+
+    private void ChangeStoneScaleByAspect(bool isWide)
+    {
+        float scaleFactor = isWide ? 1 / scaler.UIPos.TallRatio : scaler.UIPos.TallRatio;
+        
+        foreach (var stone in _recordStones)
+        {
+            stone.localScale *= scaleFactor;
+        }
+
+        foreach (var mark in _forbiddenMarks)
+        {
+            mark.localScale *= scaleFactor;
+        }
+        
+        recentMark.localScale *= scaleFactor;
     }
 }

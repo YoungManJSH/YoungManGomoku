@@ -2,6 +2,7 @@
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 using LineDir = YoungManGomoku_Protocol.TypeEnum.InGame.LineDirection;
+
 public static class JudgeMove
 {
     /// <summary> 3의 종류: Solid, Ic(Indirect Closed), Broken(틈 3) </summary>
@@ -101,22 +102,25 @@ public static class JudgeMove
     }
 
     /// <summary>
-    /// coord가 오목 위치라면 coord와 오목을 이루는 모든 좌표를 반환
+    /// coord가 오목 위치라면 coord와 오목을 이루는 좌표 정보를 반환
     /// </summary>
     /// <param name="board"> 오목판 정보 개체 </param>
     /// <param name="coord"> 탐색할 좌표 </param>
     /// <param name="stoneColor"> 흑돌, 백돌 선택 </param>
     /// <returns>
-    /// <para>stoneColor is Black: 오목을 이루는 모든 좌표(장목 제외)</para>
-    /// <para>stoneColor is White: 오목 또는 장목을 이루는 모든 좌표</para>
-    /// <para>stoneColor is Empty: null</para> 
+    /// <para>Dictionary Key: 오목이 만들어지는 방향</para>
+    /// <para>Dictionary Value: key 방향으로 오목을 이루는 모든 좌표들</para>
+    /// <para>stoneColor is Black: 렌주룰 규칙에 따라 장목은 제외됨</para>
+    /// <para>stoneColor is White: 렌주룰 규칙에 따라 장목도 해당됨</para>
+    /// <para>stoneColor is Empty: null 반환</para>
+    /// <para>coord가 오목 위치가 아니라면 빈 Dictionary가 반환됨</para>
     /// </returns>
-    public static HashSet<(int row, int col)> OmokLineCoords(Board board,
+    public static Dictionary<LineDir, List<(int row, int col)>> OmokLineInforms(Board board,
         (int row, int col) coord, StoneColorType stoneColor)
     {
         if (stoneColor == StoneColorType.Empty) return null;
 
-        HashSet<(int row, int col)> coordSet = new HashSet<(int row, int col)>();
+        var omokDict = new Dictionary<LineDir, List<(int row, int col)>>();
         
         for (LineDir dir = 0; dir < LineDir.Max; ++dir)
         {
@@ -148,15 +152,17 @@ public static class JudgeMove
                 (stoneColor == StoneColorType.Black && interval > 4))
                 continue;
             
+            omokDict.Add(dir, new List<(int row, int col)>());
+            
             while (startCoord != endCoord)
             {
-                coordSet.Add(startCoord);
+                omokDict[dir].Add(startCoord);
                 CoordinateMove(ref startCoord, dir, +1);
             }
-            coordSet.Add(endCoord);
+            omokDict[dir].Add(endCoord);
         }
 
-        return coordSet;
+        return omokDict;
     }
     
     /// <summary>
