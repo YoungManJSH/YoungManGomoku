@@ -208,12 +208,15 @@ public abstract class StoneMover : MonoBehaviour
         if (Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical"))
         {
             int hor = (int)Input.GetAxisRaw("Horizontal");
-            int ver = (int)Input.GetAxisRaw("Vertical");   
+            int ver = (int)Input.GetAxisRaw("Vertical");
+
+            int row = NowCoord.row;
+            int col = NowCoord.col;
             
             for (int i = 0; i < Board.BoardSize; ++i)
             {
-                int row = NowCoord.row - ver;
-                int col = NowCoord.col + hor;
+                row -= ver;
+                col += hor;
 
                 if (row < 0) row = Board.MaxCoord;
                 else if (Board.MaxCoord < row) row = 0;
@@ -357,7 +360,7 @@ public abstract class StoneMover : MonoBehaviour
         await Awaitable.NextFrameAsync();
         
         var informs = JudgeMove.OmokLineInforms(_boardInform,
-            NowCoord, _isBlackTurn ? StoneColorType.Black : StoneColorType.White);
+            NowCoord, _isBlackTurn ? StoneColorType.White : StoneColorType.Black);
         
         foreach (var coordList in informs.Values)
         {
