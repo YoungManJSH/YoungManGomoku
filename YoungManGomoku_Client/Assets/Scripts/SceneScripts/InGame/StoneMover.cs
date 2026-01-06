@@ -154,8 +154,8 @@ public abstract class StoneMover : MonoBehaviour
                 _boardInform[coord.row, coord.col] == StoneColorType.Empty &&
                 _forbiddenCoords.Contains(coord) is false)
             {
-                    NowCoord = coord;
-                    UpdatePreview(coord);
+                NowCoord = coord;
+                UpdatePreview(coord);
             }
         }
 
@@ -180,7 +180,7 @@ public abstract class StoneMover : MonoBehaviour
             return;
         }
 
-        if (Input.GetButtonDown("MoveStone"))
+        if (Input.GetButtonDown("Submit"))
         {
             if (NowPreview.activeSelf)
             {

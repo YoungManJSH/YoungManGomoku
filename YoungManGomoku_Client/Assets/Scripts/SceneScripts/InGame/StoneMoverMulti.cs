@@ -68,9 +68,7 @@ public class StoneMoverMulti : StoneMover
                     await _networkManager.RequestMyTurn(_gameManager.IdToken);
 
                 if (endCode != GameEndCode.None)
-                {
                     _eventManager.HandleGameEndCode(endCode);
-                }
             }
             else
             {
@@ -93,6 +91,9 @@ public class StoneMoverMulti : StoneMover
                 if (opponentMove.GameEndCode != GameEndCode.None)
                 {
                     _eventManager.HandleGameEndCode(opponentMove.GameEndCode);
+
+                    // 게임 종료 상황에서 내가 둔 좌표를 돌려받을 경우 착수 처리 생략
+                    if ((opponentMove.Row, opponentMove.Col) == NowCoord) return;
                 }
 
                 MoveStone((opponentMove.Row, opponentMove.Col));
