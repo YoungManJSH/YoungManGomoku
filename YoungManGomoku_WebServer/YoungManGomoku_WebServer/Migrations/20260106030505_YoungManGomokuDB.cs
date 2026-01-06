@@ -1,10 +1,9 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace YoungManGomoku_WebServer.Migrations
 {
-    public partial class InitMySqlSchema : Migration
+    public partial class YoungManGomokuDB : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -12,8 +11,7 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "PlayerAccountTable",
                 columns: table => new
                 {
-                    UID = table.Column<ulong>(nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    UID = table.Column<decimal>(nullable: false),
                     AuthToken = table.Column<string>(maxLength: 190, nullable: true),
                     AuthLevel = table.Column<int>(nullable: false),
                     Nickname = table.Column<string>(nullable: true),
@@ -30,10 +28,10 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "PlayerEquipItemStateTable",
                 columns: table => new
                 {
-                    UID = table.Column<ulong>(nullable: false),
-                    EquipProfile = table.Column<uint>(nullable: false),
-                    EquipStoneSkin = table.Column<uint>(nullable: false),
-                    EquipBoardSkin = table.Column<uint>(nullable: false)
+                    UID = table.Column<decimal>(nullable: false),
+                    EquipProfile = table.Column<long>(nullable: false),
+                    EquipStoneSkin = table.Column<long>(nullable: false),
+                    EquipBoardSkin = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,11 +48,11 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "PlayerGomokuBattleRecordTable",
                 columns: table => new
                 {
-                    UID = table.Column<ulong>(nullable: false),
-                    WinCount = table.Column<uint>(nullable: false),
-                    DrawCount = table.Column<uint>(nullable: false),
-                    LoseCount = table.Column<uint>(nullable: false),
-                    DisconnectCount = table.Column<uint>(nullable: false)
+                    UID = table.Column<decimal>(nullable: false),
+                    WinCount = table.Column<long>(nullable: false),
+                    DrawCount = table.Column<long>(nullable: false),
+                    LoseCount = table.Column<long>(nullable: false),
+                    DisconnectCount = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -72,10 +70,10 @@ namespace YoungManGomoku_WebServer.Migrations
                 columns: table => new
                 {
                     InventoryId = table.Column<long>(nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UID = table.Column<ulong>(nullable: false),
-                    ItemType = table.Column<uint>(nullable: false),
-                    ItemId = table.Column<uint>(nullable: false),
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UID = table.Column<decimal>(nullable: false),
+                    ItemType = table.Column<long>(nullable: false),
+                    ItemId = table.Column<long>(nullable: false),
                     AcquiredDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -93,7 +91,7 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "PlayerMoneyTable",
                 columns: table => new
                 {
-                    UID = table.Column<ulong>(nullable: false),
+                    UID = table.Column<decimal>(nullable: false),
                     GameMoney = table.Column<int>(nullable: false),
                     CashMoney = table.Column<int>(nullable: false)
                 },
@@ -112,7 +110,7 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "PlayerStatusTable",
                 columns: table => new
                 {
-                    UID = table.Column<ulong>(nullable: false),
+                    UID = table.Column<decimal>(nullable: false),
                     Rating = table.Column<float>(nullable: false),
                     Level = table.Column<int>(nullable: false),
                     ExperiencePoint = table.Column<int>(nullable: false),
@@ -133,7 +131,8 @@ namespace YoungManGomoku_WebServer.Migrations
                 name: "IX_PlayerAccountTable_AuthToken",
                 table: "PlayerAccountTable",
                 column: "AuthToken",
-                unique: true);
+                unique: true,
+                filter: "[AuthToken] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PlayerInventoryTable_UID_ItemType_ItemId",

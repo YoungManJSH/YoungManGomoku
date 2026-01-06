@@ -15,7 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pomelo.EntityFrameworkCore.MySql.Storage;
+
 using System;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.SingletoneManager;
@@ -40,10 +40,13 @@ namespace YoungManGomoku_WebServer
 		public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            
-            var connectionString = Environment.IsDevelopment() ?
-                Configuration.GetConnectionString("LocalMySql")
+
+#if !USE_URL_MSSQL
+            string connectionString = Environment.IsDevelopment()
+                ? Configuration.GetConnectionString("LocalMySql")
                 : Configuration.GetConnectionString("AwsMySqlEC2");
+#endif
+            
             services.AddDbContext<ApplicationDBContext>(options =>
 #if USE_AWS_MYSQL
 	            options.UseMySql(
@@ -54,8 +57,8 @@ namespace YoungManGomoku_WebServer
 					}
 				)
 #elif USE_URL_MSSQL
-				options.UseSqlServer(Configuration.GetConnectionString("LocalMsSql"))			
-#else		
+				options.UseSqlServer(Configuration.GetConnectionString("LocalMSSQL"))			
+#else
 				options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
 #endif
             );
