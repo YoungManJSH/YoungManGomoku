@@ -1,13 +1,25 @@
+using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "SoundData", menuName = "Scriptable Objects/SoundData")]
-public class SoundData : ScriptableObject
+[Serializable]
+public class SoundData
 {
-    public bool isMuteMasterVolume = false; 
-    public bool isMuteBGMVolume = false;
-    public bool isMuteSFXVolume = false;
+    public bool isMuteMasterVolume; 
+    public bool isMuteBGMVolume;
+    public bool isMuteSFXVolume;
 
     public float MasterVolume;
     public float BGMVolume;
     public float SFXVolume;
+
+    public SoundData()
+    {
+        isMuteMasterVolume = false;
+        isMuteBGMVolume = false;
+        isMuteSFXVolume = false;
+        
+        MasterVolume = 0.0f;
+        BGMVolume = 0.0f;
+        SFXVolume = 0.0f;
+    }
 }
