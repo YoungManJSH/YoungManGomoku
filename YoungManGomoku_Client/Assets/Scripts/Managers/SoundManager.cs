@@ -1,3 +1,5 @@
+using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
@@ -11,6 +13,11 @@ public enum VolumeType
 
 public class SoundManager : MonoBehaviour
 {
+    private const string SAVE_PATH_SETTING = "Setting.json";
+    
+    private const string MASTER_VOLUME = "MasterVolume";
+    private const string BGM_VOLUME = "BGMVolume";
+    private const string SFX_VOLUME = "SFXVolume";
     public static SoundManager Instance { get; private set; }
 
     [SerializeField] private AudioMixer audioMixer;
@@ -18,7 +25,9 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private Sprite soundIcon;
     [SerializeField] private Sprite muteIcon;
 
-    [SerializeField] private SoundData soundData;
+    private string settingSavePath;
+    
+    private SoundData soundData;
 
     private Image _masterVolumeImage;
     private Image _bgmVolumeImage;
@@ -26,7 +35,10 @@ public class SoundManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null) Destroy(Instance.gameObject);
+        if (Instance != null)
+        {
+            Destroy(Instance.gameObject);
+        }
            
         Instance = this;
     }
@@ -35,6 +47,14 @@ public class SoundManager : MonoBehaviour
 
     private void Start()
     {
+        settingSavePath = Path.Combine(Application.persistentDataPath, SAVE_PATH_SETTING);
+        _ = LoadSettingValueFromSaveFile();
+    }
+
+    private async Task LoadSettingValueFromSaveFile()
+    {
+        soundData = await LoadGameSoundDataAsync(); 
+        
         if (soundData.MasterVolume == 0)
         {
             soundData.MasterVolume = 0.5f;
@@ -42,9 +62,40 @@ public class SoundManager : MonoBehaviour
             soundData.SFXVolume = 0.5f;
         }
         
-        audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
-        audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
-        audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
+        audioMixer.SetFloat(MASTER_VOLUME, soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
+        audioMixer.SetFloat(BGM_VOLUME, soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
+        audioMixer.SetFloat(SFX_VOLUME, soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
+        
+        await SaveGameSoundDataAsync();
+    }
+    
+    private async Task<SoundData> LoadGameSoundDataAsync()
+    {
+        if (!File.Exists(settingSavePath))
+        {
+            var newSoundData = new SoundData();
+            return newSoundData;
+        }
+
+        string json = await Task.Run(() => File.ReadAllText(settingSavePath));
+        return JsonUtility.FromJson<SoundData>(json);
+    }
+    
+    private async Task SaveGameSoundDataAsync()
+    {
+        string json = JsonUtility.ToJson(soundData, true);
+        await Task.Run(() => File.WriteAllText(settingSavePath, json));
+    }
+    
+    /// <summary>
+    /// 버튼에 바인드할 세이브 함수
+    ///
+    /// 버튼에 async Task 반환형을 바로 바인드할 수 없으므로, 중간에 void 매서드를 경유하도록 한다.
+    /// 로비에서 환경설정 창 닫을 때마다 세이브 발생
+    /// </summary>
+    public async void OnSaveByButtonClicked()
+    {
+        await SaveGameSoundDataAsync();
     }
 
     // 저장된 데이터를 기반으로 환경설정의 세팅을 UI에 반영함
@@ -77,22 +128,22 @@ public class SoundManager : MonoBehaviour
         switch (type)
         {
             case VolumeType.Master: 
-                ChangeVolumeState(ref soundData.isMuteMasterVolume, _masterVolumeImage); 
-                audioMixer.SetFloat("MasterVolume", soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
+                ChangeVolumeStateToUI(ref soundData.isMuteMasterVolume, _masterVolumeImage); 
+                audioMixer.SetFloat(MASTER_VOLUME, soundData.isMuteMasterVolume ? -80f : Mathf.Log10(soundData.MasterVolume) * 20f);
                 break;
             case VolumeType.BGM: 
-                ChangeVolumeState(ref soundData.isMuteBGMVolume, _bgmVolumeImage); 
-                audioMixer.SetFloat("BGMVolume", soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
+                ChangeVolumeStateToUI(ref soundData.isMuteBGMVolume, _bgmVolumeImage); 
+                audioMixer.SetFloat(BGM_VOLUME, soundData.isMuteBGMVolume ? -80f : Mathf.Log10(soundData.BGMVolume) * 20f);
                 break;
             case VolumeType.SFX: 
-                ChangeVolumeState(ref soundData.isMuteSFXVolume, _sfxVolumeImage); 
-                audioMixer.SetFloat("SFXVolume", soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
+                ChangeVolumeStateToUI(ref soundData.isMuteSFXVolume, _sfxVolumeImage); 
+                audioMixer.SetFloat(SFX_VOLUME, soundData.isMuteSFXVolume ? -80f : Mathf.Log10(soundData.SFXVolume) * 20f);
                 break;
         }
     }
 
     // UI 이미지 적용
-    private void ChangeVolumeState(ref bool muteFlag, Image targetImage)
+    private void ChangeVolumeStateToUI(ref bool muteFlag, Image targetImage)
     {
         muteFlag = !muteFlag;
         targetImage.sprite = muteFlag ? muteIcon : soundIcon;
@@ -106,7 +157,7 @@ public class SoundManager : MonoBehaviour
 
         if (soundData.isMuteMasterVolume == false)
         {
-            audioMixer.SetFloat("MasterVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+            audioMixer.SetFloat(MASTER_VOLUME, value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
         }
     }
 
@@ -116,7 +167,7 @@ public class SoundManager : MonoBehaviour
         
         if (soundData.isMuteBGMVolume == false)
         {
-            audioMixer.SetFloat("BGMVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+            audioMixer.SetFloat(BGM_VOLUME, value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
         }
     }
 
@@ -126,7 +177,7 @@ public class SoundManager : MonoBehaviour
 
         if (soundData.isMuteSFXVolume == false)
         {
-            audioMixer.SetFloat("SFXVolume", value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
+            audioMixer.SetFloat(SFX_VOLUME, value <= 0.0001f ? -80f : Mathf.Log10(value) * 20f);
         }
     }
 }
