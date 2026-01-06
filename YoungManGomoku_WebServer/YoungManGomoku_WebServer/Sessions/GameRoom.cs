@@ -131,8 +131,8 @@ namespace YoungManGomoku_WebServer.Sessions
             _timers = new Dictionary<ulong, UserTimer>()
             {
                 // default : 180f, 3, 30f
-                [blackPlayerUID] = new UserTimer(initMainTime: 18.0f, initByoyomiCount: 3, byoyomiSeconds: 3.0f),
-                [whitePlayerUID] = new UserTimer(initMainTime: 18.0f, initByoyomiCount: 3, byoyomiSeconds: 3.0f)
+                [blackPlayerUID] = new UserTimer(initMainTime: 180f, initByoyomiCount: 3, byoyomiSeconds: 30f),
+                [whitePlayerUID] = new UserTimer(initMainTime: 180f, initByoyomiCount: 3, byoyomiSeconds: 30f)
             };
 
             blackTimeOutTimer = new Timer(OnBlackTimeOut, null, Timeout.Infinite, Timeout.Infinite);
@@ -395,10 +395,12 @@ namespace YoungManGomoku_WebServer.Sessions
                     // oppoWaitingTime만큼 기다렸다가 양 유저에게 시간패/시간승 처리를 하는 함수 실행 (PlaceStone()과는 비동기)
                     // 착수 정보가 들어올 때마다 시간패 예약은 취소
 
+                    // 현재 흑돌 차례면 백돌의 타이머를 키는게 맞다. 
+                    // 하지만 _board.TryMoveStone가 호출되어 Turn 값이 1 올라서 이미 내 턴은 끝나고 상대 턴 넘어간 취급
                     if (IsNowTurnBlack)
-                        whiteTimeOutTimer.Change(oppoWaitingTime, -1L);
-                    else
                         blackTimeOutTimer.Change(oppoWaitingTime, -1L);
+                    else
+                        whiteTimeOutTimer.Change(oppoWaitingTime, -1L);
                 }
 
                 // 내 상대가 대기 중이면 내가 착수한 정보를 대기중인 상대 이벤트로 등록해서 응답시켜줌
@@ -451,7 +453,7 @@ namespace YoungManGomoku_WebServer.Sessions
         // 보드 턴이 업데이트 되었다면 타이머 싱크로나이즈로 전달
         private void OnBoardTurnUpdated()
         {
-            lock (_synchronizeTimerTurnWaiters)
+            lock (_placeStoneLock)
             {
                 if (_synchronizeTimerTurnWaiters.TryGetValue(_board.NowTurn, out TaskCompletionSource<bool> tcs))
                 {
@@ -461,14 +463,21 @@ namespace YoungManGomoku_WebServer.Sessions
             }
         }
 
-        public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+        public TimerSyncData SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
         {
             _gameRoomManager.Logger.LogDebug($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
-            // 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
-            await WaitForSynchronizeTimerTurnAsync(turn);
+            // 개 등신 코드인데 일단은 이렇게라도 동작시켜
+            int loopCount = 0;
+            while (turn != _board.NowTurn)
+            {
+                ++loopCount;
+            }
 
-            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 서버 턴과 클라 턴 동기화 완료 : Turn {turn}");
+            // 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
+            //await WaitForSynchronizeTimerTurnAsync(turn);
+
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 서버 턴과 클라 턴 동기화 완료 : Turn {turn} / busy Waiting 루프 횟수 : {loopCount}");
 
             // 뭣이 타이머가 없다고?
             if (_timers.TryGetValue(UID, out UserTimer timer) == false) return new TimerSyncData(0f, 0);
