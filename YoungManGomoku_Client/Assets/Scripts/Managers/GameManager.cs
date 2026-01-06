@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
     public string IdToken { get; private set; }
 
     private UserTimer _nowPlayerTimer;
-    private CS_RequestTimerSynchroDTO _timerSynchroDto; 
+    private CS_RequestTimerSynchroDTO _timerSynchroDTO; 
     private EventManager _eventManager;
     private NetworkManager _networkManager;
     private AudioSource _audioSource;
@@ -57,6 +57,7 @@ public class GameManager : MonoBehaviour
         _eventManager.OnServerReplyFailed += PlayDrawSound;
         _networkManager.OnRequestFailed += _ => PlayDrawSound();
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
+        _eventManager.OnTakeBack += OnTakeBack;
         
         /*
         #region 테스트용 임시 초기화
@@ -71,7 +72,7 @@ public class GameManager : MonoBehaviour
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
-        _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0, default);
+        _timerSynchroDTO = new CS_RequestTimerSynchroDTO(IdToken, 0, default);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
@@ -173,6 +174,7 @@ public class GameManager : MonoBehaviour
 
     private void PlayDrawSound() => _audioSource.PlayOneShot(drawSound);
 
+    /// <summary> 진행 중인 타이머 교체,  </summary>
     private async void OnStoneMove(bool isBlackTurn)
     {
         try
@@ -182,6 +184,7 @@ public class GameManager : MonoBehaviour
             if (isBlackTurn == IsPlayerBlack)
             {
                 // 플레이어의 턴이 시작한 경우
+                // 
                 _nowPlayerTimer = PlayerTimer;
             }
             else
@@ -193,10 +196,10 @@ public class GameManager : MonoBehaviour
                 // 자동 착수되는 첫 수에는 타이머 동기화 요청을 보내지 않음
                 if (BoardInform.NowTurn == 1) return;
                 
-                _timerSynchroDto.NowTurn = BoardInform.NowTurn;
-                _timerSynchroDto.MyTimer = PlayerTimer.SyncData;
+                _timerSynchroDTO.NowTurn = BoardInform.NowTurn;
+                _timerSynchroDTO.MyTimer = PlayerTimer.SyncData;
                 TimerSyncData serverTimer =
-                    await _networkManager.RequestTimerSynchro(_timerSynchroDto);
+                    await _networkManager.RequestTimerSynchro(_timerSynchroDTO);
 
                 if (serverTimer.IsDefault())
                 {
@@ -224,16 +227,12 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"OnStoneMove Exception, Maybe in TimerSynchro Request : {e}");
         }
     }
-    
-    // TODO: 추후 서버에 무르기 요청 구매를 요청하는 코드로 수정하기! 
-    public void SendTakeBackRequest()
-    {
-        if (BoardInform.TryTakeBack() is false)
-        {
-            Debug.LogError("무르기 로직 에러, NowTurn, record.Count 확인 요망!");
-            return;
-        }
 
-        _eventManager.TakeBack();
+    private void OnTakeBack()
+    {
+        if (BoardInform.TryTakeBack()) return;
+        
+        Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
+        _eventManager.ServerReplyFailed();
     }
 }

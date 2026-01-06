@@ -80,7 +80,7 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameStart += OnGameStart;
         _em.OnGameEnd += DisableUpdate;
         _em.OnStartSweeping += DisableUpdate;
-        _em.OnTakeBack += TakeBack;
+        _em.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
         PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
@@ -345,8 +345,15 @@ public abstract class StoneMover : MonoBehaviour
     }
     
     /// <summary> 무르기 적용 - 최근 돌 2개 제거 </summary>
-    private void TakeBack()
+    private void OnTakeBack()
     {
+        if (_recentStone.black == null || _recentStone.white == null)
+        {
+            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 요청!");
+            EventManager.Instance.ServerReplyFailed();
+            return;
+        }
+        
         Destroy(_recentStone.black);
         Destroy(_recentStone.white);
         _audioSource.PlayOneShot(takeBackSound);

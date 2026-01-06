@@ -12,7 +12,7 @@ public class StoneMoverMulti : StoneMover
     private GameManager _gameManager;
     private UserTimer _playerTimer;
     private UserTimer _oppositeTimer;
-    private CS_PlaceStoneDTO _placeStoneDto;
+    private CS_PlaceStoneDTO _placeStoneDTO;
 
     protected override void OnAwake()
     {
@@ -23,7 +23,7 @@ public class StoneMoverMulti : StoneMover
         _isPlayerTurn = _gameManager.IsPlayerBlack;
         _playerTimer = _gameManager.PlayerTimer;
         _oppositeTimer = _gameManager.OppositeTimer;
-        _placeStoneDto = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
+        _placeStoneDTO = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
         
         OnStoneMove += OnTurnChanged;
     }
@@ -62,27 +62,20 @@ public class StoneMoverMulti : StoneMover
             _isPlayerTurn = !_isPlayerTurn;
             enabled = _isPlayerTurn;
 
-            if (_isPlayerTurn)
+            if (_isPlayerTurn is false) // 내가 착수를 완료한 상황
             {
-                GameEndCode endCode =
-                    await _networkManager.RequestMyTurn(_gameManager.IdToken);
-
-                if (endCode != GameEndCode.None)
-                    _eventManager.HandleGameEndCode(endCode);
-            }
-            else
-            {
-                _placeStoneDto.MyTimer = _playerTimer.SyncData;
-                _placeStoneDto.Row = (byte)NowCoord.row;
-                _placeStoneDto.Col = (byte)NowCoord.col;
+                _placeStoneDTO.MyTimer = _playerTimer.SyncData;
+                _placeStoneDTO.Row = (byte)NowCoord.row;
+                _placeStoneDTO.Col = (byte)NowCoord.col;
                 
                 var opponentMove =
-                    await _networkManager.RequestPlaceStone(_placeStoneDto);
+                    await _networkManager.RequestPlaceStone(_placeStoneDTO);
 
                 if (opponentMove == null)
                 {
                     // 나머지는 OnRequestFailed 이벤트로 처리됨
                     Debug.LogError("Error in Receive Opponent Move");
+                    _eventManager.ServerReplyFailed();
                     return;
                 }
                 

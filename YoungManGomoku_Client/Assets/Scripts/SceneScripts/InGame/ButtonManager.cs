@@ -55,7 +55,7 @@ public class ButtonManager : MonoBehaviour
 
 #if UNITY_ANDROID
         messageBox.OnOpened += () =>
-        { 
+        {
             ButtonInactivate(_surrenderSet);
             foreach (var buttonSet in _activateSet)
             {
@@ -79,13 +79,13 @@ public class ButtonManager : MonoBehaviour
     }
     
     public void SurrenderInput()
-        => messageBox.MessageBoxOpen(surrenderConfirmMsg, Surrender);
+        => messageBox.MessageBoxOpen(surrenderConfirmMsg, playerSweeper.Sweeping);
 
     public void TimePurchaseInput()
-        => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, EventManager.Instance.PlayerByoyomiPurchase);
+        => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
 
     public void TakeBackInput()
-        => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
+        => messageBox.MessageBoxOpen(takeBackConfirmMsg, RequestTakeBack);
 
     public void ExitInput()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
@@ -94,15 +94,13 @@ public class ButtonManager : MonoBehaviour
     
     private void OnGameEnd()
     {
-        _activateSet.Clear();
-        ButtonInactivate(_surrenderSet);
-        ButtonInactivate(_byoyomiPurchaseSet);
-        ButtonInactivate(_takeBackSet);
+        DisableIngameButton();
         ButtonActivate(_exitSet);
     }
 
     private void DisableIngameButton()
     {
+        _activateSet.Clear();
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
@@ -128,16 +126,13 @@ public class ButtonManager : MonoBehaviour
         _activateSet.Remove(_byoyomiPurchaseSet);
     }
 
-    private void Surrender()
-    {
-        ButtonInactivate(_surrenderSet);
-        playerSweeper.Sweeping();
-    }
-
-    private void TakeBack()
+    private void RequestTimePurchase()
+        => EventManager.Instance.RequestPurchaseByoyomi();
+    
+    private void RequestTakeBack()
     {
         ButtonInactivate(_takeBackSet);
-        GameManager.Instance.SendTakeBackRequest();
+        EventManager.Instance.RequestTakeBack();
     }
 
     private void OnStoneMove(bool isBlackTurn)

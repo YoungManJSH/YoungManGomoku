@@ -280,7 +280,7 @@ public class PlayerPanelController : MonoBehaviour
         }
         
         // Player의 타이머는 역행할 일이 없음을 전제로 함.
-        if (isPlayer)
+        if (isPlayer && mainTime == 0f)
         {
             if (leftCount == 1)
             {
