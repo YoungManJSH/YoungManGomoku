@@ -155,13 +155,13 @@ public class EventManager : MonoBehaviour
 
     public void HandleGameEndCode(GameEndCode gameEndCode)
     {
-        if (IsGameEnd) return;
+        if (IsGameEnd) return; // 중복 호출 방어
         
         switch (gameEndCode)
         {
             case GameEndCode.None:
                 Debug.LogWarning("GameEndCode None, but Handling Function Called!!");
-                return;
+                return; // IsGameEnd를 true로 만들지 않고 바로 return
             case GameEndCode.GomokuWin:
                 OnPlayerGomoku!.Invoke();
                 break;

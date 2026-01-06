@@ -61,20 +61,20 @@ public class GameManager : MonoBehaviour
         /*
         #region 테스트용 임시 초기화
         IsPlayerBlack = true;
-        MyPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f);
-        OppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f);
+        MyPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f, ProfileImageType.None);
+        OppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f, ProfileImageType.StudentGirl);
         PlayerTimer = new UserTimer(15f, 2, 15f);
         OppositeTimer = new UserTimer(15f, 2, 15f);
         ByoyomiPurchaseAmount = 2;
         #endregion
-        */
+        // */
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
         _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0, default);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
-        MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating);
+        MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
         
         SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
         if (matchResult.MatchingSuccess is false ||
@@ -89,7 +89,8 @@ public class GameManager : MonoBehaviour
         IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
-        OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount, opponent.LoseCount, opponent.Rating);
+        OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount,
+            opponent.LoseCount, opponent.Rating, opponent.EquipProfile);
 
         SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
         PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);

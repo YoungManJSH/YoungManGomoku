@@ -1,19 +1,31 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class AdjustScaler : MonoBehaviour
 {
+    [SerializeField] private UIPosition uiPos;
+    [SerializeField] private RectTransform boardPanel;
+    [SerializeField] private RectTransform messagePanel;
+    [SerializeField] private RectTransform topPanel;
     [SerializeField] private RectTransform bottomPanel;
 
+    /// <summary>
+    /// <para>가로/세로 모드 전환 시 호출되는 이벤트</para>
+    /// <para>true: 가로(wide) 모드</para>
+    /// <para>false: 세로(tall) 모드</para>
+    /// </summary>
+    public event Action<bool> OnChangeAspect;
+    public bool IsWide { get; private set; }
+    public UIPosition UIPos => uiPos;
+    
     private CanvasScaler _canvasScaler;
-    private float _baseRatio;
     private int _lastWidth;
     private int _lastHeight;
 
     private void Awake()
     {
         _canvasScaler = GetComponent<CanvasScaler>();
-        _baseRatio = _canvasScaler.referenceResolution.x / _canvasScaler.referenceResolution.y;
         AdjustScale();
     }
 
@@ -25,11 +37,21 @@ public class AdjustScaler : MonoBehaviour
         }
     }
 
-    private  void AdjustScale()
+    private void AdjustScale()
     {
         _lastWidth = Screen.width;
         _lastHeight = Screen.height;
-
-        _canvasScaler.matchWidthOrHeight = (float)_lastWidth / _lastHeight > _baseRatio ? 1f : 0f;
+        
+        float nowAspect = (float)Screen.width / Screen.height;
+        bool isWide = nowAspect >= uiPos.WideRatio;
+        
+        _canvasScaler.matchWidthOrHeight = nowAspect > uiPos.TallRatio ? 1f : 0f;
+        uiPos.PanelMovingAndScaling(boardPanel, messagePanel, topPanel, bottomPanel, nowAspect);
+        
+        if (isWide != IsWide)
+        {
+            IsWide = isWide;
+            OnChangeAspect?.Invoke(isWide);
+        }
     }
 }

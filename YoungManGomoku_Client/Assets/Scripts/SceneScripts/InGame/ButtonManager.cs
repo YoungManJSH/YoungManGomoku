@@ -34,7 +34,7 @@ public class ButtonManager : MonoBehaviour
         _exitSet = (exitButton, exitButton.GetComponentInChildren<TextMeshProUGUI>());
 
         _byoyomiPurchaseSet.Item2.text = $"{_byoyomiPurchaseSet.Item2.text} ({GameManager.Instance.ByoyomiPurchaseAmount}회)";
-        byoyomiPurchaseConfirmMsg = $"{byoyomiPurchaseConfirmMsg} ({GameManager.Instance.ByoyomiPurchaseAmount}회)";
+        byoyomiPurchaseConfirmMsg = $"{byoyomiPurchaseConfirmMsg}\n({GameManager.Instance.ByoyomiPurchaseAmount}회)";
         
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);

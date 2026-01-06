@@ -21,18 +21,20 @@ public abstract class StoneMover : MonoBehaviour
     protected GameObject NowPreview { get; set; }
     protected Color PreviewColor { get; private set; }
     /// <summary> 직전에 인식한 오목판 좌표 </summary>
-    protected (int row, int col) PrevCoord { get; private set; }
+    protected (int row, int col) NowCoord { get; private set; }
     
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
     private AudioSource _audioSource;
     private Transform _forbiddenParent;
-    private IngameBoardManager _ingameBoardManager;
+    private IngameBoardScaler _ingameBoardScaler;
+    private BoardImageData _boardImageData;
     private HashSet<(int row, int col)> _forbiddenCoords;
     private (GameObject black, GameObject white) _recentStone;
     private Camera _mainCamera;
     private EventManager _em;
-    
+
+    private Vector3 _prevMousePos;
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
@@ -44,9 +46,10 @@ public abstract class StoneMover : MonoBehaviour
     
     protected void Awake()
     {
-        _ingameBoardManager = GetComponent<IngameBoardManager>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _audioSource = GetComponent<AudioSource>();
+        _ingameBoardScaler = GetComponent<IngameBoardScaler>();
+        _boardImageData = _ingameBoardScaler.BoardData;
         _audioSource.playOnAwake = false;
         _audioSource.loop = false;
 
@@ -59,12 +62,12 @@ public abstract class StoneMover : MonoBehaviour
         _forbiddenCoords = new HashSet<(int row, int col)>();
         
         _boardInform = GameManager.Instance.BoardInform;
-        PrevCoord = (-1, -1);
+        NowCoord = (-1, -1);
         _isBlackTurn = true;
         _muteDeniedSound = false;
         recentMark.SetActive(false);
         
-        _ingameBoardManager.OnBoardScaled += async () => await CalcWorldValue();
+        _ingameBoardScaler.OnBoardScaled += CalcWorldValue;
         _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
@@ -139,32 +142,79 @@ public abstract class StoneMover : MonoBehaviour
     private void InputProcessing()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE
-        Vector3 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        worldPos.z = 0;
+        Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0;
         
-        if (TryGetBoardCoord(worldPos, out var coord) is false ||
-            _boardInform[coord.row, coord.col] != StoneColorType.Empty ||
-            _forbiddenCoords.Contains(coord))
+        if (mousePos != _prevMousePos)
+        {
+            _prevMousePos = mousePos;
+
+            if (TryGetBoardCoord(mousePos, out var coord) &&
+                coord != NowCoord &&
+                _boardInform[coord.row, coord.col] == StoneColorType.Empty &&
+                _forbiddenCoords.Contains(coord) is false)
+            {
+                NowCoord = coord;
+                UpdatePreview(coord);
+            }
+        }
+
+        if (Input.GetMouseButtonDown(0))
         {
             NowPreview.SetActive(false);
-            PrevCoord = coord;
+            
+            if (TryGetBoardCoord(mousePos, out var coord) &&
+                _boardInform[coord.row, coord.col] == StoneColorType.Empty &&
+                _forbiddenCoords.Contains(coord) is false)
+            {
+                NowCoord = coord;
+                MoveStone(coord);
+            }
+
             return;
         }
 
-        if (Input.GetMouseButtonDown(0) ||
-            Input.GetKeyDown(KeyCode.Return) ||
-            Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetButtonDown("Cancel"))
         {
             NowPreview.SetActive(false);
-            PrevCoord = coord;
-            MoveStone(coord);
             return;
         }
-            
-        if (coord != PrevCoord)
+
+        if (Input.GetButtonDown("Submit"))
         {
-            PrevCoord = coord;
-            UpdatePreview(coord);
+            if (NowPreview.activeSelf)
+            {
+                NowPreview.SetActive(false);
+                MoveStone(NowCoord);
+            }
+
+            return;
+        }
+        
+        if (Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical"))
+        {
+            int hor = (int)Input.GetAxisRaw("Horizontal");
+            int ver = (int)Input.GetAxisRaw("Vertical");   
+            
+            for (int i = 0; i < Board.BoardSize; ++i)
+            {
+                int row = NowCoord.row - ver;
+                int col = NowCoord.col + hor;
+
+                if (row < 0) row = Board.MaxCoord;
+                else if (Board.MaxCoord < row) row = 0;
+
+                if (col < 0) col = Board.MaxCoord;
+                else if (Board.MaxCoord < col) col = 0;
+                
+                if (_boardInform[row, col] == StoneColorType.Empty &&
+                    _forbiddenCoords.Contains((row, col)) is false)
+                {
+                    NowCoord = (row, col);
+                    UpdatePreview(NowCoord);
+                    break;
+                }
+            }
         }
         
 #elif UNITY_ANDROID
@@ -185,9 +235,9 @@ public abstract class StoneMover : MonoBehaviour
 
             if (TryGetBoardCoord(worldPos, out var coord))
             {
-                if (coord == PrevCoord) return;
+                if (coord == NowCoord) return;
 
-                PrevCoord = coord;
+                NowCoord = coord;
                 
                 if (_boardInform[coord.row, coord.col] != StoneColorType.Empty ||
                     _forbiddenCoords.Contains(coord))
@@ -262,22 +312,19 @@ public abstract class StoneMover : MonoBehaviour
     }
     
     /// <summary> 창 크기가 변할 때 월드좌표 기준값 다시 계산 </summary>
-    private async Awaitable CalcWorldValue()
+    private void CalcWorldValue()
     {
-        await Awaitable.EndOfFrameAsync();
-
-        var data = _ingameBoardManager.BoardData;
-        float pixelToWorld = _spriteRenderer.bounds.size.x / data.TotalPixel;
-        _marginWorld = (data.MarginSize - data.CellSize / 2f) * pixelToWorld;
-        _firstLineWorld = data.MarginSize * pixelToWorld;
-        _cellSizeWorld = data.CellSize * pixelToWorld;
+        float pixelToWorld = _spriteRenderer.bounds.size.x / _boardImageData.TotalPixel;
+        _marginWorld = (_boardImageData.MarginSize - _boardImageData.CellSize / 2f) * pixelToWorld;
+        _firstLineWorld = _boardImageData.MarginSize * pixelToWorld;
+        _cellSizeWorld = _boardImageData.CellSize * pixelToWorld;
     }
     
     /// <summary> 게임 시작 시 천원점 자동 착수 </summary>
     private void OnGameStart()
     {
-        PrevCoord = (7, 7);
-        MoveStone(PrevCoord);
+        NowCoord = (7, 7);
+        MoveStone(NowCoord);
         recentMark.SetActive(true);
     }
     
