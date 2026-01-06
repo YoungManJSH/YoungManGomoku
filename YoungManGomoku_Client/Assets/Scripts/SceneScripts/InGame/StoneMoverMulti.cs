@@ -92,8 +92,10 @@ public class StoneMoverMulti : StoneMover
                 {
                     _eventManager.HandleGameEndCode(opponentMove.GameEndCode);
 
-                    // 게임 종료 상황에서 내가 둔 좌표를 돌려받을 경우 착수 처리 생략
-                    if ((opponentMove.Row, opponentMove.Col) == NowCoord) return;
+                    // 게임 종료 상황에서 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략
+                    if ((opponentMove.Row, opponentMove.Col) == NowCoord ||
+                        opponentMove.Row > Board.MaxCoord ||
+                        opponentMove.Col > Board.MaxCoord) return;
                 }
 
                 MoveStone((opponentMove.Row, opponentMove.Col));

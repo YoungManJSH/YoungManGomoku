@@ -201,16 +201,10 @@ public class GameManager : MonoBehaviour
                 if (serverTimer.IsDefault())
                 {
                     /* case 1: OnRequestFailed
-                     * case 2: 서버 연산 로직 버그 */
+                     * case 2: 서버 연산 로직 버그
+                     * case 3: 게임 종료 상황에서의 응답(레이스 컨디션) */
 
-                    // 이 조건은 OnRequestFailed가 아닌 경우 = 서버 버그 의심
-                    if (_eventManager.IsGameEnd is false)
-                    {
-                        _eventManager.ServerReplyFailed();
-                        Debug.LogError("Invalid Timer Synchro Data");
-                    }
-                    
-                    Debug.LogError("Error in Timer Synchro Request");
+                    Debug.Log("타이머 동기화 요청에 default가 응답됨");
                     return;
                 }
                 

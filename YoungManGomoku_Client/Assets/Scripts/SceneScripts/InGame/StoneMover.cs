@@ -31,6 +31,7 @@ public abstract class StoneMover : MonoBehaviour
     private BoardImageData _boardImageData;
     private HashSet<(int row, int col)> _forbiddenCoords;
     private (GameObject black, GameObject white) _recentStone;
+    private GameObject[,] _stoneObjects;
     private Camera _mainCamera;
     private EventManager _em;
 
@@ -60,6 +61,7 @@ public abstract class StoneMover : MonoBehaviour
         WhiteParent.SetParent(transform);
         _forbiddenParent.SetParent(transform);
         _forbiddenCoords = new HashSet<(int row, int col)>();
+        _stoneObjects = new GameObject[Board.BoardSize, Board.BoardSize];
         
         _boardInform = GameManager.Instance.BoardInform;
         NowCoord = (-1, -1);
@@ -68,6 +70,8 @@ public abstract class StoneMover : MonoBehaviour
         recentMark.SetActive(false);
         
         _ingameBoardScaler.OnBoardScaled += CalcWorldValue;
+        _boardInform.OnBlackGomoku += OnGomoku().Cancel;
+        _boardInform.OnWhiteGomoku += OnGomoku().Cancel;
         _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
@@ -103,6 +107,8 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary>[row, col] 위치에 착수 시도, 금수일 경우 Forbidden mark 생성</summary>
     protected void MoveStone((int row, int col) coord)
     {
+        NowCoord = coord;
+        
         Vector3 position = _spriteRenderer.bounds.min + new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
             _firstLineWorld + _cellSizeWorld * (Board.MaxCoord - coord.row), 0f);
 
@@ -110,9 +116,18 @@ public abstract class StoneMover : MonoBehaviour
         {
             PlaceStone(position);
             _audioSource.Play();
-            if (_isBlackTurn) ClearForbiddenMarks();
-            _isBlackTurn = _boardInform.NowTurn % 2 == 0;
             
+            if (_isBlackTurn)
+            {
+                ClearForbiddenMarks();
+                _stoneObjects[coord.row, coord.col] = _recentStone.black;
+            }
+            else
+            {
+                _stoneObjects[coord.row, coord.col] = _recentStone.white;
+            }
+            
+            _isBlackTurn = _boardInform.NowTurn % 2 == 0;
             OnStoneMove?.Invoke(_isBlackTurn);
             return;
         }
@@ -167,7 +182,6 @@ public abstract class StoneMover : MonoBehaviour
                 _boardInform[coord.row, coord.col] == StoneColorType.Empty &&
                 _forbiddenCoords.Contains(coord) is false)
             {
-                NowCoord = coord;
                 MoveStone(coord);
             }
 
@@ -323,8 +337,7 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 게임 시작 시 천원점 자동 착수 </summary>
     private void OnGameStart()
     {
-        NowCoord = (7, 7);
-        MoveStone(NowCoord);
+        MoveStone((7, 7));
         recentMark.SetActive(true);
     }
     
@@ -335,6 +348,25 @@ public abstract class StoneMover : MonoBehaviour
         Destroy(_recentStone.white);
         _audioSource.PlayOneShot(takeBackSound);
         ClearForbiddenMarks();
+    }
+
+    /// <summary> 오목 상황에서 적용할 연출 </summary>
+    private async Awaitable OnGomoku()
+    {
+        // 월드에서 착수 처리가 완료되고 다음 프레임에 실행 
+        await Awaitable.NextFrameAsync();
+        
+        var informs = JudgeMove.OmokLineInforms(_boardInform,
+            NowCoord, _isBlackTurn ? StoneColorType.Black : StoneColorType.White);
+        
+        foreach (var coordList in informs.Values)
+        {
+            foreach (var coord in coordList)
+            {
+                _stoneObjects[coord.row, coord.col].
+                    GetComponent<StoneController>().GomokuAction();
+            }
+        }
     }
     
     /// <summary> 흑돌 금수패 상황에서 적용할 연출 </summary>
