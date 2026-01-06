@@ -76,7 +76,7 @@ public class IngameBoardScaler : MonoBehaviour
             float posX = -_mainCamera.orthographicSize * uiPos.WideRatio +
                          _spriteRenderer.bounds.extents.x;
             
-            transform.position = new Vector3(posX, 0f, Mathf.Abs(_mainCamera.transform.position.z));
+            transform.position = new Vector3(posX, 0f, 0f);
         }
     }
 }

@@ -94,6 +94,7 @@ public class ButtonManager : MonoBehaviour
     
     private void OnGameEnd()
     {
+        _activateSet.Clear();
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
