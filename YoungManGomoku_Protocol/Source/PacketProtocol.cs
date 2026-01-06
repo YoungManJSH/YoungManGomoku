@@ -177,15 +177,30 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_InGameRequestDTO
     {
         public string IDToken { get; set; }
-        public IngameRequest IngameRequest { get; set; }
+        public IngameRequestType IngameRequest { get; set; }
 
         /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
         public CS_InGameRequestDTO() { }
 
-        public CS_InGameRequestDTO(string idToken, IngameRequest request)
+        public CS_InGameRequestDTO(string idToken, IngameRequestType request)
         {
 	        IDToken = idToken;
 	        IngameRequest = request;
+        }
+    }
+
+    public class CS_WaitForEventDTO
+    {
+        public string IDToken { get; set; }
+        public bool isTakeBackable { get; set; }
+
+        /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
+        public CS_WaitForEventDTO() { }
+
+        public CS_WaitForEventDTO(string idToken, bool takeback)
+        {
+            IDToken = idToken;
+            isTakeBackable = takeback;
         }
     }
 }
@@ -269,16 +284,31 @@ namespace YoungManGomoku_Protocol.ServerToClient
     }
     
     /// <summary> 인게임 특수 요청에 대한 응답, 추후 추가 및 수정 가능 </summary>
-    public class SC_IngameRequestAnswerDTO
+    public class SC_IngameRequestResponseDTO
     {
 	    public bool IsSuccess { get; set; }
 	    public GameEndCode GameEndCode { get; set; }
 
-	    public SC_IngameRequestAnswerDTO(bool isSuccess, GameEndCode gameEndCode)
+	    public SC_IngameRequestResponseDTO(bool isSuccess, GameEndCode gameEndCode)
 	    {
 		    IsSuccess = isSuccess;
 		    GameEndCode = gameEndCode;
 	    }
+    }
+
+    public class SC_WaitEventDTO
+    {
+        // 시간 승/패, 항복 승/패, 상대방 접속 끊겼을 때
+        public GameEndCode GameEndCode { get; set; }
+
+        // 상대방이 항복, 무르기 요청, 초읽기 구매 등을 했을 때
+        public IngameRequestType OpponentRequest { get; set; }
+
+        public SC_WaitEventDTO(GameEndCode gameEndCode, IngameRequestType opponentRequest)
+        {
+            GameEndCode = gameEndCode;
+            OpponentRequest = opponentRequest;
+        }
     }
 }
 
