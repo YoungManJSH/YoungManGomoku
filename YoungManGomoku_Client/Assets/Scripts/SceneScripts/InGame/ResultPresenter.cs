@@ -36,7 +36,7 @@ public class ResultPresenter : MonoBehaviour
         NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
         
         EventManager em = EventManager.Instance;
-        em.OnGameEnd += OnGameEnd().Cancel;
+        em.OnGameEnd += async() => await OnGameEnd();
         em.OnGameWin += () => mainText.text = "승리";
         em.OnGameLose += () => mainText.text = "패배";
         em.OnGameDraw += () => mainText.text = "무승부";

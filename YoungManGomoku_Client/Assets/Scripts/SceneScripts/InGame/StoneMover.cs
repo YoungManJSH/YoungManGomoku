@@ -70,8 +70,8 @@ public abstract class StoneMover : MonoBehaviour
         recentMark.SetActive(false);
         
         _ingameBoardScaler.OnBoardScaled += CalcWorldValue;
-        _boardInform.OnBlackGomoku += OnGomoku().Cancel;
-        _boardInform.OnWhiteGomoku += OnGomoku().Cancel;
+        _boardInform.OnBlackGomoku += async() => await OnGomoku();
+        _boardInform.OnWhiteGomoku += async() => await OnGomoku();
         _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
