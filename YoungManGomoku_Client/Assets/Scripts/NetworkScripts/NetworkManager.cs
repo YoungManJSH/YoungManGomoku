@@ -165,12 +165,12 @@ public class NetworkManager : MonoBehaviour
 	
 	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
 	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
-	public async Awaitable<GameEndCode> RequestMyTurn(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<GameEndCode>("GomokuIngame/ResponseGameEnd",$"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request MyTurn Success");
+	public async Awaitable<SC_WaitEventDTO> RequestWaitForEvent(CS_WaitForEventDTO reqWaitEventDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_WaitEventDTO>("GomokuIngame/WaitForEvent", JsonConvert.SerializeObject(reqWaitEventDTO), timeOutSeconds, "Gomoku Ingame : Request Wait For Event Success");
 	
 
-    public async Awaitable<SC_IngameRequestAnswerDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
-    => await RequestPostServer<SC_IngameRequestAnswerDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
+    public async Awaitable<SC_ResponseStringDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
+    => await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
 
 
 

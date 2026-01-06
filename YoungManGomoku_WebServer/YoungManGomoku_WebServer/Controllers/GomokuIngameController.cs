@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager;
@@ -124,40 +125,6 @@ namespace YoungManGomoku_WebServer.Controllers
             return Ok(room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
 
-
-        /*
-         * TODO
-            (내가 상대 착수 정보를 받음)(내 턴 시작)
-
-            RequestMyTurn (내 턴이 진행하는 동안 응답 대기용 요청) : 롱 폴링
-            이건 언제 응답해야 하는가?
-            1. 중간에 게임 끝났을 때 (시간승, 시간패, 기권승, 기권패)
-            2. 상대방 착수 정보 보내줄 때 이거 응답도 그냥 None으로 같이 보내줘야 함. Opponent DTO 조립할 때 None으로 이벤트 던져야 함
-         */
-        [HttpPost("ResponseGameEnd")]
-        public async Task<IActionResult> ResponseGameEnd([FromBody] string idToken, CancellationToken ct)
-        {
-            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
-            PlayerSession player = _serverManager.GetPlayerSession(idToken);
-
-            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
-            // 인증 정보는 왔지만 유효한 세션이 아니다
-            if (player == null)
-                return Unauthorized($"[{idToken}] Player Session Not Found.");
-
-            player.LastRequestTime = DateTime.UtcNow;
-
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {idToken}");
-
-			// 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
-			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
-                return BadRequest("Not in game");
-
-
-            // await
-            return Ok(await room.WaitGameEndAsync(player.Account.UID, ct));
-        }
-
         // Long Polling
         [HttpPost("Request")]
         public async Task<IActionResult> InGameRequest([FromBody] CS_InGameRequestDTO userInGameRequestDTO, CancellationToken ct)
@@ -180,7 +147,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 // 인증 정보는 왔지만 유효한 세션이 아니다
                 return Unauthorized($"[{uid}] Player Session Not Found.");
             }
-
+            
             player.LastRequestTime = DateTime.UtcNow;
 
 
@@ -193,9 +160,53 @@ namespace YoungManGomoku_WebServer.Controllers
             // 여기서 인게임 리퀘스트 처리 
             // 무르기, 항복 등등
             //room.ProcessRequest(uid, userInGameRequestDTO);
+            switch (userInGameRequestDTO.IngameRequest)
+            {
+                case IngameRequestType.Surrender:
+                    room.Surrender(uid);
+                    break;
+                case IngameRequestType.PurchaseByoyomi:
+                    break;
+                case IngameRequestType.TakeBack:
+                    room.RequestTakeBack(uid);
+                    break;
+            }
 
-            SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(uid, ct);
-            return Ok(response);
+            
+
+            //SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(uid, ct);
+            return Ok(new SC_ResponseStringDTO("InGame Request Success", true));
+        }
+
+
+        /*
+        * TODO
+           WaitForEvent : 롱 폴링
+           항상 요청을 걸어놓고 대기하고 있음. 이건 언제 응답해야 하는가?
+           1. 중간에 게임 끝났을 때 (시간승, 시간패, 기권승, 기권패, 접속끊김)
+           2. 상대방이 항복, 무르기 요청, 초읽기 구매 등을 했을 때
+        */
+        [HttpPost("WaitForEvent")]
+        public async Task<IActionResult> WaitForEvent([FromBody] string idToken, CancellationToken ct)
+        {
+            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
+            PlayerSession player = _serverManager.GetPlayerSession(idToken);
+
+            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
+            // 인증 정보는 왔지만 유효한 세션이 아니다
+            if (player == null)
+                return Unauthorized($"[{idToken}] Player Session Not Found.");
+
+            player.LastRequestTime = DateTime.UtcNow;
+
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {idToken}");
+
+            // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
+            if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
+                return BadRequest("Not in game");
+
+            // await
+            return Ok(await room.WaitGameEventAsync(player.Account.UID, ct));
         }
     }
 }
