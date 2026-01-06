@@ -15,7 +15,7 @@ namespace YoungManGomoku_WebServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.5")
+                .HasAnnotation("ProductVersion", "3.1.19")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -29,7 +29,8 @@ namespace YoungManGomoku_WebServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AuthToken")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(190)")
+                        .HasMaxLength(190);
 
                     b.Property<DateTime>("LastLoginDate")
                         .HasColumnType("datetime2");

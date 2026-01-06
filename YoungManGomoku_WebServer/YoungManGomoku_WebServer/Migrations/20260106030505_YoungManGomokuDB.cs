@@ -12,7 +12,7 @@ namespace YoungManGomoku_WebServer.Migrations
                 columns: table => new
                 {
                     UID = table.Column<decimal>(nullable: false),
-                    AuthToken = table.Column<string>(nullable: true),
+                    AuthToken = table.Column<string>(maxLength: 190, nullable: true),
                     AuthLevel = table.Column<int>(nullable: false),
                     Nickname = table.Column<string>(nullable: true),
                     RegisterDate = table.Column<DateTime>(nullable: false),

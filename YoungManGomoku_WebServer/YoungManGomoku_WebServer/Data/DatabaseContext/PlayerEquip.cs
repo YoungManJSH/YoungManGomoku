@@ -4,7 +4,7 @@ using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {
-    internal class PlayerEquip
+	public class PlayerEquip
     {
         [Key]
         public ulong UID { get; set; }

@@ -12,7 +12,7 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         ProfileImage = 2
     }
 
-    internal class PlayerInventoryItem
+	public class PlayerInventoryItem
 	{
         // 단일 Primary Key (Identity)
 		[Key]

@@ -9,7 +9,7 @@ using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {
 	// BCNF 정규형
-	internal class PlayerAccount
+	public class PlayerAccount
 	{
 		[Key]
 		public ulong UID { get; set; }

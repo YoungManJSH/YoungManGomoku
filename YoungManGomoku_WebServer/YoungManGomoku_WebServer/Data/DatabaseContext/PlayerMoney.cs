@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace YoungManGomoku_WebServer.Data.DatabaseContext
 {
-    internal class PlayerMoney
+	public class PlayerMoney
     {
         [Key]
         public ulong UID { get; set; }
