@@ -77,6 +77,8 @@ public class GiboBoardManager : MonoBehaviour
     private RectTransform[] _recordStones;
     private RectTransform[,] _forbiddenMarks;
     private ForbiddenRecords _forbiddenRecords;
+    private List<RectTransform> _gomokuStoneList;
+    private GiboStone[] _gomokuStones;
     private int _nowTurn;
 
     private void Awake()
@@ -174,13 +176,14 @@ public class GiboBoardManager : MonoBehaviour
         
         Board simulator = new Board();
         bool isEnded = false;
-        bool isBlackGomoku = false;
-        void Ended() => isEnded = true;
+        StoneColorType gomokuColor = StoneColorType.Empty;
         
+        void Ended() => isEnded = true;
         simulator.OnBlackGomoku += Ended;
         simulator.OnWhiteGomoku += Ended;
         simulator.OnBlackUnmovable += Ended;
-        simulator.OnBlackGomoku += () => isBlackGomoku = true;
+        simulator.OnBlackGomoku += () => gomokuColor = StoneColorType.Black;
+        simulator.OnWhiteGomoku += () => gomokuColor = StoneColorType.White;
         // OverMaxTurn 이벤트는 파일 읽기 단계에서 걸러지므로 체크 불필요
 
         _forbiddenRecords = new ForbiddenRecords(LastTurn);
@@ -218,12 +221,23 @@ public class GiboBoardManager : MonoBehaviour
             }
         }
 
-        // 흑돌 오목인 경우 인접 2자리 금수 목록에서 제외
-        if (isBlackGomoku && turn == LastTurn)
+        // 흑돌 오목이고 턴이 정상적으로 종료된 경우
+        if (gomokuColor == StoneColorType.Black && turn == LastTurn)
         {
             var gomokuInform = JudgeMove.OmokLineInforms(simulator,
                 _moveStoneData[LastTurn - 1], StoneColorType.Black);
 
+            _gomokuStoneList = new List<RectTransform>();
+            
+            foreach (var coordList in gomokuInform.Values)
+            {
+                foreach (var coord in coordList)
+                {
+                    _gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)]);
+                }
+            }
+            
+            // 오목 라인 인접 두 자리 금수 목록에서 제외
             foreach (var keyValue in gomokuInform)
             {
                 (int row, int col) firstCoord = keyValue.Value[0];
@@ -255,10 +269,37 @@ public class GiboBoardManager : MonoBehaviour
                 }
             }
         }
+        //백돌 오목이고 턴이 정상적으로 종료된 경우
+        else if (gomokuColor == StoneColorType.White && turn == LastTurn)
+        {
+            var gomokuInform = JudgeMove.OmokLineInforms(simulator,
+                _moveStoneData[LastTurn - 1], StoneColorType.Black);
+
+            _gomokuStoneList = new List<RectTransform>();
+            
+            foreach (var coordList in gomokuInform.Values)
+            {
+                foreach (var coord in coordList)
+                {
+                    _gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)].GetComponent<RectTransform>());
+                }
+            }
+        }
         #endregion
         
         // 시뮬레이션 끝났으면 메인 스레드 복귀 후 결과 반환
         await Awaitable.MainThreadAsync();
+
+        // GetComponent는 유니티 함수이므로 불가피하게 메인 스레드 복귀 이후에...
+        if (_gomokuStoneList != null)
+        {
+            _gomokuStones = new GiboStone[_gomokuStoneList.Count];
+            
+            for (int i = 0; i < _gomokuStones.Length; ++i)
+            {
+                _gomokuStones[i] = _gomokuStoneList[i].GetComponent<GiboStone>();
+            }
+        }
         
         /* 중간에 시뮬레이션이 break 된 경우 turn < LastTurn
          * 오목, 금수패 이벤트 이후에도 착수 데이터 있음 or 유효하지 않은 착수 데이터 */
@@ -321,11 +362,27 @@ public class GiboBoardManager : MonoBehaviour
         {
             _forbiddenMarks[coord.row, coord.col].gameObject.SetActive(true);
         }
+
+        if (_nowTurn == LastTurn && _gomokuStones != null)
+        {
+            foreach (GiboStone gomokuStone in _gomokuStones)
+            {
+                gomokuStone.SetCircleActive(true);
+            }
+        }
     }
 
     public void MovePrevTurn()
     {
         if (_nowTurn <= 0) return;
+
+        if (_nowTurn == LastTurn && _gomokuStones != null)
+        {
+            foreach (GiboStone gomokuStone in _gomokuStones)
+            {
+                gomokuStone.SetCircleActive(false);
+            }
+        }
         
         --_nowTurn;
         _recordStones[_nowTurn].gameObject.SetActive(false);

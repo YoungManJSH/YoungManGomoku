@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
-        _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0);
+        _timerSynchroDto = new CS_RequestTimerSynchroDTO(IdToken, 0, default);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
@@ -194,22 +194,17 @@ public class GameManager : MonoBehaviour
                 if (BoardInform.NowTurn == 1) return;
                 
                 _timerSynchroDto.NowTurn = BoardInform.NowTurn;
+                _timerSynchroDto.TimerSyncData = PlayerTimer.SyncData;
                 TimerSyncData serverTimer =
                     await _networkManager.RequestTimerSynchro(_timerSynchroDto);
 
                 if (serverTimer.IsDefault())
                 {
                     /* case 1: OnRequestFailed
-                     * case 2: 서버 연산 로직 버그 */
+                     * case 2: 서버 연산 로직 버그
+                     * case 3: 게임 종료 상황에서의 응답(레이스 컨디션) */
 
-                    // 이 조건은 OnRequestFailed가 아닌 경우 = 서버 버그 의심
-                    if (_eventManager.IsGameEnd is false)
-                    {
-                        _eventManager.ServerReplyFailed();
-                        Debug.LogError("Invalid Timer Synchro Data");
-                    }
-                    
-                    Debug.LogError("Error in Timer Synchro Request");
+                    Debug.Log("타이머 동기화 요청에 default가 응답됨");
                     return;
                 }
                 
