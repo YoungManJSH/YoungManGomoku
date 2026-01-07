@@ -6,6 +6,7 @@ public class PanelMover : MonoBehaviour
     [SerializeField] private RectTransform topPanel;
     [SerializeField] private RectTransform bottomPanel;
     [SerializeField] private RectTransform messageBoxPanel;
+    [SerializeField] private RectTransform respondBoxPanel; 
     [SerializeField] private RectTransform resultPanel;
     [SerializeField] private RectTransform startCountDown;
     [SerializeField] private SpriteRenderer boardRenderer;
@@ -30,7 +31,7 @@ public class PanelMover : MonoBehaviour
         Vector3 boardMin = mainCamera.WorldToScreenPoint(boardRenderer.bounds.min);
         Vector3 boardMax = mainCamera.WorldToScreenPoint(boardRenderer.bounds.max);
         
-        _uiPos.PanelMovingAndScaling(startCountDown, resultPanel, messageBoxPanel,
+        _uiPos.PanelMovingAndScaling(startCountDown, resultPanel, messageBoxPanel, respondBoxPanel,
             topPanel, bottomPanel, boardMin, boardMax, nowAspect);
     }
 }

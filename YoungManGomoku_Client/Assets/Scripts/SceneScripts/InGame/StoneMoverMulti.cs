@@ -45,8 +45,9 @@ public class StoneMoverMulti : StoneMover
     
     protected override void CreatePreview()
     {
-        NowPreview = _gameManager.IsPlayerBlack ?
-            Instantiate(blackStone, BlackParent) : Instantiate(whiteStone, WhiteParent);
+        NowPreview = (_gameManager.IsPlayerBlack ?
+            Instantiate(blackStone, BlackParent) :
+            Instantiate(whiteStone, WhiteParent)).gameObject;
         
         NowPreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         NowPreview.name = "Preview";

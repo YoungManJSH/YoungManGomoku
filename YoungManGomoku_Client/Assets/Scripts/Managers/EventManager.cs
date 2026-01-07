@@ -121,7 +121,7 @@ public class EventManager : MonoBehaviour
         }
     }
     
-    public async void PlayerSurrendered()
+    public async void RequestSurrender()
     {
         try
         {

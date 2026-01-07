@@ -39,12 +39,12 @@ public sealed class StoneMoverSingle : StoneMover
     
     protected override void CreatePreview()
     {
-        _blackPreview = Instantiate(blackStone, BlackParent);
+        _blackPreview = Instantiate(blackStone, BlackParent).gameObject;
         _blackPreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         _blackPreview.name = "Black Preview";
         _blackPreview.SetActive(false);
 
-        _whitePreview = Instantiate(whiteStone, WhiteParent);
+        _whitePreview = Instantiate(whiteStone, WhiteParent).gameObject;
         _whitePreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         _whitePreview.name = "White Preview";
         _whitePreview.SetActive(false);

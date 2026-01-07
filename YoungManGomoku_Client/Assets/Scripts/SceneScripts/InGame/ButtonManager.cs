@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using Button = UnityEngine.UI.Button;
+using UnityEngine.UI;
 
 public class ButtonManager : MonoBehaviour
 {
@@ -52,6 +52,11 @@ public class ButtonManager : MonoBehaviour
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
         stoneMover.OnStoneMove += OnStoneMove;
+        
+        surrenderButton.onClick.AddListener(SurrenderInput);
+        byoyomiPurchaseButton.onClick.AddListener(TimePurchaseInput);
+        takeBackButton.onClick.AddListener(TakeBackInput);
+        exitButton.onClick.AddListener(ExitInput);
 
 #if UNITY_ANDROID
         messageBox.OnOpened += () =>
@@ -78,16 +83,19 @@ public class ButtonManager : MonoBehaviour
 #endif
     }
     
-    public void SurrenderInput()
+    private void SurrenderInput()
         => messageBox.MessageBoxOpen(surrenderConfirmMsg, playerSweeper.Sweeping);
 
-    public void TimePurchaseInput()
+    private void TimePurchaseInput()
         => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
 
-    public void TakeBackInput()
-        => messageBox.MessageBoxOpen(takeBackConfirmMsg, RequestTakeBack);
+    private void TakeBackInput()
+    {
+        stoneMover.MarkTakeBack();
+        messageBox.MessageBoxOpen(takeBackConfirmMsg, RequestTakeBack);
+    }
 
-    public void ExitInput()
+    private void ExitInput()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
     
     private void OnGameStart() => ButtonActivate(_surrenderSet);

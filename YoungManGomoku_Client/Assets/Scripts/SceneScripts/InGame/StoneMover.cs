@@ -6,8 +6,8 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 /// <summary> 착수 제어 추상 클래스 </summary>
 public abstract class StoneMover : MonoBehaviour
 {
-    [SerializeField] protected GameObject blackStone;
-    [SerializeField] protected GameObject whiteStone;
+    [SerializeField] protected StoneController blackStone;
+    [SerializeField] protected StoneController whiteStone;
     [SerializeField] private GameObject forbiddenMark;
     [SerializeField] private AudioClip deniedSound;
     [SerializeField] private AudioClip takeBackSound;
@@ -30,8 +30,8 @@ public abstract class StoneMover : MonoBehaviour
     private IngameBoardScaler _ingameBoardScaler;
     private BoardImageData _boardImageData;
     private HashSet<(int row, int col)> _forbiddenCoords;
-    private (GameObject black, GameObject white) _recentStone;
-    private GameObject[,] _stoneObjects;
+    private (StoneController black, StoneController white) _recentStone;
+    private StoneController[,] _stoneObjects;
     private Camera _mainCamera;
     private EventManager _em;
 
@@ -61,7 +61,7 @@ public abstract class StoneMover : MonoBehaviour
         WhiteParent.SetParent(transform);
         _forbiddenParent.SetParent(transform);
         _forbiddenCoords = new HashSet<(int row, int col)>();
-        _stoneObjects = new GameObject[Board.BoardSize, Board.BoardSize];
+        _stoneObjects = new StoneController[Board.BoardSize, Board.BoardSize];
         
         _boardInform = GameManager.Instance.BoardInform;
         NowCoord = (-1, -1);
@@ -75,10 +75,12 @@ public abstract class StoneMover : MonoBehaviour
         _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
+        messageBox.TurnBackToGame += UnmarkTakeBack;
 
         _em = EventManager.Instance;
         _em.OnGameStart += OnGameStart;
         _em.OnGameEnd += DisableUpdate;
+        _em.OnGameEnd += UnmarkTakeBack;
         _em.OnStartSweeping += DisableUpdate;
         _em.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
@@ -97,6 +99,27 @@ public abstract class StoneMover : MonoBehaviour
     
     /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
     public abstract void MoveConfirmed();
+    
+    /// <summary> 무르기가 적용될 돌을 표시 </summary>
+    public void MarkTakeBack()
+    {
+        if (_recentStone.black == null || _recentStone.white == null)
+        {
+            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 요청!");
+            EventManager.Instance.ServerReplyFailed();
+            return;
+        }
+        
+        _recentStone.black.XMarking(isActivate: true);
+        _recentStone.white.XMarking(isActivate: true);
+    }
+    
+    /// <summary> 무르기가 적용될 돌의 표시를 해제 </summary>
+    public void UnmarkTakeBack()
+    {
+        _recentStone.black?.XMarking(isActivate: false);
+        _recentStone.white?.XMarking(isActivate: false);
+    }
     
     private void MessageBoxOpened() => enabled = false;
     protected abstract void MessageBoxClosed();
@@ -349,11 +372,13 @@ public abstract class StoneMover : MonoBehaviour
     {
         if (_recentStone.black == null || _recentStone.white == null)
         {
-            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 요청!");
+            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 실행!");
             EventManager.Instance.ServerReplyFailed();
             return;
         }
         
+        recentMark.transform.position =
+            (_isBlackTurn ? _recentStone.black : _recentStone.white).transform.position;
         Destroy(_recentStone.black);
         Destroy(_recentStone.white);
         _audioSource.PlayOneShot(takeBackSound);
@@ -366,6 +391,7 @@ public abstract class StoneMover : MonoBehaviour
         // 월드에서 착수 처리가 완료되고 다음 프레임에 실행 
         await Awaitable.NextFrameAsync();
         
+        // 착수 처리가 완료돼 있으므로 현재 턴은 오목 완성자의 상대방임에 유의!
         var informs = JudgeMove.OmokLineInforms(_boardInform,
             NowCoord, _isBlackTurn ? StoneColorType.White : StoneColorType.Black);
         
@@ -373,8 +399,7 @@ public abstract class StoneMover : MonoBehaviour
         {
             foreach (var coord in coordList)
             {
-                _stoneObjects[coord.row, coord.col].
-                    GetComponent<StoneController>().GomokuAction();
+                _stoneObjects[coord.row, coord.col].GomokuAction();
             }
         }
     }
