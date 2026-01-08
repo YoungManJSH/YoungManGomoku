@@ -53,20 +53,18 @@ public class EventManager : MonoBehaviour
     private GameManager _gameManager;
     private NetworkManager _networkManager;
     private CS_InGameRequestDTO _ingameRequestDTO;
-    private CS_TakeBackPermitDTO _takebackpermitDTO;
     
     /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
      * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음. */
     private void Awake()
     {
-        if (Instance != null) Destroy(gameObject);
+        if (Instance != null) Destroy(Instance);
         Instance = this;
         _gameManager = GetComponent<GameManager>();
         _networkManager = GetComponent<NetworkManager>();
         _networkManager.OnRequestFailed += OnRequestFailed;
         _ingameRequestDTO = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequestType.None);
-		_takebackpermitDTO = new CS_TakeBackPermitDTO(_gameManager.IdToken, takeback: false);
-        
+		
         IsGameEnd = false;
     }
 
@@ -110,12 +108,13 @@ public class EventManager : MonoBehaviour
         try
         {
             SC_ResponseStringDTO reply =
-                await _networkManager.RequestGameStartAnnounce(_gameManager.IdToken, timeOutSeconds: 3);
+                await _networkManager.RequestGameStartAnnounce(_gameManager.IdToken, timeOutSeconds: 5);
 
             if (reply == null)
             {
                 // 나머지는 OnRequestFailed 이벤트로 처리됨
                 Debug.LogError("게임 시작 응답으로 null이 들어옴");
+                ServerReplyFailed();
                 return;
             }
             
@@ -142,7 +141,7 @@ public class EventManager : MonoBehaviour
         {
             _ingameRequestDTO.IngameRequest = IngameRequestType.Surrender;
             SC_ResponseStringDTO reply =
-                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 3);
+                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
             
             if (reply == null)
             {
@@ -175,7 +174,7 @@ public class EventManager : MonoBehaviour
         {
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
             SC_ResponseStringDTO reply =
-                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 3);
+                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
             
             if (reply == null)
             {
@@ -215,7 +214,7 @@ public class EventManager : MonoBehaviour
         {
             _ingameRequestDTO.IngameRequest = IngameRequestType.PurchaseByoyomi;
             SC_ResponseStringDTO reply =
-                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 3);
+                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
             
             if (reply == null)
             {
@@ -246,12 +245,6 @@ public class EventManager : MonoBehaviour
             ServerReplyFailed();
         }
     }
-
-    public void TakeBackResponse(bool isAccept)
-    {
-        /* TODO: 네트워크 매니저 API 추가되면 해당 코드 추가하기
-         * 추가 작업 필요 없으면 함수 삭제 */
-    }
     
     /// <summary> 서버의 응답에 결함이 있을 경우 실행 </summary>
     public void ServerReplyFailed()
@@ -260,14 +253,14 @@ public class EventManager : MonoBehaviour
         
         IsGameEnd = true;
         OnServerReplyFailed!.Invoke();
-        // TODO: Fast-Fail 상황을 서버에게 전송하는 코드 추후 추가
+        _networkManager.RequestCloseSession(_gameManager.IdToken, 5).Cancel(); //일방적 통보
     }
 
     /// <summary> 기권 판 쓸기 연출이 시작될 때 호출 </summary>
     public void StartSweeping() => OnStartSweeping!.Invoke();
     
     /// <summary> 서버 응답 중 None이 아닌 GameEndCode가 있을 경우 호출 </summary>
-    public void HandleGameEndCode(GameEndCode gameEndCode)
+    private void HandleGameEndCode(GameEndCode gameEndCode)
     {
         if (IsGameEnd) return; // 중복 호출 방어
         
@@ -338,7 +331,7 @@ public class EventManager : MonoBehaviour
             }
             // 여기부터는 게임 종료 이벤트가 아닌 경우
 
-            /* TODO: 추후 무르기 적용인지 체크 */if (false)
+            if (response.IsTakeBackSuccess)
             {
                 OnTakeBack!.Invoke(true);
                 HandleIngameEvent(); // 다음 인게임 이벤트 응답을 받기 위해 재호출
@@ -349,12 +342,11 @@ public class EventManager : MonoBehaviour
             {
                 case IngameRequestType.None:
                     if (IsGameEnd) return; // 게임이 끝났으면 완전 종료
-                    //TODO: 일단 여기서 무르기 요청 무산 처리, 추후 체크
-                    OnTakeBack!.Invoke(false);
-                    Debug.Log("아무 동작도 없는 인게임 이벤트 응답, 게임 재개");
+                    OnTakeBack!.Invoke(false); // 무르기 요청 무산
+                    Debug.Log("비어있는 인게임 이벤트 응답, 무르기 요청 무산으로 처리됨");
                     break; // 게임이 끝나지 않았으면 switch문만 종료
                 case IngameRequestType.Surrender:
-                    Debug.LogError("서버가 바보인 듯?");
+                    Debug.LogError("GameEndCode가 None이라매?");
                     ServerReplyFailed();
                     return;
                 case IngameRequestType.TakeBack:

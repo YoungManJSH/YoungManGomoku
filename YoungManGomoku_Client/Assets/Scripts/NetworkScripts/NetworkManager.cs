@@ -62,7 +62,7 @@ public class NetworkManager : MonoBehaviour
     // Execution Order -3 : 이 Instance는 가장 먼저 등록돼 있어야 함 
     private void Awake()
     {
-	    if (Instance != null) Destroy(gameObject);
+	    if (Instance != null) Destroy(Instance);
 	    
 	    Instance = this;
     }
@@ -142,9 +142,7 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_ResponseStringDTO> RequestGameStartAnnounce(string idToken, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameStart", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Game Start");
 
-	
-	/* TODO: 내 타이머 동기화 요청
-	 * 대충 적어봤으니 컨펌 부탁. */
+    
 	/// <summary> 타이머 검증 요청, RequestPlaceStone과 함께 보내는 요청 </summary>
 	/// <returns>
 	/// <para> 클라이언트 타이머 승인: false, 서버 타이머 데이터 혹은 이상 감지값 </para>

@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
      * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음. */
     private void Awake()
     {
-        if (Instance != null) Destroy(gameObject);
+        if (Instance != null) Destroy(Instance);
         Instance = this;
         _eventManager = GetComponent<EventManager>();
         _networkManager = GetComponent<NetworkManager>();
@@ -236,14 +236,18 @@ public class GameManager : MonoBehaviour
     
     private void OnTakeBack(bool isAccepted)
     {
-        if (BoardInform.TryTakeBack() is false)
-        {
-            Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
-            _eventManager.ServerReplyFailed();
-            return;
-        }
         // 타이머 재개
         _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         enabled = true;
+        
+        if (isAccepted)
+        {
+            // 무르기 적용
+            if (BoardInform.TryTakeBack() is false)
+            {
+                Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
+                _eventManager.ServerReplyFailed();
+            }
+        }
     }
 }

@@ -84,8 +84,11 @@ public class StoneMoverMulti : StoneMover
 
                 // 게임 종료 상황에서 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략
                 if ((opponentMove.Row, opponentMove.Col) == NowCoord ||
-                    opponentMove.Row > Board.MaxCoord ||
-                    opponentMove.Col > Board.MaxCoord) return;
+                    opponentMove.Row > Board.MaxCoord || opponentMove.Col > Board.MaxCoord)
+                {
+                    Debug.Log("유효하지 않은 착수 좌표가 응답되었음, 게임 종료 상황이면 정상");
+                    return;
+                }
 
                 MoveStone((opponentMove.Row, opponentMove.Col));
             }
