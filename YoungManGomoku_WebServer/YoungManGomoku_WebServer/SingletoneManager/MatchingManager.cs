@@ -37,9 +37,16 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         public string PlayerIdToken { get; set; }
 
         // 언제 끝났다고 할 지를 내가 결정하기 위해 사용
-        public TaskCompletionSource<MatchResult> TaskCompSrc { get; set; }
+        public TaskCompletionSource<MatchResult>? TaskCompSrc { get; set; }
         public CancellationTokenRegistration CancellationTokenRegist { get; set; }
-    }
+
+        public WaitingPlayer(string playerIdToken, TaskCompletionSource<MatchResult>? taskCompSrc, CancellationTokenRegistration cancellationTokenRegist)
+		{
+			PlayerIdToken = playerIdToken;
+			TaskCompSrc = taskCompSrc;
+			CancellationTokenRegist = cancellationTokenRegist;
+		}
+	}
 
     // 싱글톤 또는 서비스 레벨에서 관리되는 매칭 매니저
     public class MatchingManager
@@ -107,11 +114,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     TaskCreationOptions.RunContinuationsAsynchronously);
 
                 WaitingPlayer waitingPlayer = new WaitingPlayer
-                {
-                    PlayerIdToken = playerIDToken,
-                    TaskCompSrc = tcs,
-                    CancellationTokenRegist = ct.Register(() => Cancel(playerIDToken))
-                };
+                (
+                    playerIDToken,
+                    tcs,
+                    ct.Register(() => Cancel(playerIDToken))
+                );
 
                 _matchingQueue.Enqueue(waitingPlayer);
                 _waitingMap[playerIDToken] = waitingPlayer;
@@ -129,12 +136,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             {
                 _logger.LogTrace($"[{DateTime.Now}] Matching Cancel: {playerIDToken}");
 
-                if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer wp) == false)
+                if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer? wp) == false)
                     return;
 
                 _logger.LogTrace($"[{DateTime.Now}] Matching Cancel - Has WaitingMap {playerIDToken}");
 
-                wp.TaskCompSrc.TrySetResult(
+                wp.TaskCompSrc?.TrySetResult(
                     new MatchResult
                     (
                         message: "Matching Register Cancelled",
@@ -156,14 +163,14 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             while (_matchingQueue.Count >= 2)
             {
                 _logger.LogTrace($"[{DateTime.Now}] Matching Game : {_matchingQueue.Count}");
-                WaitingPlayer p1 = _matchingQueue.Dequeue();
+                WaitingPlayer? p1 = _matchingQueue.Dequeue();
 
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
 
                 _logger.LogTrace($"[{DateTime.Now}] Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
 
-                WaitingPlayer p2 = null;
+                WaitingPlayer? p2 = null;
                 while (_matchingQueue.Count > 0)
                 {
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
@@ -197,7 +204,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 int colorRandomValue = random.Next(0, 2);
 
                 // 매칭에 성공한 두 플레이어에게 각각의 게임을 위한 정보 (색, 방번호) 전달 및 클라이언트로 응답
-                p1.TaskCompSrc.TrySetResult(
+                p1.TaskCompSrc?.TrySetResult(
                     new MatchResult
                     (
                         success: true,
@@ -207,7 +214,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     )
                 );
 
-                p2.TaskCompSrc.TrySetResult(
+                p2.TaskCompSrc?.TrySetResult(
                     new MatchResult
                     (
                         success: true,

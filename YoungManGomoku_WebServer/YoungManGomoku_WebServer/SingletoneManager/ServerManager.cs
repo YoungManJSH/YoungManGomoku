@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 //using System.Security.Cryptography;
 using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
@@ -21,12 +22,16 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
         public ConcurrentDictionary<string, ulong> UIDByIDToken { get; set; }
 
-        public ServerManager(ILogger<ServerManager> logger)
+		public SC_TimerSettingDTO DefaultTimerSetting { get; }
+
+		public ServerManager(ILogger<ServerManager> logger)
         {
             _logger = logger;
             _uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
+
+			DefaultTimerSetting = new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount: 3, byoyomiSeconds: 30f, byoyomiPurchaseAmount: 2);
 		}
 
         public uint GenerateUID32() => _uidGenerator.GenerateUID32();
@@ -39,16 +44,16 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         /// </summary>
         /// <param name="UID"></param>
         /// <returns></returns>
-        internal PlayerSession GetPlayerSession(ulong UID)
+        internal PlayerSession? GetPlayerSession(ulong UID)
         {
             if (UID == 0) return null;
             
-            if (PlayerDatas.TryGetValue(UID, out PlayerSession playerSession))
+            if (PlayerDatas.TryGetValue(UID, out PlayerSession? playerSession))
                 return playerSession;
             
             return null;
         }
-        internal PlayerSession GetPlayerSession(string idToken) => GetPlayerSession(GetPlayerUID(idToken));
+        internal PlayerSession? GetPlayerSession(string idToken) => GetPlayerSession(GetPlayerUID(idToken));
 
         public ulong GetPlayerUID(string idToken)
         {
@@ -60,7 +65,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         // 로깅용 유저 출력
         public string UserInfo(ulong UID)
         {
-            PlayerSession user = GetPlayerSession(UID);
+            PlayerSession? user = GetPlayerSession(UID);
             if (user == null)
                 return $"[{UID}] : (Invalid User UID)";
             return $"[{UID}] Lv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating} )";
@@ -76,9 +81,9 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         /// </summary>
         /// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
         /// <returns> 클라용 플레이어 데이터 </returns>
-        public PlayerData ComposePlayerData(ulong UID)
+        public PlayerData? ComposePlayerData(ulong UID)
 		{
-            if (PlayerDatas.TryGetValue(UID, out PlayerSession playerSession))
+            if (PlayerDatas.TryGetValue(UID, out PlayerSession? playerSession))
             {
                 // 클라로 UID, AuthToken, AuthLevel을 보낼 필요는 없다.
                 return new PlayerData()
@@ -112,9 +117,9 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		}
 
 		// 매칭 성공 시 상대방 데이터
-        public OpponentPlayerData ComposeOpponentPlayerData(ulong opponentPlayerUID)
+        public OpponentPlayerData? ComposeOpponentPlayerData(ulong opponentPlayerUID)
 		{
-            if (PlayerDatas.TryGetValue(opponentPlayerUID, out PlayerSession playerData))
+            if (PlayerDatas.TryGetValue(opponentPlayerUID, out PlayerSession? playerData))
             {
                 return new OpponentPlayerData()
                 {

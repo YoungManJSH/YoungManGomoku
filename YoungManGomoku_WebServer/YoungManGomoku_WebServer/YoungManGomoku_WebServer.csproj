@@ -9,6 +9,7 @@
        =============================== -->
     <!-- <DefineConstants>$(DefineConstants);USE_AWS_MYSQL</DefineConstants> -->  <!--AWS EC2 Linux 배포용, 로컬 빌드 시 반드시 주석 처리 -->
     <DefineConstants>$(DefineConstants);USE_URL_MSSQL</DefineConstants>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsIISExpress)' == 'true'">
     <DefineConstants>$(DefineConstants);USE_URL_MSSQL_IIS</DefineConstants>
