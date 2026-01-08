@@ -28,7 +28,7 @@ namespace YoungManGomoku_WebServer.Controllers
 		[HttpPost]
 		public IActionResult HeartBeat([FromBody] string idToken)
 		{
-            PlayerSession player = _serverManager.GetPlayerSession(idToken);
+            PlayerSession? player = _serverManager.GetPlayerSession(idToken);
 
 			if (player == null)
 			{
