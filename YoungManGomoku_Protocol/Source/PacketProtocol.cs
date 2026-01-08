@@ -192,7 +192,7 @@ namespace YoungManGomoku_Protocol.ClientToServer
     public class CS_WaitForEventDTO
     {
         public string IDToken { get; set; }
-        public bool isTakeBackable { get; set; }
+        public bool IsTakeBackable { get; set; }
 
         /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
         public CS_WaitForEventDTO() { }
@@ -200,7 +200,7 @@ namespace YoungManGomoku_Protocol.ClientToServer
         public CS_WaitForEventDTO(string idToken, bool takeback)
         {
             IDToken = idToken;
-            isTakeBackable = takeback;
+            IsTakeBackable = takeback;
         }
     }
 }

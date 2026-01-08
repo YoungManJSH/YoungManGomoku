@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using Button = UnityEngine.UI.Button;
+using UnityEngine.UI;
 
 public class ButtonManager : MonoBehaviour
 {
@@ -46,16 +46,20 @@ public class ButtonManager : MonoBehaviour
         GameManager gm = GameManager.Instance;
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
-        em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
         em.OnStartSweeping += DisableIngameButton;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
         stoneMover.OnStoneMove += OnStoneMove;
+        
+        surrenderButton.onClick.AddListener(SurrenderInput);
+        byoyomiPurchaseButton.onClick.AddListener(TimePurchaseInput);
+        takeBackButton.onClick.AddListener(TakeBackInput);
+        exitButton.onClick.AddListener(ExitInput);
 
 #if UNITY_ANDROID
         messageBox.OnOpened += () =>
-        { 
+        {
             ButtonInactivate(_surrenderSet);
             foreach (var buttonSet in _activateSet)
             {
@@ -78,31 +82,32 @@ public class ButtonManager : MonoBehaviour
 #endif
     }
     
-    public void SurrenderInput()
-        => messageBox.MessageBoxOpen(surrenderConfirmMsg, Surrender);
+    private void SurrenderInput()
+        => messageBox.MessageBoxOpen(surrenderConfirmMsg, playerSweeper.Sweeping);
 
-    public void TimePurchaseInput()
-        => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, EventManager.Instance.PlayerByoyomiPurchase);
+    private void TimePurchaseInput()
+        => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
 
-    public void TakeBackInput()
-        => messageBox.MessageBoxOpen(takeBackConfirmMsg, TakeBack);
+    private void TakeBackInput()
+    {
+        stoneMover.MarkTakeBack();
+        messageBox.MessageBoxOpen(takeBackConfirmMsg, RequestTakeBack);
+    }
 
-    public void ExitInput()
+    private void ExitInput()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
     
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     
     private void OnGameEnd()
     {
-        _activateSet.Clear();
-        ButtonInactivate(_surrenderSet);
-        ButtonInactivate(_byoyomiPurchaseSet);
-        ButtonInactivate(_takeBackSet);
+        DisableIngameButton();
         ButtonActivate(_exitSet);
     }
 
     private void DisableIngameButton()
     {
+        _activateSet.Clear();
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);
         ButtonInactivate(_takeBackSet);
@@ -114,30 +119,23 @@ public class ButtonManager : MonoBehaviour
     private void OnLastByoyomi()
     {
         if (GameManager.Instance.IsByoyomiPurchased)
-        {
             return;
-        }
         
         ButtonActivate(_byoyomiPurchaseSet);
         _activateSet.Add(_byoyomiPurchaseSet);
     }
 
-    private void OnByoyomiPurchase(int amount)
+    private void RequestTimePurchase()
     {
         ButtonInactivate(_byoyomiPurchaseSet);
-        _activateSet.Remove(_byoyomiPurchaseSet);
+        _activateSet.Remove(_byoyomiPurchaseSet); // 초읽기 구매는 판당 1번만 가능한 설정
+        EventManager.Instance.RequestPurchaseByoyomi();
     }
 
-    private void Surrender()
+    private void RequestTakeBack()
     {
-        ButtonInactivate(_surrenderSet);
-        playerSweeper.Sweeping();
-    }
-
-    private void TakeBack()
-    {
-        ButtonInactivate(_takeBackSet);
-        GameManager.Instance.SendTakeBackRequest();
+        ButtonInactivate(_takeBackSet); // 무르기 신청은 한 턴에 한 번만 가능
+        EventManager.Instance.RequestTakeBack();
     }
 
     private void OnStoneMove(bool isBlackTurn)

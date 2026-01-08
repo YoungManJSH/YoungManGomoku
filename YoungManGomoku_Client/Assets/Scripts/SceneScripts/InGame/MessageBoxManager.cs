@@ -1,10 +1,14 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MessageBoxManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI messageText;
+    [SerializeField] private Button confirmButton;
+    [SerializeField] private Button cancelButton;
+    
 
     public event Action OnOpened;
     public event Action TurnBackToGame;
@@ -17,6 +21,9 @@ public class MessageBoxManager : MonoBehaviour
         _rect = GetComponent<RectTransform>();
         EventManager.Instance.OnGameEnd += OnGameEnd;
         EventManager.Instance.OnStartSweeping += OnGameEnd;
+        
+        confirmButton.onClick.AddListener(OnConfirm);
+        cancelButton.onClick.AddListener(OnCancel);
         gameObject.SetActive(false);
     }
     
@@ -68,14 +75,14 @@ public class MessageBoxManager : MonoBehaviour
         gameObject.SetActive(true);
     }
     
-    public void OnConfirm()
+    private void OnConfirm()
     {
         _requestedAction?.Invoke();
         gameObject.SetActive(false);
         TurnBackToGame!.Invoke();
     }
 
-    public void OnCancel()
+    private void OnCancel()
     {
         gameObject.SetActive(false);
         TurnBackToGame!.Invoke();

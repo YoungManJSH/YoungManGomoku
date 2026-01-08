@@ -50,7 +50,7 @@ public class BoardSweeper : MonoBehaviour
 
         seq.OnComplete(() =>
         {
-            if (isPlayerHand) EventManager.Instance.PlayerSurrendered();
+            if (isPlayerHand) EventManager.Instance.RequestSurrender();
             
             gameObject.SetActive(false);
         });

@@ -27,13 +27,16 @@ public class UIPosition : ScriptableObject
     /// <param name="startCount">시작 카운트 다운 텍스트 UI</param>
     /// <param name="resultPanel">결과창 패널</param>
     /// <param name="messagePanel">메시지 박스 패널</param>
+    /// <param name="respondPanel">응답용 박스 패널</param>
     /// <param name="topPanel">상단 패널</param>
     /// <param name="bottomPanel">하단 패널</param>
     /// <param name="boardMin">오목판 스크린 좌표 좌하단</param>
     /// <param name="boardMax">오목판 스크린 좌표 우상단</param>
     /// <param name="nowAspect">출력되는 화면의 종횡비</param>
-    public void PanelMovingAndScaling(RectTransform startCount, RectTransform resultPanel, RectTransform messagePanel,
-        RectTransform topPanel, RectTransform bottomPanel, Vector3 boardMin, Vector3 boardMax, float nowAspect)
+    public void PanelMovingAndScaling(RectTransform startCount, RectTransform resultPanel,
+        RectTransform messagePanel, RectTransform respondPanel,
+        RectTransform topPanel, RectTransform bottomPanel,
+        Vector3 boardMin, Vector3 boardMax, float nowAspect)
     {
         float minX = boardMin.x / Screen.width;
         float maxX = boardMax.x / Screen.width;
@@ -73,7 +76,6 @@ public class UIPosition : ScriptableObject
             messagePanel.anchorMin = new Vector2(LerpX(messageWideAnchors.xMin), LerpY(messageWideAnchors.yMin));
             messagePanel.anchorMax = new Vector2(LerpX(messageWideAnchors.xMax), LerpY(messageWideAnchors.yMax));
             
-            
             // top, bottom panel을 board의 우측으로 배치
             float rightLimit = 0.5f + 0.5f * wideRatio / nowAspect; // UI 표시 한계선 (wideRatio만큼만 화면 표시)
 
@@ -83,11 +85,15 @@ public class UIPosition : ScriptableObject
             bottomPanel.anchorMin = new Vector2(maxX, 0f);
             bottomPanel.anchorMax = new Vector2(rightLimit, bottomHeight);
         }
+        // 응답용 박스는 메시지 박스와 동일 위치
+        respondPanel.anchorMin = messagePanel.anchorMin;
+        respondPanel.anchorMax = messagePanel.anchorMax;
         
         // 설정된 Anchors를 꽉 채우도록 여백 제거
         startCount.offsetMin = startCount.offsetMax = Vector2.zero;
         resultPanel.offsetMin = resultPanel.offsetMax = Vector2.zero;
         messagePanel.offsetMin = messagePanel.offsetMax = Vector2.zero;
+        respondPanel.offsetMin = respondPanel.offsetMax = Vector2.zero;
         topPanel.offsetMin = topPanel.offsetMax = Vector2.zero;
         bottomPanel.offsetMin = bottomPanel.offsetMax = Vector2.zero;
         
