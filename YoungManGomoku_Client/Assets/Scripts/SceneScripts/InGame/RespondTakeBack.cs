@@ -17,12 +17,22 @@ public class RespondTakeBack : MonoBehaviour
     private int _remainSecond;
     private bool _respond;
     private CancellationTokenSource _cts;
+    private EventManager _eventManager;
 
     private void Awake()
     {
         acceptButton.onClick.AddListener(Accept);
         denyButton.onClick.AddListener(Deny);
         messageUI.text = $"{message} - {timeLimit:D2}";
+        
+        _eventManager = EventManager.Instance;
+        _eventManager.OnTakeBackRequested += async isMyRequest =>
+        {
+            if (isMyRequest) return;
+            
+            await WaitRespond();
+        };
+        
         gameObject.SetActive(false);
     }
     
@@ -54,7 +64,7 @@ public class RespondTakeBack : MonoBehaviour
 
     private void Deny() => _cts.Cancel();
 
-    public async Awaitable<bool> Respond()
+    private async Awaitable WaitRespond()
     {
         _requestedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _remainSecond = timeLimit;
@@ -72,8 +82,7 @@ public class RespondTakeBack : MonoBehaviour
             gameObject.SetActive(false);
             _cts.Dispose();
             _cts = null;
+            _eventManager.TakeBackResponse(_respond);
         }
-        
-        return _respond;
     }
 }

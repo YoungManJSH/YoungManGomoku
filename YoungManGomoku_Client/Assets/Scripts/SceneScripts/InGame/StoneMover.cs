@@ -82,6 +82,7 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameEnd += DisableUpdate;
         _em.OnGameEnd += UnmarkTakeBack;
         _em.OnStartSweeping += DisableUpdate;
+        _em.OnTakeBackRequested += _ => MarkTakeBack();
         _em.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
@@ -115,7 +116,7 @@ public abstract class StoneMover : MonoBehaviour
     }
     
     /// <summary> 무르기가 적용될 돌의 표시를 해제 </summary>
-    public void UnmarkTakeBack()
+    private void UnmarkTakeBack()
     {
         _recentStone.black?.XMarking(isActivate: false);
         _recentStone.white?.XMarking(isActivate: false);

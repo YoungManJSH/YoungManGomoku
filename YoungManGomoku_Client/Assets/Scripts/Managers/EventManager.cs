@@ -31,7 +31,15 @@ public class EventManager : MonoBehaviour
     
     public event Action OnOppositeDisconnectedWin;
     public event Action OnPlayerDisconnectedLose;
+
+    /// <summary>
+    /// <para>본인 혹은 상대방의 무르기 요청 시점에 발생</para>
+    /// <para>매개변수 true: 나의 요청</para>
+    /// <para>매개변수 false: 상대방의 요청</para>
+    /// </summary>
+    public event Action<bool> OnTakeBackRequested; //TODO: 타이머 정지 로직 추가 
     public event Action OnTakeBack;
+    
     public event Action OnServerReplyFailed;
 
     public static EventManager Instance { get; private set; }
@@ -155,12 +163,11 @@ public class EventManager : MonoBehaviour
 
     public async void RequestTakeBack()
     {
-        // TODO: 타이머 정지시킬 거면 해당 처리 추가하기!
         try
         {
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
-            SC_ResponseStringDTO reply = // 상대방의 승인을 기다려야 하므로 넉넉하게 대기
-                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 15);
+            SC_ResponseStringDTO reply =
+                await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 3);
             
             if (reply == null)
             {
@@ -172,14 +179,15 @@ public class EventManager : MonoBehaviour
 
             if (reply.IsSuccess)
             {
-                Debug.Log("무르기 요청이 승인됨!");
-                OnTakeBack!.Invoke();
-                // TODO: OnTakeBack 이벤트에 승인 UI 호출도 추가 구독...
+                Debug.Log("무르기 요청이 확인됨!");
+                OnTakeBackRequested!.Invoke(true);
+                // 상대방의 승인 응답은 인게임 이벤트 응답으로 받음
             }
             else
             {
-                Debug.Log("무르기 요청이 거부됨! - 상대방의 거부 or 구매 거부");
-                // TODO: 거부됐다는 UI 호출이 있어야 할 듯..? 이벤트 새로 파자
+                /* 레이스 컨디션으로 게임 종료가 중간에 끼어들면 여기 들어올 수 있음
+                 * 그밖의 경우는 클라이언트가 요청을 잘못한 것이므로 로직 확인할 것 */
+                Debug.LogWarning("무르기 요청이 거부됨! (게임 종료 레이스 컨디션이 아니라면 클라이언트 요청이 잘못된 것)");
             }
             
             // 요청-응답이 완료되었으면 DTO 멤버 초기화 (잘못된 사용을 미연에 방지)
@@ -229,11 +237,21 @@ public class EventManager : MonoBehaviour
             ServerReplyFailed();
         }
     }
+
+    public void TakeBackResponse(bool isAccept)
+    {
+        /* TODO: 네트워크 매니저 API 추가되면 해당 코드 추가하기
+         * 추가 작업 필요 없으면 함수 삭제 */
+    }
     
+    /// <summary> 서버의 응답에 결함이 있을 경우 실행 </summary>
     public void ServerReplyFailed()
     {
+        if (IsGameEnd) return;
+        
         IsGameEnd = true;
         OnServerReplyFailed!.Invoke();
+        // TODO: Fast-Fail 상황을 서버에게 전송하는 코드 추후 추가
     }
 
     public void StartSweeping() => OnStartSweeping!.Invoke();
@@ -257,7 +275,7 @@ public class EventManager : MonoBehaviour
                 OnBlackUnmovable!.Invoke();
                 break;
             case GameEndCode.SurrenderWin:
-                oppositeHand.Sweeping();
+                oppositeHand.Sweeping(); // TODO: 그냥 이벤트에 넣는 쪽으로 수정하기
                 OnOppositeSurrender!.Invoke();
                 break;
             case GameEndCode.SurrenderLose:
@@ -307,25 +325,31 @@ public class EventManager : MonoBehaviour
                 HandleGameEndCode(response.GameEndCode);
                 return;
             }
-
             // 여기부터는 게임 종료 이벤트가 아닌 경우
-            
-            _waitForEventDTO.IsTakeBackable = false; // 무르기 거부가 기본 세팅
+
+            /* TODO: 추후 무르기 적용인지 체크 */if (false)
+            {
+                OnTakeBack!.Invoke();
+                HandleIngameEvent(); // 다음 인게임 이벤트 응답을 받기 위해 재호출
+                return;
+            }
             
             switch (response.OpponentRequest)
             {
                 case IngameRequestType.None:
-                    Debug.LogWarning("아무 동작도 없는 인게임 이벤트 응답!");
                     if (IsGameEnd) return; // 게임이 끝났으면 완전 종료
+                    
+                    /* TODO: 여기를 무르기 요청 무산으로 처리하면 될 듯?
+                     * 돌 마크 끄고 타이머 재개하는 이벤트 만들어서 넣자 */
+                    
+                    Debug.Log("아무 동작도 없는 인게임 이벤트 응답, 게임 재개");
                     break; // 게임이 끝나지 않았으면 switch문만 종료
                 case IngameRequestType.Surrender:
                     Debug.LogError("서버가 바보인 듯?");
                     ServerReplyFailed();
                     return;
                 case IngameRequestType.TakeBack:
-                    // TODO: 상대방의 무르기 요청에 대해 승인 확인 대화상자 핑퐁
-                    // 승인, 거부 처리 후 IsTakeBackable 조정
-                    // 승인이면 OnTakeBack 이벤트 Invoke
+                    OnTakeBackRequested!.Invoke(false);
                     break;
                 case IngameRequestType.PurchaseByoyomi:
                     OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);

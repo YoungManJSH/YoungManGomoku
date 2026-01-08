@@ -46,7 +46,6 @@ public class ButtonManager : MonoBehaviour
         GameManager gm = GameManager.Instance;
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
-        em.OnPlayerByoyomiPurchase += OnByoyomiPurchase;
         em.OnStartSweeping += DisableIngameButton;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
@@ -128,18 +127,16 @@ public class ButtonManager : MonoBehaviour
         _activateSet.Add(_byoyomiPurchaseSet);
     }
 
-    private void OnByoyomiPurchase(int amount)
+    private void RequestTimePurchase()
     {
         ButtonInactivate(_byoyomiPurchaseSet);
-        _activateSet.Remove(_byoyomiPurchaseSet);
+        _activateSet.Remove(_byoyomiPurchaseSet); // 초읽기 구매는 판당 1번만 가능한 설정
+        EventManager.Instance.RequestPurchaseByoyomi();
     }
 
-    private void RequestTimePurchase()
-        => EventManager.Instance.RequestPurchaseByoyomi();
-    
     private void RequestTakeBack()
     {
-        ButtonInactivate(_takeBackSet);
+        ButtonInactivate(_takeBackSet); // 무르기 신청은 한 턴에 한 번만 가능
         EventManager.Instance.RequestTakeBack();
     }
 
