@@ -51,7 +51,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://115.126.216.245:5001"; //"https://localhost:5001";
+	[SerializeField] private const string baseURL = "https://192.168.200.156:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -182,6 +182,12 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_TakeBackPermitDTO takebackPermitDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
+
+
+	/// <summary> 서버가 응답이 이상하거나 클라가 이상한 등 아무튼 클라의 접속을 끊어버리고 서버의 관리에서 죽여버리고 싶을 때(로그아웃) </summary>
+	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestCloseSession(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_ResponseStringDTO>("Session/Close", $"\"{idToken}\"", timeOutSeconds, "Session Close");
 
 
 
