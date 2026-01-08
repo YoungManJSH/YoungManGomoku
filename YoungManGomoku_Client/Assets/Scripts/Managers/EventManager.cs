@@ -37,8 +37,13 @@ public class EventManager : MonoBehaviour
     /// <para>매개변수 true: 나의 요청</para>
     /// <para>매개변수 false: 상대방의 요청</para>
     /// </summary>
-    public event Action<bool> OnTakeBackRequested; //TODO: 타이머 정지 로직 추가 
-    public event Action OnTakeBack;
+    public event Action<bool> OnTakeBackRequested;
+    /// <summary>
+    /// <para>무르기 요청 이후 수락/거절이 결정되었을 때 발생</para>
+    /// <para>매개변수 true: 요청이 수락됨, 무르기 진행</para>
+    /// <para>매개변수 false: 요청이 거절됨, 게임 재개</para>
+    /// </summary>
+    public event Action<bool> OnTakeBack;
     
     public event Action OnServerReplyFailed;
 
@@ -50,8 +55,8 @@ public class EventManager : MonoBehaviour
     private CS_InGameRequestDTO _ingameRequestDTO;
     private CS_WaitForEventDTO _waitForEventDTO;
     
-    // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
-    // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음.
+    /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
+     * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음. */
     private void Awake()
     {
         if (Instance != null) Destroy(gameObject);
@@ -99,6 +104,7 @@ public class EventManager : MonoBehaviour
         OnPlayerDisconnectedLose += OnGameLose;
     }
 
+    /// <summary> 게임 시작 요청 </summary>
     public async void StartGame()
     {
         try
@@ -129,6 +135,7 @@ public class EventManager : MonoBehaviour
         }
     }
     
+    /// <summary> 기권 요청 </summary>
     public async void RequestSurrender()
     {
         try
@@ -161,6 +168,7 @@ public class EventManager : MonoBehaviour
         }
     }
 
+    /// <summary> 무르기 요청, 무르기 성사 여부는 별도로 처리됨 </summary>
     public async void RequestTakeBack()
     {
         try
@@ -200,6 +208,7 @@ public class EventManager : MonoBehaviour
         }
     }
     
+    /// <summary> 초읽기 구매 요청 </summary>
     public async void RequestPurchaseByoyomi()
     {
         try
@@ -254,8 +263,10 @@ public class EventManager : MonoBehaviour
         // TODO: Fast-Fail 상황을 서버에게 전송하는 코드 추후 추가
     }
 
+    /// <summary> 기권 판 쓸기 연출이 시작될 때 호출 </summary>
     public void StartSweeping() => OnStartSweeping!.Invoke();
     
+    /// <summary> 서버 응답 중 None이 아닌 GameEndCode가 있을 경우 호출 </summary>
     public void HandleGameEndCode(GameEndCode gameEndCode)
     {
         if (IsGameEnd) return; // 중복 호출 방어
@@ -329,7 +340,7 @@ public class EventManager : MonoBehaviour
 
             /* TODO: 추후 무르기 적용인지 체크 */if (false)
             {
-                OnTakeBack!.Invoke();
+                OnTakeBack!.Invoke(true);
                 HandleIngameEvent(); // 다음 인게임 이벤트 응답을 받기 위해 재호출
                 return;
             }
@@ -338,10 +349,8 @@ public class EventManager : MonoBehaviour
             {
                 case IngameRequestType.None:
                     if (IsGameEnd) return; // 게임이 끝났으면 완전 종료
-                    
-                    /* TODO: 여기를 무르기 요청 무산으로 처리하면 될 듯?
-                     * 돌 마크 끄고 타이머 재개하는 이벤트 만들어서 넣자 */
-                    
+                    //TODO: 일단 여기서 무르기 요청 무산 처리, 추후 체크
+                    OnTakeBack!.Invoke(false);
                     Debug.Log("아무 동작도 없는 인게임 이벤트 응답, 게임 재개");
                     break; // 게임이 끝나지 않았으면 switch문만 종료
                 case IngameRequestType.Surrender:

@@ -8,7 +8,6 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private StoneMover stoneMover;
-    [SerializeField] private BoardSweeper oppositeSweeper;
     [SerializeField] private AudioClip winSound;
     [SerializeField] private AudioClip loseSound;
     [SerializeField] private AudioClip drawSound;
@@ -32,8 +31,8 @@ public class GameManager : MonoBehaviour
     private AudioSource _audioSource;
     private long _lastTime;
 
-    // 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
-    // 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음.
+    /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
+     * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -2로 설정하였음. */
     private void Awake()
     {
         if (Instance != null) Destroy(gameObject);
@@ -46,9 +45,9 @@ public class GameManager : MonoBehaviour
         
         #region 타이머 진행 제어 (Update 활성화 여부)
         _eventManager.OnGameStart += () => enabled = true;
-        _eventManager.OnGameEnd += () => enabled = false;
-        _eventManager.OnStartSweeping += () => enabled = false;
-        _eventManager.OnBlackUnmovable += () => enabled = false;
+        _eventManager.OnGameEnd += DisableTimer;
+        _eventManager.OnStartSweeping += DisableTimer;
+        _eventManager.OnBlackUnmovable += DisableTimer;
         #endregion
         
         _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
@@ -57,6 +56,7 @@ public class GameManager : MonoBehaviour
         _eventManager.OnServerReplyFailed += PlayDrawSound;
         _networkManager.OnRequestFailed += _ => PlayDrawSound();
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
+        _eventManager.OnTakeBackRequested += _ => DisableTimer();
         _eventManager.OnTakeBack += OnTakeBack;
         
         /*
@@ -156,8 +156,8 @@ public class GameManager : MonoBehaviour
         }
         #endregion
         
-        // Board의 OnTurnChanged는 무르기 때도 실행되는 이벤트
-        // 오직 착수만 의미하는 이벤트는 OnStoneMove
+        /* Board.OnTurnChanged<int>는 무르기 때도 실행되는 이벤트
+         * 오직 착수만 의미하는 이벤트는 stoneMover.OnStoneMove */
         stoneMover.OnStoneMove += OnStoneMove;
     }
     
@@ -171,10 +171,13 @@ public class GameManager : MonoBehaviour
         _nowPlayerTimer.Progress((nowTime - _lastTime) / 1000f);
         _lastTime = nowTime;
     }
+    
+    /// <summary> MonoBehaviour 비활성화 (타이머 정지) </summary>
+    private void DisableTimer() => enabled = false;
 
     private void PlayDrawSound() => _audioSource.PlayOneShot(drawSound);
 
-    /// <summary> 진행 중인 타이머 교체,  </summary>
+    /// <summary> 진행 중인 타이머 교체 및 내 타이머 동기화 요청 </summary>
     private async void OnStoneMove(bool isBlackTurn)
     {
         try
@@ -184,7 +187,6 @@ public class GameManager : MonoBehaviour
             if (isBlackTurn == IsPlayerBlack)
             {
                 // 플레이어의 턴이 시작한 경우
-                // 
                 _nowPlayerTimer = PlayerTimer;
             }
             else
@@ -193,6 +195,7 @@ public class GameManager : MonoBehaviour
                 _nowPlayerTimer = OppositeTimer;
                 PlayerTimer.ReviseTimer();
 
+                #region 타이머 동기화
                 // 자동 착수되는 첫 수에는 타이머 동기화 요청을 보내지 않음
                 if (BoardInform.NowTurn == 1) return;
                 
@@ -205,9 +208,14 @@ public class GameManager : MonoBehaviour
                 {
                     /* case 1: OnRequestFailed
                      * case 2: 서버 연산 로직 버그
-                     * case 3: 게임 종료 상황에서의 응답(레이스 컨디션) */
+                     * case 3: 각종 상황에서의 레이스 컨디션
+                     * 
+                     * _eventManager.ServerReplyFailed()를 하지 않는 이유
+                     * 타이머 동기화는 UI/UX 보강을 위한 작업일 뿐임.
+                     * 게임의 핵심 로직이 아니므로 속행해도 무방함.
+                     * 따라서 유연하게 soft-fail 전략을 선택함 */
 
-                    Debug.Log("타이머 동기화 요청에 default가 응답됨");
+                    Debug.LogWarning("타이머 동기화 요청에 default가 응답됨");
                     return;
                 }
                 
@@ -216,10 +224,8 @@ public class GameManager : MonoBehaviour
                     PlayerTimer.SynchroTimer(serverTimer);
                     Debug.Log("플레이어의 타이머가 서버로부터 반려됨, 서버 정보로 동기화 완료");
                 }
-                else
-                {
-                    Debug.Log("플레이어의 타이머가 승인됨");
-                }
+                else Debug.Log("플레이어의 타이머가 승인됨");
+                #endregion
             }
         }
         catch (Exception e)
@@ -227,12 +233,17 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"OnStoneMove Exception, Maybe in TimerSynchro Request : {e}");
         }
     }
-
-    private void OnTakeBack()
+    
+    private void OnTakeBack(bool isAccepted)
     {
-        if (BoardInform.TryTakeBack()) return;
-        
-        Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
-        _eventManager.ServerReplyFailed();
+        if (BoardInform.TryTakeBack() is false)
+        {
+            Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
+            _eventManager.ServerReplyFailed();
+            return;
+        }
+        // 타이머 재개
+        _lastTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        enabled = true;
     }
 }

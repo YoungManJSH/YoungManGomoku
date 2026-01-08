@@ -44,7 +44,6 @@ public class PlayerPanelController : MonoBehaviour
     private int _prevByoyomiCount;
     private string _initByoyomiSecondText;
     private bool _isByoyomi;
-    private bool _isGameEnd;
     private CancellationTokenSource _byoyomiUseCts;
 
     private void Awake()
@@ -52,16 +51,10 @@ public class PlayerPanelController : MonoBehaviour
         _audioSource = GetComponent<AudioSource>();
         _originFont = byoyomiCount.font;
         _prevTime = -1;
-        _isGameEnd = false;
         
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
         if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
-        gm.BoardInform.OnBlackUnmovable += () =>
-        {
-            enabled = false;
-            _isGameEnd = true;
-        };
         
         _myTimer = isPlayer ? gm.PlayerTimer : gm.OppositeTimer;
         _isByoyomi = _myTimer.MainTime == 0f;
@@ -102,13 +95,14 @@ public class PlayerPanelController : MonoBehaviour
         InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating, myUser.imageNum);
         
         EventManager em = EventManager.Instance;
-        em.OnGameEnd += () =>
-        {
-            _isGameEnd = true;
-            enabled = false;
-            CancelByoyomiUse();
-        };
-            
+        em.OnStartSweeping += DisableTimer;
+        em.OnGameEnd += DisableTimer;
+        em.OnGameEnd += CancelByoyomiUse;
+        /* 무르기 관련 MonoBehaviour 정지&재개는 적용하지 않음
+         * 어차피 실제 타이머 값이 멈춰있으므로 계속 Update 해도 변화가 없을 것이며
+         * Glow Effect가 중단되는 것이 부자연스럽다고 판단하였음.
+         * 연산량이 약간 낭비되긴 하지만 미미한 수준임. */
+        
         if (isPlayer)
         {
             em.OnPlayerTimeOut += OnTimeOut;
@@ -151,14 +145,14 @@ public class PlayerPanelController : MonoBehaviour
         #endregion
 
         #region 초읽기 중일 때
-        remainTime = Mathf.CeilToInt(_myTimer.NowByoyomiSeconds);
-        
         if (_myTimer.ByoyomiCount < _prevByoyomiCount)
         {
             CancelByoyomiUse();
             _byoyomiUseCts = new CancellationTokenSource();
             OnUseByoyomi(_myTimer.ByoyomiCount, _byoyomiUseCts.Token).Cancel();
         }
+        
+        remainTime = Mathf.CeilToInt(_myTimer.NowByoyomiSeconds);
         
         if (remainTime == _prevTime) return;
 
@@ -186,6 +180,9 @@ public class PlayerPanelController : MonoBehaviour
         #endregion
     }
 
+    /// <summary> MonoBehaviour 비활성화 (타이머 정지) </summary>
+    private void DisableTimer() => enabled = false;
+    
     private void CancelByoyomiUse()
     {
         if (_byoyomiUseCts != null)
@@ -223,8 +220,6 @@ public class PlayerPanelController : MonoBehaviour
 
     private void OnStoneMove(bool isBlackTurn)
     {
-        if (_isGameEnd) return;
-        
         enabled = isBlackTurn == _isThisBlack;
 
         if (enabled)

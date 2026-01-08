@@ -119,9 +119,7 @@ public class ButtonManager : MonoBehaviour
     private void OnLastByoyomi()
     {
         if (GameManager.Instance.IsByoyomiPurchased)
-        {
             return;
-        }
         
         ButtonActivate(_byoyomiPurchaseSet);
         _activateSet.Add(_byoyomiPurchaseSet);

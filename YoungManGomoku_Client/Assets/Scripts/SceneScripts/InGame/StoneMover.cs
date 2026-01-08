@@ -369,8 +369,14 @@ public abstract class StoneMover : MonoBehaviour
     }
     
     /// <summary> 무르기 적용 - 최근 돌 2개 제거 </summary>
-    private void OnTakeBack()
+    private void OnTakeBack(bool isAccepted)
     {
+        if (isAccepted is false)
+        {
+            UnmarkTakeBack();
+            return;
+        }
+        
         if (_recentStone.black == null || _recentStone.white == null)
         {
             Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 실행!");
