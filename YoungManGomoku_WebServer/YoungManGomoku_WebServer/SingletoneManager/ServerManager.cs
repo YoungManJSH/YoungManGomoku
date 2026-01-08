@@ -73,15 +73,33 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
         public string UserInfo(string idToken) => UserInfo(GetPlayerUID(idToken));
 
+		public bool CloseSession(ulong UID)
+        {
+            if (PlayerDatas.TryRemove(UID, out PlayerSession? logoutUser))
+            {
+				if(UIDByIDToken.TryRemove(logoutUser.AuthToken, out ulong removeUID))
+                {
+                    if (removeUID != UID) _logger.LogWarning($"[{DateTime.Now}] 세션 삭제하려는 토큰과 연결된 UID가 다릅니다!");
+					
+                    _logger.LogTrace($"[{DateTime.Now}] {UID} 세션 종료 성공!");
+					
+                    return true;
+                }
+				_logger.LogWarning($"[{DateTime.Now}] {UID} User 세션은 존재하지만, UID by Token이 연결되어 있지 않았습니다!");
+			}
+			_logger.LogWarning($"[{DateTime.Now}] {UID} User는 이미 세션에 존재하지 않습니다!");
+			return false;
+        }
 
-        /// <summary>
-        /// Player Data는 Client에서 사용하는 class, 
-        /// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다. 
-        /// 서버가 가진 데이터를 조립해 클라가 알아보기 쉬운 PlayerData로 바꿔주는 함수
-        /// </summary>
-        /// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
-        /// <returns> 클라용 플레이어 데이터 </returns>
-        public PlayerData? ComposePlayerData(ulong UID)
+
+		/// <summary>
+		/// Player Data는 Client에서 사용하는 class, 
+		/// 보안 문제로 서버에서는 공개된 클라의 구조체를 쓰지 않는다. 
+		/// 서버가 가진 데이터를 조립해 클라가 알아보기 쉬운 PlayerData로 바꿔주는 함수
+		/// </summary>
+		/// <param name="UID"> 이 UID로 서버의 플레이어 세션에 접근해서 클라용 플레이어 데이터로 조립</param>
+		/// <returns> 클라용 플레이어 데이터 </returns>
+		public PlayerData? ComposePlayerData(ulong UID)
 		{
             if (PlayerDatas.TryGetValue(UID, out PlayerSession? playerSession))
             {

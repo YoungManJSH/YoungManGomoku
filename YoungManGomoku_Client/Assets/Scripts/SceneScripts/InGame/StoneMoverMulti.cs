@@ -68,7 +68,7 @@ public class StoneMoverMulti : StoneMover
                 _placeStoneDTO.MyTimer = _playerTimer.SyncData;
                 _placeStoneDTO.Row = (byte)NowCoord.row;
                 _placeStoneDTO.Col = (byte)NowCoord.col;
-                
+
                 var opponentMove =
                     await _networkManager.RequestPlaceStone(_placeStoneDTO);
 
@@ -79,18 +79,13 @@ public class StoneMoverMulti : StoneMover
                     _eventManager.ServerReplyFailed();
                     return;
                 }
-                
+
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
 
-                if (opponentMove.GameEndCode != GameEndCode.None)
-                {
-                    _eventManager.HandleGameEndCode(opponentMove.GameEndCode);
-
-                    // 게임 종료 상황에서 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략
-                    if ((opponentMove.Row, opponentMove.Col) == NowCoord ||
-                        opponentMove.Row > Board.MaxCoord ||
-                        opponentMove.Col > Board.MaxCoord) return;
-                }
+                // 게임 종료 상황에서 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략
+                if ((opponentMove.Row, opponentMove.Col) == NowCoord ||
+                    opponentMove.Row > Board.MaxCoord ||
+                    opponentMove.Col > Board.MaxCoord) return;
 
                 MoveStone((opponentMove.Row, opponentMove.Col));
             }

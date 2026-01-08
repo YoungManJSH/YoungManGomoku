@@ -53,7 +53,7 @@ public class EventManager : MonoBehaviour
     private GameManager _gameManager;
     private NetworkManager _networkManager;
     private CS_InGameRequestDTO _ingameRequestDTO;
-    private CS_WaitForEventDTO _waitForEventDTO;
+    private CS_TakeBackPermitDTO _takebackpermitDTO;
     
     /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
      * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음. */
@@ -65,7 +65,7 @@ public class EventManager : MonoBehaviour
         _networkManager = GetComponent<NetworkManager>();
         _networkManager.OnRequestFailed += OnRequestFailed;
         _ingameRequestDTO = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequestType.None);
-        _waitForEventDTO = new CS_WaitForEventDTO(_gameManager.IdToken, takeback: false);
+		_takebackpermitDTO = new CS_TakeBackPermitDTO(_gameManager.IdToken, takeback: false);
         
         IsGameEnd = false;
     }
@@ -321,7 +321,7 @@ public class EventManager : MonoBehaviour
         try
         {
             SC_WaitEventDTO response =
-                await _networkManager.RequestWaitForEvent(_waitForEventDTO);
+                await _networkManager.RequestWaitForEvent(_gameManager.IdToken);
             
             if (response == null)
             {

@@ -10,5 +10,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 		public ulong GetPlayerUID(string id_Token);
 
 		public PlayerData? ComposePlayerData(ulong UID);
+
+		public bool CloseSession(ulong UID);
 	}
 }

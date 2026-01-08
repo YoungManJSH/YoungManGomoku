@@ -131,11 +131,11 @@ namespace YoungManGomoku_WebServer.Controllers
         }
         
 		[HttpGet]
-		public IEnumerable<PlayerData> Get()
+		public IEnumerable<PlayerData?> Get()
         {
             int size = 5;
             
-            PlayerData[] datas = new PlayerData[size];
+            PlayerData?[] datas = new PlayerData[size];
             
             int i = 0;
             // 안전한 스냅샷?
