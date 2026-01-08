@@ -189,18 +189,18 @@ namespace YoungManGomoku_Protocol.ClientToServer
         }
     }
 
-    public class CS_WaitForEventDTO
+    public class CS_TakeBackPermitDTO
     {
         public string IDToken { get; set; }
-        public bool IsTakeBackable { get; set; }
+        public bool IsTakeBackPermit { get; set; }
 
         /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
-        public CS_WaitForEventDTO() { }
+        public CS_TakeBackPermitDTO() { }
 
-        public CS_WaitForEventDTO(string idToken, bool takeback)
+        public CS_TakeBackPermitDTO(string idToken, bool takeback)
         {
             IDToken = idToken;
-            IsTakeBackable = takeback;
+			IsTakeBackPermit = takeback;
         }
     }
 }
@@ -230,8 +230,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
         public StoneColorType MyStoneColorType { get; set; }
 
         public SC_TimerSettingDTO TimerSettingDTO { get; set; }
-
-        
+  
         public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor, in SC_TimerSettingDTO timerSettingDTO) 
         { 
             OpponentPlayer = opponent;
@@ -264,45 +263,27 @@ namespace YoungManGomoku_Protocol.ServerToClient
     {
 	    /// <summary> 상대방의 타이머 </summary>
         public TimerSyncData OpponentTimer { get; set; }
-	    
-	    /// <summary> 게임이 끝난 경우 알맞은 값을 넣어주세요 </summary>
-        public GameEndCode GameEndCode { get; set; }
 
         public byte Row { get; set; }
 	    public byte Col { get; set; }
 
-        // 재대결 가능 알림? 일단 만들어는 봤는데... 쓸 일이 있을까?
-        public bool CanRequestRematch { get; set; }
-
-        public SC_OpponentPlaceStoneDTO(TimerSyncData opponentTimer, byte row, byte col, GameEndCode endCode = GameEndCode.None)
+        public SC_OpponentPlaceStoneDTO(TimerSyncData opponentTimer, byte row, byte col)
 	    {
 		    OpponentTimer = opponentTimer;
 		    Row = row;
 		    Col = col;
-		    GameEndCode = endCode; // None or GomokuLose or BlackUnmovable
-	    }
-    }
-    
-    /// <summary> 인게임 특수 요청에 대한 응답, 추후 추가 및 수정 가능 </summary>
-    public class SC_IngameRequestResponseDTO
-    {
-	    public bool IsSuccess { get; set; }
-	    public GameEndCode GameEndCode { get; set; }
-
-	    public SC_IngameRequestResponseDTO(bool isSuccess, GameEndCode gameEndCode)
-	    {
-		    IsSuccess = isSuccess;
-		    GameEndCode = gameEndCode;
 	    }
     }
 
     public class SC_WaitEventDTO
     {
-        // 시간 승/패, 항복 승/패, 상대방 접속 끊겼을 때
-        public GameEndCode GameEndCode { get; set; }
+		/// <summary> 게임이 끝난 경우 알맞은 값을 넣어주세요 </summary>
+		public GameEndCode GameEndCode { get; set; }
 
         // 상대방이 항복, 무르기 요청, 초읽기 구매 등을 했을 때
         public IngameRequestType OpponentRequest { get; set; }
+
+        public bool IsTakeBackSuccess { get; set; }
 
         public SC_WaitEventDTO(GameEndCode gameEndCode, IngameRequestType opponentRequest)
         {

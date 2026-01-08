@@ -51,7 +51,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://192.168.200.156:5001"; //"https://localhost:5001";
+	[SerializeField] private const string baseURL = "https://115.126.216.245:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -165,24 +165,34 @@ public class NetworkManager : MonoBehaviour
 	
 	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
 	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
-	public async Awaitable<SC_WaitEventDTO> RequestWaitForEvent(CS_WaitForEventDTO reqWaitEventDTO, int timeOutSeconds = 0)
-		=> await RequestPostServer<SC_WaitEventDTO>("GomokuIngame/WaitForEvent", JsonConvert.SerializeObject(reqWaitEventDTO), timeOutSeconds, "Gomoku Ingame : Request Wait For Event Success");
+	public async Awaitable<SC_WaitEventDTO> RequestWaitForEvent(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_WaitEventDTO>("GomokuIngame/WaitForEvent", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request Wait For Event Success");
 	
-
+    // 무르기 요청, 항복, 초읽기 구매
     public async Awaitable<SC_ResponseStringDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
     => await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
 
 
+	/// <summary>
+	/// 서버로부터 상대의 무르기 요청 이벤트가 온 경우, 상대의 무르기 요청에 대한 승인이나 거절 여부를 담아 서버로 전송
+	/// </summary>
+	/// <param name="takebackPermitDTO">  IdToken, 상대의 무르기를 승인할 것인지 거부할 것인지 여부의 bool 변수 </param>
+	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
+	/// <returns> 단순 성공 응답 문자열 </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_TakeBackPermitDTO takebackPermitDTO, int timeOutSeconds = 0)
+	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
 
 
-    /// <summary>
-    /// 웹 서버에 하트 비트 요청 (접속 여부 확인)
-    /// 서버에서는 클라의 마지막 요청 시간과 하트비트가 날아온 시간차를 비교해 유효한 연결인지 계산
-    /// </summary>
-    /// <param name="idToken"> 플레이어의 idToken </param>
-    /// <param name="timeOutSeconds"> 대기 한계시간, 이 값을 넘으면 Connection Error, 0 이하면 무한 대기 </param>
-    public async Awaitable<string> RequestHeartbeat(string idToken, int timeOutSeconds = 10)
+
+
+	/// <summary>
+	/// 웹 서버에 하트 비트 요청 (접속 여부 확인)
+	/// 서버에서는 클라의 마지막 요청 시간과 하트비트가 날아온 시간차를 비교해 유효한 연결인지 계산
+	/// </summary>
+	/// <param name="idToken"> 플레이어의 idToken </param>
+	/// <param name="timeOutSeconds"> 대기 한계시간, 이 값을 넘으면 Connection Error, 0 이하면 무한 대기 </param>
+	public async Awaitable<string> RequestHeartbeat(string idToken, int timeOutSeconds = 10)
 		=> await RequestPostServer<string>("Heartbeat", $"\"{idToken}\"", timeOutSeconds, "=== Heart Beat Success ===");
 
 

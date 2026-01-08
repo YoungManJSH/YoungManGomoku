@@ -17,7 +17,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 		// Key : Player UID / Value : Room UID
 		private readonly ConcurrentDictionary<ulong, ulong> _roomByPlayer;
 
-		public IServerContext ServerContext;
+		public IServerContext ServerContext { get; }
 
         public GameRoomManager(ILogger<GameRoomManager> logger, IServerContext serverContext)
 		{
