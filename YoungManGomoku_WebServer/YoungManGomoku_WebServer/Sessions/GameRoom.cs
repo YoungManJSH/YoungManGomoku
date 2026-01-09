@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Security.Cryptography;
+
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -462,8 +461,33 @@ namespace YoungManGomoku_WebServer.Sessions
                 return PlaceStoneResultType.Success;
             }
         }
+		public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+		{
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
-        public void Surrender(ulong UID)
+			// 개 등신 코드인데 일단은 이렇게라도 동작시켜
+			/*
+            int loopCount = 0;
+            while (turn != _board.NowTurn) ++loopCount;       
+            */
+			// 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
+			await WaitForSynchronizeTimerTurnAsync(turn);
+
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn}");
+
+			// 뭣이 타이머가 없다고?
+			if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false) return new TimerSyncData(0f, 0);
+
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {UID} 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
+
+			// 서버 타이머 값보다 클라이언트 데이터값이 더 작으면 클라이언트 데이터 승인
+			if (timer >= clientTimerData) timer.SynchroTimer(clientTimerData);
+
+			// 승인 되지 않았다면 서버 타이머 데이터를 그대로 보냄
+			return timer.SyncData;
+		}
+
+		public void Surrender(ulong UID)
         {
             _userEndCodes[UID] = GameEndCode.SurrenderLose;
 
@@ -538,41 +562,18 @@ namespace YoungManGomoku_WebServer.Sessions
             }
 		}
 
-        public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+        public void PurchaseCountdownLife(ulong UID)
         {
-            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
+            // 타이머 추가 처리 필요
 
-            // 개 등신 코드인데 일단은 이렇게라도 동작시켜
-            /*
-            int loopCount = 0;
-            while (turn != _board.NowTurn) ++loopCount;       
-            */
-            // 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
-            await WaitForSynchronizeTimerTurnAsync(turn);
-
-            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn}");
-
-            // 뭣이 타이머가 없다고?
-            if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false) return new TimerSyncData(0f, 0);
-
-            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {UID} 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
-            
-            // 서버 타이머 값보다 클라이언트 데이터값이 더 작으면 클라이언트 데이터 승인
-            if (timer >= clientTimerData) timer.SynchroTimer(clientTimerData);
-            
-            // 승인 되지 않았다면 서버 타이머 데이터를 그대로 보냄
-            return timer.SyncData;
-        }
-
-
-        public StoneColorType GetColor(ulong UID)
-		{
-			if (UID == BlackPlayerUID) return StoneColorType.Black;
-			if (UID == WhitePlayerUID) return StoneColorType.White;
-            // 있을 수 없는 일일까? Assert를 걸어야 할까? 하지만 서버는 Assert 걸면 안 된다.
-            _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [{UID}]유저의 돌 색이 이상하다.");
-            return StoneColorType.Empty;
+            if (_userTimers.TryGetValue(UID, out UserTimer? myTimer) == false)
+            {
+				_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] [{UID}] 유저의 유저타이머를 찾지 못했습니다.");
+			}
+			myTimer?.ByoyomiPurchased(_gameRoomManager.ServerContext.DefaultTimerSetting.ByoyomiPurchaseAmount);
 		}
+
+       
 
 		// 구버전 코드기는 한데 혹시 몰라서 일단 저장, 추후 제거할듯
 		public void CheckHeartbeat()
@@ -630,6 +631,7 @@ namespace YoungManGomoku_WebServer.Sessions
 		{
 			_userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.Draw;
             _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 오목 무승부 발생!");
+            FinishGame();
 		}
 
         private void OnBlackUnmovable()
@@ -637,7 +639,6 @@ namespace YoungManGomoku_WebServer.Sessions
             _userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.BlackUnmovable;
             _winnerUID = WhitePlayerUID;
             _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 흑돌의 남은 위치 모두 금수로 인한 자동 패배. 백돌의 오목 승리!");
-			FinishGame();
 		}
 
         // 항상 락 내부에서 실행되어야 하는 함수
@@ -693,7 +694,16 @@ namespace YoungManGomoku_WebServer.Sessions
 			}
         }
 
-        private ulong GetOpponent(ulong uid)
+		public StoneColorType GetColor(ulong UID)
+		{
+			if (UID == BlackPlayerUID) return StoneColorType.Black;
+			if (UID == WhitePlayerUID) return StoneColorType.White;
+			// 있을 수 없는 일일까? Assert를 걸어야 할까? 하지만 서버는 Assert 걸면 안 된다.
+			_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [{UID}]유저의 돌 색이 이상하다.");
+			return StoneColorType.Empty;
+		}
+
+		private ulong GetOpponent(ulong uid)
 			=> uid == BlackPlayerUID ? WhitePlayerUID : BlackPlayerUID;
 
         public GameEndCode GetEndCode(ulong uid)

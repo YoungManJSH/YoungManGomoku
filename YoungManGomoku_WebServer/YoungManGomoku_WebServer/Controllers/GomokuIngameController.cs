@@ -166,6 +166,7 @@ namespace YoungManGomoku_WebServer.Controllers
                     room.Surrender(uid);
                     break;
                 case IngameRequestType.PurchaseByoyomi:
+                    room.PurchaseCountdownLife(uid);
                     break;
                 case IngameRequestType.TakeBack:
                     room.RequestTakeBack(uid);
