@@ -549,7 +549,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 long takebackWaitTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _lastTakebackRequestTime;
                 _gameProgressMilliseconds += takebackWaitTime;
 
-                SC_WaitEventDTO endEvent = new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBack);
+                SC_WaitEventDTO endEvent = new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBackResult);
                 endEvent.IsTakeBackSuccess = isTakebackable && takebackWaitTime < 11000; // 무르기 요청이 온 후 15000ms 이내로 온 무르기 승인에만 무르기 성공
 
                 if (endEvent.IsTakeBackSuccess) _board.TryTakeBack();

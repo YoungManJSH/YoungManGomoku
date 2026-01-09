@@ -12,6 +12,9 @@
         TakeBack,
         
         /// <summary> 초읽기 구매 </summary>
-        PurchaseByoyomi
+        PurchaseByoyomi,
+
+        /// <summary> 무르기 승인 or 거부 허가 확답 </summary>
+        TakeBackResult
     }
 }
