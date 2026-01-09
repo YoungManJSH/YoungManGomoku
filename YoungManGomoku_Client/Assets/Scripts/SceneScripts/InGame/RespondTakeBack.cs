@@ -3,6 +3,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using YoungManGomoku_Protocol.ClientToServer;
 
 public class RespondTakeBack : MonoBehaviour
 {
@@ -15,18 +16,17 @@ public class RespondTakeBack : MonoBehaviour
     
     private long _requestedTime;
     private int _remainSecond;
-    private bool _respond;
     private CancellationTokenSource _cts;
-    private EventManager _eventManager;
+    private CS_TakeBackPermitDTO _takeBackPermitDTO;
 
     private void Awake()
     {
         acceptButton.onClick.AddListener(Accept);
         denyButton.onClick.AddListener(Deny);
         messageUI.text = $"{message} - {timeLimit:D2}";
+        _takeBackPermitDTO = new CS_TakeBackPermitDTO(GameManager.Instance.IdToken, takeback: false);
         
-        _eventManager = EventManager.Instance;
-        _eventManager.OnTakeBackRequested += async isMyRequest =>
+        EventManager.Instance.OnTakeBackRequested += async isMyRequest =>
         {
             if (isMyRequest) return;
             
@@ -54,11 +54,22 @@ public class RespondTakeBack : MonoBehaviour
         
         messageUI.text = $"{message} - {nowRemain:D2}";
         _remainSecond = nowRemain;
+
+        if (Input.GetButtonDown("Submit"))
+        {
+            Accept();
+            return;
+        }
+        
+        if (Input.GetButtonDown("Cancel"))
+        {
+            Deny();
+        }
     }
 
     private void Accept()
     {
-        _respond = true;
+        _takeBackPermitDTO.IsTakeBackPermit = true;
         _cts.Cancel();
     }
 
@@ -68,7 +79,7 @@ public class RespondTakeBack : MonoBehaviour
     {
         _requestedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _remainSecond = timeLimit;
-        _respond = false; // 유저 입력이 없을 경우 적용할 기본값 (거절)
+        _takeBackPermitDTO.IsTakeBackPermit = false; // 유저 입력이 없을 경우 적용할 기본값 (거절)
         _cts = new CancellationTokenSource();
         
         try
@@ -80,9 +91,9 @@ public class RespondTakeBack : MonoBehaviour
         finally
         {
             gameObject.SetActive(false);
+            NetworkManager.Instance.RequestTakeBackPermit(_takeBackPermitDTO, timeOutSeconds: 5).Cancel();
             _cts.Dispose();
             _cts = null;
-            _eventManager.TakeBackResponse(_respond);
         }
     }
 }
