@@ -238,14 +238,20 @@ namespace YoungManGomoku_WebServer.Sessions
             lock (_gameroomLock)
             {
                 _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitTimerAsync] Room {RoomID} : {turn} 턴 - 타이머 싱크 대기\n");
-                // 이미 턴이 같으면 바로 완료
-                if (_board.NowTurn == turn) _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] Room {RoomID} : {turn}턴과 서버보드 턴 {_board.NowTurn}  타이머 싱크 일치\n"); //  return ;
-
+                
                 if (!_synchronizeTimerTurnWaiters.TryGetValue(turn, out TaskCompletionSource<bool>? tcs))
                 {
                     tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     _synchronizeTimerTurnWaiters[turn] = tcs;
                 }
+
+                // 이미 턴이 같으면 바로 완료
+                if (_board.NowTurn == turn)
+                {
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitTimerAsync] Room {RoomID} : {turn}턴과 서버보드 턴 {_board.NowTurn} 타이머 싱크 일치\n");
+                    tcs.TrySetResult(true);
+                }
+
                 return tcs.Task;
             }
         } 
@@ -319,7 +325,7 @@ namespace YoungManGomoku_WebServer.Sessions
         {
             // 백돌 첫 턴 시작 시간 갱신용
             if (_gameProgressMilliseconds == 0) _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-			_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Game Start]]  {RoomID} 방에서 게임 시작 작업 수행\n시작 ms : {_gameProgressMilliseconds}");
+			_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Game Start]] {RoomID} 방에서 게임 시작 작업 수행\n시작 ms : {_gameProgressMilliseconds}");
 			return true;
 			// return State == GameRoomState.Waiting; // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
 		}
@@ -347,15 +353,15 @@ namespace YoungManGomoku_WebServer.Sessions
                     if (BlackPlayerUID != UID)
                     {
                         // 이건 그럴 수 있음. 백돌 착수 요청이 먼저 도착할 수 있지...
-                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone]  첫 수인데 흑돌이 아닌 {UID} 유저가 착수 요청을 했습니다!\n");
+                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone] 첫 수인데 흑돌이 아닌 {UID} 유저가 착수 요청을 했습니다!\n");
                         return PlaceStoneResultType.Invalid; // 다른걸 생각해봐야 할 듯
                     }
 
                     // 흑돌은 무조건 첫 수 정 중앙이기 때문에 이건 클라 뚜껑 딴게 맞음, 
                     // 룰 상 중앙은 무조건 7, API 담당자가 중앙 번호나 보드판의 최대 길이를 뱉어주는 프로퍼티를 만들지 않아 매직 넘버를 일단 박음
-                    if (x != 7 || y != 7)
+                    if (x != Board.BoardSize / 2 || y != Board.BoardSize / 2)
                     {
-                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone]  첫 수인데 {UID} 흑 유저가 (7,7) 위치에 두지 않았습니다...!\n");
+                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone] 첫 수인데 {UID} 흑 유저가 (7,7) 위치에 두지 않았습니다...!\n");
                         return PlaceStoneResultType.Invalid;
                     }
 
@@ -363,7 +369,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     if (State != GameRoomState.Waiting)
                     {
                         // 리벤지 쪽 구현 이상하면 여기 들어올 수도 있음
-                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone]  첫 수인데 게임 룸의 상태가 대기중이 아닙니다!\n");
+                        _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] [Place Stone] 첫 수인데 게임 룸의 상태가 대기중이 아닙니다!\n");
                         return PlaceStoneResultType.Invalid;
                     }
 
@@ -374,7 +380,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
 				if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
                 {
-					_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone]  [{UID}] 타이머 콜백이 등록되어 있지 않아 시간승패 처리가 불가능합니다!!!");
+					_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] [{UID}] 타이머 콜백이 등록되어 있지 않아 시간승패 처리가 불가능합니다!!!");
 				}
 				myTimerCallback?.Change(Timeout.Infinite, Timeout.Infinite);
 
@@ -384,12 +390,12 @@ namespace YoungManGomoku_WebServer.Sessions
                 // [흑].프로그레스(흑턴 시작 시간, 흑턴 착수 정보가 온 시간)
                 if (_userTimers.TryGetValue(UID, out UserTimer? myTimer))
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone]  [{UID}] 타이머 진행 전 : 서버시간 {_gameProgressMilliseconds}ms - {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] [{UID}] 타이머 진행 전 : 서버시간 {_gameProgressMilliseconds}ms - {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
                     myTimer.ProgressExcludingTol(_gameProgressMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                     _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] [{UID}] 타이머 진행 후 : 서버시간 {_gameProgressMilliseconds}ms - {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
                 }
 
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone]  {_board.NowTurn}턴 시작 : {(IsNowTurnBlack ? "Black" : "White")} [{_currentTurnUID}] 차례");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_board.NowTurn}턴 시작 : {(IsNowTurnBlack ? "Black" : "White")} {_gameRoomManager.ServerContext.UserInfo(_currentTurnUID)}유저의 차례");
 
                 // TryMoveStone이 true일 시 착수 성공. 내부적으로 승패 처리까지 동작하며 _board에 등록한 event들이 실행됨
                 if (_board.TryMoveStone(x, y) == false)
@@ -398,7 +404,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     return PlaceStoneResultType.Occupied;
                 }
                 // 착수 성공 및 게임 결과 처리
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone]  {_board.NowTurn}턴으로 진행");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_board.NowTurn}턴으로 진행");
 
                 // 보드 턴이 업데이트 되었다면 타이머 싱크로나이즈로 전달
                 if (_synchronizeTimerTurnWaiters.TryGetValue(_board.NowTurn, out TaskCompletionSource<bool>? tcs))
@@ -440,7 +446,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 이번 착수로 네가 지금 즉시 승리했음
                 if (UID == _winnerUID)
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}]  [Place Stone] {UID} 차례에서 승리");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_gameRoomManager.ServerContext.UserInfo(UID)}차례에서 승리");
                     FinishGame();
                     return PlaceStoneResultType.NowWin;
                 }
@@ -454,37 +460,51 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 게임 안 끝났네, 상대 턴으로 넘김
                 if (State != GameRoomState.Finished && _winnerUID == 0UL)
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_currentTurnUID} 차례에서 {GetOpponent(UID)}으로 턴 교체");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_gameRoomManager.ServerContext.UserInfo(UID)}차례에서 {_gameRoomManager.ServerContext.UserInfo(GetOpponent(UID))}으로 턴 교체");
                     _currentTurnUID = opponent;
                 }
 
                 return PlaceStoneResultType.Success;
             }
         }
-		public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+		public TimerSyncData SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
 		{
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
 			// 개 등신 코드인데 일단은 이렇게라도 동작시켜
-			/*
+			
             int loopCount = 0;
             while (turn != _board.NowTurn) ++loopCount;       
-            */
+            
+
 			// 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
-			await WaitForSynchronizeTimerTurnAsync(turn);
+			//await WaitForSynchronizeTimerTurnAsync(turn);
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn} / Loop Count {loopCount}");
 
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn}");
+            // 뭣이 타이머가 없다고?
+            if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false)
+            {
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)} 유저가 유저 타이머를 보유하고 있지 않다?!");
+                return new TimerSyncData(0f, 0);
+            }
 
-			// 뭣이 타이머가 없다고?
-			if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false) return new TimerSyncData(0f, 0);
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)} 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
 
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {UID} 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
+            // 서버 타이머 값보다 클라이언트 데이터값이 더 작으면 클라이언트 데이터 승인
+            if (timer >= clientTimerData)
+            {
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되었습니다.");
+                timer.SynchroTimer(clientTimerData);
+            }
+            else
+            {
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되지 않았습니다.");
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] Client Timer Data : 메인타임 {clientTimerData.MainTime} / 초읽기 {clientTimerData.ByoyomiCount}회");
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] Server Timer Data : 메인타임 {timer.MainTime} / 초읽기 {timer.ByoyomiCount}회");
+            }
 
-			// 서버 타이머 값보다 클라이언트 데이터값이 더 작으면 클라이언트 데이터 승인
-			if (timer >= clientTimerData) timer.SynchroTimer(clientTimerData);
-
-			// 승인 되지 않았다면 서버 타이머 데이터를 그대로 보냄
-			return timer.SyncData;
+            // 승인 되지 않았다면 서버 타이머 데이터를 그대로 보냄
+            return timer.SyncData;
 		}
 
 		public void Surrender(ulong UID)
@@ -504,22 +524,22 @@ namespace YoungManGomoku_WebServer.Sessions
 			_lastTakebackRequestTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
 			if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [무르기 요청] 무르기를 요청한 유저 [{UID}]의 타이머 콜백이 등록되어 있지 않습니다!!!");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [무르기 요청] 무르기를 요청한 유저 {_gameRoomManager.ServerContext.UserInfo(UID)}의 타이머 콜백이 등록되어 있지 않습니다!!!");
 			
-            // 일단 무르기 승인이 들어왔으니 내 시간패 타이머 함수를 정지
+            // 일단 무르기 요청이 들어왔으니 내 시간패 타이머 함수를 정지
 			myTimerCallback?.Change(Timeout.Infinite, Timeout.Infinite);
 
 			ulong opponent = GetOpponent(UID);
             if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
             {
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {opponent} 유저에게 무르기 요청 전달!");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}유저에게 무르기 요청 전달!");
                 waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBack));
 
-                // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
+                // 대기 끝, 상대 플레이어에게 이벤트 응답을 보내라
                 _waitingEventMap.Remove(opponent);
             }
             else
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_currentTurnUID} 현재 턴 유저가 Turn Request를 보낸 적 없음");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(_currentTurnUID)}현재 턴 유저가 Turn Request를 보낸 적 없음");
         }
 
         public void TakeBackResult(ulong permitterUID, bool isTakebackable)
@@ -529,24 +549,25 @@ namespace YoungManGomoku_WebServer.Sessions
                 long takebackWaitTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _lastTakebackRequestTime;
                 _gameProgressMilliseconds += takebackWaitTime;
 
-                if (isTakebackable)
-                {
-                    _board.TryTakeBack();
-                }
+                SC_WaitEventDTO endEvent = new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBack);
+                endEvent.IsTakeBackSuccess = isTakebackable && takebackWaitTime < 11000; // 무르기 요청이 온 후 15000ms 이내로 온 무르기 승인에만 무르기 성공
 
+                if (endEvent.IsTakeBackSuccess) _board.TryTakeBack();
+                
+                
+                // 모든 대기중인 이벤트에 무르기 결과를 전송
 				foreach (GomokuGameEventWaitingPlayer waitingPlayer in _waitingEventMap.Values)
 				{
-					_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 이벤트 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 무르기 승인 결과 이벤트 응답");
-					SC_WaitEventDTO endEvent = new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBack);
-                    endEvent.IsTakeBackSuccess = true;
-					waitingPlayer.TaskCompSrc?.TrySetResult(endEvent);
-				}
+					_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Takeback Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 무르기 승인 결과 이벤트 응답");              
+					waitingPlayer.TaskCompSrc?.TrySetResult(endEvent);                   
+                }
+                _waitingEventMap.Clear();
 
 
-				ulong takebackRequester = GetOpponent(permitterUID);
+                ulong takebackRequester = GetOpponent(permitterUID);
                 if (_userTimers.TryGetValue(takebackRequester, out UserTimer? opponentTimer) == false)
                 {
-                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Takeback Result] {takebackRequester}의 타이머가 없습니다!!!");
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Takeback Result] {_gameRoomManager.ServerContext.UserInfo(takebackRequester)}의 타이머가 없습니다!!!");
                 }
                 else
                 {
@@ -555,7 +576,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
                     // 무르기 요청했던 녀석의 타임아웃 이벤트를 동작시킨다.
                     if (_timeOutTimer.TryGetValue(takebackRequester, out Timer? opponentTimerCallback) == false)
-                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Takeback Result] {takebackRequester}의 타이머 콜백이 등록되지 않았습니다!!!");
+                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Takeback Result] {_gameRoomManager.ServerContext.UserInfo(takebackRequester)}의 타이머 콜백이 등록되지 않았습니다!!!");
 
                     opponentTimerCallback?.Change(waitingTime, -1L);
                 }
@@ -564,16 +585,46 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public void PurchaseCountdownLife(ulong UID)
         {
-            // 타이머 추가 처리 필요
-
-            if (_userTimers.TryGetValue(UID, out UserTimer? myTimer) == false)
+            lock (_gameroomLock)
             {
-				_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] [{UID}] 유저의 유저타이머를 찾지 못했습니다.");
-			}
-			myTimer?.ByoyomiPurchased(_gameRoomManager.ServerContext.DefaultTimerSetting.ByoyomiPurchaseAmount);
-		}
+                // 유저가 돈이 있을 경우 승인하고 상대방에게 이벤트로 전달
+                if (true)
+                {
+                    if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
+                    {
+                        _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}초읽기 구매를 요청한 유저의 타이머 콜백이 등록되어 있지 않습니다!!!");
+                        return;
+                    }
 
-       
+                    // 타이머 추가 처리 필요
+                    if (_userTimers.TryGetValue(UID, out UserTimer? myTimer) == false)
+                    {
+                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 유저타이머를 찾지 못했습니다.");
+                        return;
+                    }
+
+                    // 초읽기 구매 요청이 들어왔으니 내 시간패 타이머 함수를 정지
+                    myTimerCallback?.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    myTimer?.ByoyomiPurchased(_gameRoomManager.ServerContext.DefaultTimerSetting.ByoyomiPurchaseAmount);
+
+                    ulong opponent = GetOpponent(UID);
+                    if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
+                    {
+                        _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}상대방 유저에게 초읽기 구매했음을 알림!");
+                        waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.PurchaseByoyomi));
+
+                        // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
+                        _waitingEventMap.Remove(opponent);
+                    }
+
+                    _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    // 데드라인값 : 착수 응답을 보내는 놈의 시간패 시각
+                    long waitingTime = myTimer!.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds;
+                    myTimerCallback?.Change(waitingTime, -1L);
+                }
+            }
+        }
 
 		// 구버전 코드기는 한데 혹시 몰라서 일단 저장, 추후 제거할듯
 		public void CheckHeartbeat()
@@ -600,7 +651,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 return;
 
             State = GameRoomState.Finished;
-			_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] 승리한 유저 : {_winnerUID}");
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 승리한 유저 : {_winnerUID}");
 
 			DispatchGameEndToAll();
 
@@ -616,7 +667,7 @@ namespace YoungManGomoku_WebServer.Sessions
 			_userEndCodes[BlackPlayerUID] = GameEndCode.GomokuWin;
 			_userEndCodes[WhitePlayerUID] = GameEndCode.GomokuLose;
 			_winnerUID = BlackPlayerUID;
-            _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 흑돌의 오목 승리!");
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 흑돌의 오목 승리!");
 		}
 
 		private void OnWhiteWin()
@@ -624,13 +675,13 @@ namespace YoungManGomoku_WebServer.Sessions
             _userEndCodes[BlackPlayerUID] = GameEndCode.GomokuLose;
             _userEndCodes[WhitePlayerUID] = GameEndCode.GomokuWin;			
 			_winnerUID = WhitePlayerUID;
-            _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 백돌의 오목 승리!");
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 백돌의 오목 승리!");
 		}
 
 		private void OnDraw()
 		{
 			_userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.Draw;
-            _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 오목 무승부 발생!");
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 오목 무승부 발생!");
             FinishGame();
 		}
 
@@ -638,7 +689,7 @@ namespace YoungManGomoku_WebServer.Sessions
         {
             _userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.BlackUnmovable;
             _winnerUID = WhitePlayerUID;
-            _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 흑돌의 남은 위치 모두 금수로 인한 자동 패배. 백돌의 오목 승리!");
+            _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 흑돌의 남은 위치 모두 금수로 인한 자동 패배. 백돌의 오목 승리!");
 		}
 
         // 항상 락 내부에서 실행되어야 하는 함수
@@ -648,22 +699,21 @@ namespace YoungManGomoku_WebServer.Sessions
             // 현재 턴인 유저에게만 뿌린다.
             if (_waitingEventMap.TryGetValue(_currentTurnUID, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
             {
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_currentTurnUID} 현재 턴 유저에게 타임아웃 정보 전달!");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [TimeOut] {_gameRoomManager.ServerContext.UserInfo(_currentTurnUID)}현재 턴 유저에게 타임아웃 정보 전달!");
                 waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(GetEndCode(_currentTurnUID), IngameRequestType.None));
 
                 // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
                 _waitingEventMap.Remove(_currentTurnUID);
             }
             else
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_currentTurnUID} 현재 턴 유저가 Turn Request를 보낸 적 없음");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [TimeOut] {_gameRoomManager.ServerContext.UserInfo(_currentTurnUID)}현재 턴 유저가 Turn Request를 보낸 적 없음");
 
 
             ulong opponent = GetOpponent(_currentTurnUID);
             // 현재 턴인 플레이어가 타임아웃이므로 내 착수를 대기중인 상대에게 응답시켜줌
             if (_waitingPlaceStoneMap.TryGetValue(opponent, out GomokuIngamePlaceStoneWaitingPlayer? waitingPlaceStonePlayer))
             {
-                waitingPlaceStonePlayer.TaskCompSrc?.TrySetResult(
-                new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), 255, 255));
+                waitingPlaceStonePlayer.TaskCompSrc?.TrySetResult(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), 255, 255));
                 _waitingPlaceStoneMap.Remove(opponent);
             }
         }
@@ -693,22 +743,22 @@ namespace YoungManGomoku_WebServer.Sessions
 				FinishGame();
 			}
         }
+	
+		private ulong GetOpponent(ulong UID)
+			=> UID == BlackPlayerUID ? WhitePlayerUID : BlackPlayerUID;
 
-		public StoneColorType GetColor(ulong UID)
-		{
-			if (UID == BlackPlayerUID) return StoneColorType.Black;
-			if (UID == WhitePlayerUID) return StoneColorType.White;
-			// 있을 수 없는 일일까? Assert를 걸어야 할까? 하지만 서버는 Assert 걸면 안 된다.
-			_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [{UID}]유저의 돌 색이 이상하다.");
-			return StoneColorType.Empty;
-		}
-
-		private ulong GetOpponent(ulong uid)
-			=> uid == BlackPlayerUID ? WhitePlayerUID : BlackPlayerUID;
-
-        public GameEndCode GetEndCode(ulong uid)
+        public StoneColorType GetColor(ulong UID)
         {
-            if (_userEndCodes.TryGetValue(uid, out GameEndCode endCode))
+            if (UID == BlackPlayerUID) return StoneColorType.Black;
+            if (UID == WhitePlayerUID) return StoneColorType.White;
+            // 있을 수 없는 일일까? Assert를 걸어야 할까? 하지만 서버는 Assert 걸면 안 된다.
+            _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 돌 색이 이상하다.");
+            return StoneColorType.Empty;
+        }
+
+        public GameEndCode GetEndCode(ulong UID)
+        {
+            if (_userEndCodes.TryGetValue(UID, out GameEndCode endCode))
                 return endCode;
             return GameEndCode.Error;
         }

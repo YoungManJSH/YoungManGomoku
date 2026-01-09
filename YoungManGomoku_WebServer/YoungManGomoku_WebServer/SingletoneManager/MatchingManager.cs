@@ -79,7 +79,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.Now}] Thread {Thread.CurrentThread.ManagedThreadId} enqueue {playerIDToken}");
+                //_logger.LogTrace($"[{DateTime.Now}] Thread {Thread.CurrentThread.ManagedThreadId} enqueue {playerIDToken}");
 
                 if (_waitingMap.Count >= MAX_WAITING)
                 {
@@ -95,7 +95,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (_waitingMap.ContainsKey(playerIDToken))
                 {
-                    _logger.LogDebug($"[{DateTime.Now}] Already Matching : {_waitingMap[playerIDToken]}");
+                    _logger.LogDebug($"[{DateTime.Now}] Already in Matching Queue : {_waitingMap[playerIDToken]}");
                     //throw new InvalidOperationException("Already matching");
                     return Task.FromResult(
                         new MatchResult
@@ -134,12 +134,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel: {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.Now}]{_serverManagerContext.UserInfo(playerIDToken)}Matching Cancel ");
 
                 if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer? wp) == false)
                     return;
 
-                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel - Has WaitingMap {playerIDToken}");
+                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel - Has WaitingMap in User");
 
                 wp.TaskCompSrc?.TrySetResult(
                     new MatchResult
@@ -157,18 +157,17 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         // 항상 lock 안에서 실행되어야 하는 함수
         private void TryMatch()
         {
-            _logger.LogTrace($"[{DateTime.Now}] Matching Try - Begin()");
             // 아직 레이팅이고 뭐고 신경쓰기 싫다는 코드
             // 동시다발적 매칭 신청이 있으면 3 이상일 수 있다
             while (_matchingQueue.Count >= 2)
             {
-                _logger.LogTrace($"[{DateTime.Now}] Matching Game : {_matchingQueue.Count}");
+                //_logger.LogTrace($"[{DateTime.Now}] Matching Queue Count : {_matchingQueue.Count}");
                 WaitingPlayer? p1 = _matchingQueue.Dequeue();
 
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
 
-                _logger.LogTrace($"[{DateTime.Now}] Matching : Player {_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)} is Playable.");
+                _logger.LogTrace($"[{DateTime.Now}] [Try Matching] {_serverManagerContext.UserInfo(p1.PlayerIdToken)}Player is Playable.");
 
                 WaitingPlayer? p2 = null;
                 while (_matchingQueue.Count > 0)
@@ -176,12 +175,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
                     if (p1.PlayerIdToken == candidate.PlayerIdToken)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}] Matching Queue에 자기 자신과 매칭됨 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogWarning($"[{DateTime.Now}] {_serverManagerContext.UserInfo(candidate.PlayerIdToken)}Matching Queue에 자기 자신과 매칭됨 ");
                         continue;
                     }
                     if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
-                        _logger.LogTrace($"[{DateTime.Now}] Matching - 다른 플레이어 발견 [{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}]");
+                        _logger.LogTrace($"[{DateTime.Now}] {_serverManagerContext.UserInfo(candidate.PlayerIdToken)}Matching 다른 플레이어 발견");
                         p2 = candidate;
                         break;
                     }
@@ -197,7 +196,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
-                _logger.LogTrace($"[{DateTime.Now}] Matching Success : Room ID {roomID}");
+                _logger.LogTrace($"[{DateTime.Now}] [Matching Success] Room ID {roomID}");
 
 
                 Random random = new Random();
@@ -227,15 +226,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 _waitingMap.Remove(p1.PlayerIdToken);
                 _waitingMap.Remove(p2.PlayerIdToken);
 
-                _logger.LogTrace($"[{DateTime.Now}] Try Match : Create Room");
                 _gameRoomManager.CreateRoom(
                     roomID,
                     colorRandomValue == 0 ? _serverManagerContext.GetPlayerUID(p1.PlayerIdToken) : _serverManagerContext.GetPlayerUID(p2.PlayerIdToken),
                     colorRandomValue == 1 ? _serverManagerContext.GetPlayerUID(p1.PlayerIdToken) : _serverManagerContext.GetPlayerUID(p2.PlayerIdToken)
                 );
             }
-
-            _logger.LogTrace($"[{DateTime.Now}] Matching Try - End()");
         }
     }
 }

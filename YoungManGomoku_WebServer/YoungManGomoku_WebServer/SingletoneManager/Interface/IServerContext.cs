@@ -7,7 +7,11 @@ namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 	{
 		public SC_TimerSettingDTO DefaultTimerSetting { get; }
 
-		public ulong GetPlayerUID(string id_Token);
+        public ulong GetPlayerUID(string id_Token);
+
+        public string UserInfo(string id_Token);
+
+        public string UserInfo(ulong UID);       
 
 		public PlayerData? ComposePlayerData(ulong UID);
 
