@@ -386,8 +386,8 @@ public abstract class StoneMover : MonoBehaviour
         
         recentMark.transform.position =
             (_isBlackTurn ? _recentStone.black : _recentStone.white).transform.position;
-        Destroy(_recentStone.black);
-        Destroy(_recentStone.white);
+        Destroy(_recentStone.black.gameObject);
+        Destroy(_recentStone.white.gameObject);
         _audioSource.PlayOneShot(takeBackSound);
         ClearForbiddenMarks();
     }
