@@ -81,8 +81,9 @@ public class StoneMoverMulti : StoneMover
                 }
 
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
-
-                // 게임 종료 상황에서 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략
+                
+                /* 게임 종료 상황용 예외 처리
+                 * 유효하지 않은 좌표를 돌려받을 경우 착수 처리 생략 */
                 if ((opponentMove.Row, opponentMove.Col) == NowCoord ||
                     opponentMove.Row > Board.MaxCoord || opponentMove.Col > Board.MaxCoord)
                 {
