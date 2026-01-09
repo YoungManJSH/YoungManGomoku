@@ -8,6 +8,7 @@ public class IngameBoardScaler : MonoBehaviour
     
     public BoardImageData BoardData => boardData;
     public UIPosition UIPos => uiPos;
+    public bool IsWide { get; private set; }
 
     private SpriteRenderer _spriteRenderer;
     private Camera _mainCamera;
@@ -50,6 +51,7 @@ public class IngameBoardScaler : MonoBehaviour
     private void AdjustBoardScale()
     {
         float nowAspect = _mainCamera.aspect;
+        IsWide = nowAspect >= uiPos.WideRatio;
         
         /* nowAspect < WideRatio : 세로 모드 (보드를 화면 가로 사이즈에 맞춤)
          * nowAspect >= WideRatio : 가로 모드 (보드를 화면 세로 사이즈에 맞춤)
@@ -58,18 +60,14 @@ public class IngameBoardScaler : MonoBehaviour
          * nowAspect < TallRatio : 세로 모드 + 상하 레터박스
          * TallRatio <= nowAspect < WideRatio : 세로 모드 + 좌우 레터박스
          * WideRatio <= nowAspect : 가로 모드 + 좌우 레터박스 */
+        
         float boardSize = _mainCamera.orthographicSize * 2f *
-                         (nowAspect < uiPos.WideRatio ? Mathf.Min(nowAspect, uiPos.TallRatio) : 1f);
+                         (IsWide ? 1f : Mathf.Min(nowAspect, uiPos.TallRatio));
         
         float scale = boardSize / _worldSize;
         transform.localScale = new Vector3(scale, scale, 1f);
-        
-        if (nowAspect < uiPos.WideRatio) // 세로 모드
-        {
-            transform.position = _mainCamera.ViewportToWorldPoint(new Vector3(0.5f,
-                uiPos.BoardPosY, Mathf.Abs(_mainCamera.transform.position.z)));
-        }
-        else // 가로 모드
+
+        if (IsWide)
         {
             /* WideRatio 기준으로 보드를 좌측에 맞추게 됨
              * 따라서 nowAspect > WideRatio이면 좌우 레터박스가 생김 */ 
@@ -77,6 +75,11 @@ public class IngameBoardScaler : MonoBehaviour
                          _spriteRenderer.bounds.extents.x;
             
             transform.position = new Vector3(posX, 0f, 0f);
+        }
+        else
+        {
+            transform.position = _mainCamera.ViewportToWorldPoint(new Vector3(0.5f,
+                uiPos.BoardPosY, Mathf.Abs(_mainCamera.transform.position.z)));
         }
     }
 }

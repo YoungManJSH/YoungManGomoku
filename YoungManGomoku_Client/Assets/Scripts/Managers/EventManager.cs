@@ -330,20 +330,12 @@ public class EventManager : MonoBehaviour
                 return;
             }
             // 여기부터는 게임 종료 이벤트가 아닌 경우
-
-            if (response.IsTakeBackSuccess)
-            {
-                OnTakeBack!.Invoke(true);
-                HandleIngameEvent(); // 다음 인게임 이벤트 응답을 받기 위해 재호출
-                return;
-            }
             
             switch (response.OpponentRequest)
             {
                 case IngameRequestType.None:
                     if (IsGameEnd) return; // 게임이 끝났으면 완전 종료
-                    OnTakeBack!.Invoke(false); // 무르기 요청 무산
-                    Debug.Log("비어있는 인게임 이벤트 응답, 무르기 요청 무산으로 처리됨");
+                    Debug.LogWarning("비어있는 인게임 이벤트가 응답됨!");
                     break; // 게임이 끝나지 않았으면 switch문만 종료
                 case IngameRequestType.Surrender:
                     Debug.LogError("GameEndCode가 None이라매?");
@@ -354,6 +346,9 @@ public class EventManager : MonoBehaviour
                     break;
                 case IngameRequestType.PurchaseByoyomi:
                     OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
+                    break;
+                case IngameRequestType.TakeBackResult:
+                    OnTakeBack!.Invoke(response.IsTakeBackSuccess);
                     break;
                 default:
                     Debug.LogError("정의되지 않은 인게임 이벤트 종류");

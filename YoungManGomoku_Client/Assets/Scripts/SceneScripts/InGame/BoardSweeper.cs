@@ -13,11 +13,14 @@ public class BoardSweeper : MonoBehaviour
     
     private Rigidbody2D _rb;
     private AudioSource _audioSource;
-
+    private IngameBoardScaler _boardScaler;
+    
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _audioSource = GetComponent<AudioSource>();
+        _boardScaler = GetComponentInParent<IngameBoardScaler>();
+        
         gameObject.SetActive(false);
     }
 
@@ -40,10 +43,12 @@ public class BoardSweeper : MonoBehaviour
         Sequence seq = DOTween.Sequence();
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
-            middleVelocity, toMiddleDuration).SetEase(Ease.OutQuad));
+            endValue: middleVelocity / (_boardScaler.IsWide ? _boardScaler.UIPos.TallRatio : 1f), toMiddleDuration).
+            SetEase(Ease.OutQuad));
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
-            endVelocity, switchingDuration).SetEase(Ease.InOutQuad));
+            endValue: endVelocity / (_boardScaler.IsWide ? _boardScaler.UIPos.TallRatio : 1f), switchingDuration).
+            SetEase(Ease.InOutQuad));
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             Vector2.zero, toEndDuration).SetEase(Ease.InQuad));
