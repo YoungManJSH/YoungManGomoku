@@ -428,7 +428,7 @@ namespace YoungManGomoku_WebServer.Sessions
 					long opponentWaitingTime = opponentTimer.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds;
 
 					// 상대방의 타임아웃 이벤트를 동작시킨다.
-					if (_timeOutTimer.TryGetValue(UID, out Timer? opponentTimerCallback) == false)
+					if (_timeOutTimer.TryGetValue(opponent, out Timer? opponentTimerCallback) == false)
                         _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Place Stone] 상대 타이머 콜백이 등록되지 않았습니다!!!");
 					
 					opponentTimerCallback?.Change(opponentWaitingTime, -1L);
@@ -451,7 +451,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     return PlaceStoneResultType.NowWin;
                 }
 
-                // 항복, 연결끊김 처리도 해야함
+                // 연결끊김 처리
 
 
 
@@ -467,19 +467,20 @@ namespace YoungManGomoku_WebServer.Sessions
                 return PlaceStoneResultType.Success;
             }
         }
-		public TimerSyncData SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+		public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
 		{
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
 			// 개 등신 코드인데 일단은 이렇게라도 동작시켜
-			
+			/*
             int loopCount = 0;
             while (turn != _board.NowTurn) ++loopCount;       
-            
+            */
 
 			// 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
-			//await WaitForSynchronizeTimerTurnAsync(turn);
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn} / Loop Count {loopCount}");
+			await WaitForSynchronizeTimerTurnAsync(turn);
+
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn}");
 
             // 뭣이 타이머가 없다고?
             if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false)

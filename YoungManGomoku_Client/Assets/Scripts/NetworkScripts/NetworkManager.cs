@@ -47,11 +47,11 @@ public class NetworkManager : MonoBehaviour
 	/* 나중에 바꿀 예정
 	 * "https://localhost:5001" (서버와 클라이언트가 동일 컴퓨터인 경우)
      * 기존값 : "https://192.168.200.156:5001" (학원 자습실 컴퓨터 공유기 로컬망)
-     * 강찬구 집 데스크탑 : "https://118.37.216.48:5001"
+     * 강찬구 집 데스크탑 : "https://115.21.221.6:5001" // "https:///118.37.216.48:5001";
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://192.168.200.156:5001"; //"https://localhost:5001";
+	[SerializeField] private const string baseURL = "https://115.21.221.6:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
