@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+using System;
+
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Sessions;
@@ -14,15 +16,17 @@ namespace YoungManGomoku_WebServer.Controllers
 	{
 		private ApplicationDBContext _context;
 		private readonly ServerManager _serverManager;
+		private readonly GameRoomManager _gameroomManager;
 
-		private readonly ILogger<SessionController> _logger;
+        private readonly ILogger<SessionController> _logger;
 
-		public SessionController(ILogger<SessionController> logger, ApplicationDBContext context, ServerManager serverManager)
+		public SessionController(ILogger<SessionController> logger, ApplicationDBContext context, ServerManager serverManager, GameRoomManager gameroomManager)
 		{
 			_logger = logger;
 			_context = context;
 			_serverManager = serverManager;
-		}
+			_gameroomManager = gameroomManager;
+        }
 
 
 		[HttpPost("Close")]
@@ -38,10 +42,14 @@ namespace YoungManGomoku_WebServer.Controllers
 
 			if (_serverManager.CloseSession(player.Account.UID) == false)
 				return Unauthorized($"[{idToken}] Player Session Close Failed.");
-			
 
+            _logger.LogTrace($"[{DateTime.Now}] [Session Controller] Response Game End By : {idToken}");
 
-			return Ok(new SC_ResponseStringDTO("Close SessionSuccess", true));
+            // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
+            if (_gameroomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
+                return BadRequest("Not in game");
+
+            return Ok(new SC_ResponseStringDTO("Close SessionSuccess", true));
 		}
 	}
 }

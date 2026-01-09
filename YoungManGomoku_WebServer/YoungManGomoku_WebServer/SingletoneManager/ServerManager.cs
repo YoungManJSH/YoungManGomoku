@@ -31,7 +31,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
 
-			DefaultTimerSetting = new SC_TimerSettingDTO(mainTime: 180f, byoyomiCount: 3, byoyomiSeconds: 30f, byoyomiPurchaseAmount: 2);
+			DefaultTimerSetting = new SC_TimerSettingDTO(mainTime: 5f, byoyomiCount: 3, byoyomiSeconds: 10f, byoyomiPurchaseAmount: 2);
 		}
 
         public uint GenerateUID32() => _uidGenerator.GenerateUID32();
@@ -68,7 +68,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             PlayerSession? user = GetPlayerSession(UID);
             if (user == null)
                 return $"[{UID}] : (Invalid User UID)";
-            return $"[{UID}] Lv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating} )";
+            return $"UID[{UID}] : Token[{user.AuthToken}]\nLv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating})\n";
         }
 
         public string UserInfo(string idToken) => UserInfo(GetPlayerUID(idToken));
@@ -153,7 +153,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     DisconnectCount = playerData.Account.GomokuBattleRecord.DisconnectCount
                 };       
             }
-            _logger.LogWarning($"[{DateTime.UtcNow}] Failed : ComposeOpponentPlayerData By UID ({opponentPlayerUID}).\nPlayerSession has not UID Data.");
+            _logger.LogWarning($"[{DateTime.Now}] Failed : ComposeOpponentPlayerData By UID ({opponentPlayerUID}).\nPlayerSession has not UID Data.");
             return null;
         }
     }

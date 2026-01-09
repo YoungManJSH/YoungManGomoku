@@ -99,8 +99,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 return Conflict("Can't Find ID Token. Login Failed!");
             }
 
-            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success\nLogin : {_serverManager.UserInfo(findAccount.UID)}");
-
+            
             // DB Column Update
             findAccount.LastLoginDate = DateTime.Now;
 
@@ -118,6 +117,8 @@ namespace YoungManGomoku_WebServer.Controllers
                 // 키가 없어서 제거 실패할 때까지 일단 무식하게 제거
                 while ( _serverManager.PlayerDatas.TryRemove(findAccount.UID, out PlayerSession findRemoveAccount));
             }
+
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success\nLogin : {_serverManager.UserInfo(findAccount.UID)}");
 
             while (_serverManager.UIDByIDToken.TryAdd(findAccount.AuthToken, findAccount.UID) == false)
             {
