@@ -49,7 +49,7 @@ namespace YoungManGomoku_WebServer.Controllers
             if (_gameroomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
                 return BadRequest("Not in game");
 
-            return Ok(new SC_ResponseStringDTO("Close SessionSuccess", true));
+            return Ok(new SC_ResponseStringDTO("Close Session Success", true));
 		}
 	}
 }
