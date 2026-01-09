@@ -384,6 +384,7 @@ public abstract class StoneMover : MonoBehaviour
             return;
         }
         
+        NowCoord = (7, 7); // NowCoord가 물러진 위치에 있지 않도록 변경 
         recentMark.transform.position =
             (_isBlackTurn ? _recentStone.black : _recentStone.white).transform.position;
         Destroy(_recentStone.black.gameObject);
