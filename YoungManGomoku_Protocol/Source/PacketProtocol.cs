@@ -115,10 +115,10 @@ namespace YoungManGomoku_Protocol
     /// <summary> 서버-클라이언트 간 타이머 전송용 DTO </summary>
     public struct TimerSyncData
     {
-	    public float MainTime { get; set; }
-	    public int ByoyomiCount { get; set; }
+	    public float MainTime { get; set; }     // 누적하여 소모되는 자유시간
+		public int ByoyomiCount { get; set; }   // 현재 보유한 초읽기 개수
 
-	    public TimerSyncData(float mainTime, int byoyomiCount)
+		public TimerSyncData(float mainTime, int byoyomiCount)
 	    {
 		    MainTime = mainTime;
 		    ByoyomiCount = byoyomiCount;
@@ -127,6 +127,27 @@ namespace YoungManGomoku_Protocol
 	    // 프로퍼티로 만들면 직렬화되어 날아가므로 주의
 	    public bool IsDefault() => MainTime == 0 && ByoyomiCount == 0;
     }
+
+	///<summary> 
+	/// 게임이 시작될 때 클라가 받을 타이머 설정 정보 
+	/// 서버도 매칭 잡고 방 생성 시 Default Setting을 위해 사용하므로 namespace 위치 이동
+	/// 단, 송수신 자체는 여전히 매칭 성공 시 Server To Client 1번만 사용 (통상적으로는 TimerSyncData를 사용)
+	/// </summary>
+	public struct TimerSettingData
+	{
+		public float MainTime { get; set; }         // 처음에 누적하여 소모되는 자유시간
+		public int ByoyomiCount { get; set; }       // 처음에 제공되는 초읽기 개수
+		public float ByoyomiSeconds { get; set; }   // 초읽기 시간
+		public int ByoyomiPurchaseAmount { get; set; } // 초읽기 구매 시 추가되는 개수
+
+		public TimerSettingData(float mainTime, int byoyomiCount, float byoyomiSeconds, int byoyomiPurchaseAmount)
+		{
+			MainTime = mainTime;
+			ByoyomiCount = byoyomiCount;
+			ByoyomiSeconds = byoyomiSeconds;
+			ByoyomiPurchaseAmount = byoyomiPurchaseAmount;
+		}
+	}
 }
 
 namespace YoungManGomoku_Protocol.ClientToServer
@@ -189,18 +210,18 @@ namespace YoungManGomoku_Protocol.ClientToServer
         }
     }
 
-    public class CS_TakeBackPermitDTO
+    public class CS_PermitDTO
     {
         public string IDToken { get; set; }
-        public bool IsTakeBackPermit { get; set; }
+        public bool IsPermit { get; set; }
 
         /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
-        public CS_TakeBackPermitDTO() { }
+        public CS_PermitDTO() { }
 
-        public CS_TakeBackPermitDTO(string idToken, bool takeback)
+        public CS_PermitDTO(string idToken, bool takeback)
         {
             IDToken = idToken;
-			IsTakeBackPermit = takeback;
+			IsPermit = takeback;
         }
     }
 }
@@ -229,9 +250,9 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
         public StoneColorType MyStoneColorType { get; set; }
 
-        public SC_TimerSettingDTO TimerSettingDTO { get; set; }
+        public TimerSettingData TimerSettingDTO { get; set; }
   
-        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor, in SC_TimerSettingDTO timerSettingDTO) 
+        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor, in TimerSettingData timerSettingDTO) 
         { 
             OpponentPlayer = opponent;
             Message = msg;
@@ -240,23 +261,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
             TimerSettingDTO = timerSettingDTO;
         }
     }
-    
-    ///<summary> 게임이 시작될 때 클라가 받을 타이머 설정 정보 </summary>
-    public struct SC_TimerSettingDTO
-    {
-        public float MainTime { get; set; } // 처음에 누적하여 소모되는 자유시간
-        public int ByoyomiCount { get; set; }// 처음에 제공되는 초읽기 개수
-        public float ByoyomiSeconds { get; set; } // 초읽기 시간
-        public int ByoyomiPurchaseAmount { get; set; } // 초읽기 구매 시 추가되는 개수
-
-        public SC_TimerSettingDTO(float mainTime, int byoyomiCount, float byoyomiSeconds, int byoyomiPurchaseAmount)
-        {
-            MainTime = mainTime;
-            ByoyomiCount = byoyomiCount;
-            ByoyomiSeconds = byoyomiSeconds;
-            ByoyomiPurchaseAmount = byoyomiPurchaseAmount;
-        }
-    }
+   
 
     /// <summary> 착수가 이루어질 때 상대방 클라이언트가 받을 착수 위치 및 타이머 정보 </summary>
     public class SC_OpponentPlaceStoneDTO

@@ -33,21 +33,21 @@ namespace YoungManGomoku_WebServer.Controllers
             _gameRoomManager = gameRoomManager;
         }
 
-		[HttpPost("GameStart")]
-		public IActionResult GameStart([FromBody] string idToken, CancellationToken ct)
-		{
+        [HttpPost("GameStart")]
+        public IActionResult GameStart([FromBody] string idToken, CancellationToken ct)
+        {
             // 일단 보내온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
             PlayerSession? player = _serverManager.GetPlayerSession(idToken);
 
             // 인증 정보는 왔지만 유효한 세션이 아니다
-            if (player == null)           
+            if (player == null)
                 return Unauthorized($"[{idToken}] Player Session Not Found. Please Re Login.");
 
             player.LastRequestTime = DateTime.UtcNow;
 
-			// 네 이놈 게임 룸에 있지도 않은 주제에 게임 시작이라고 뻥카를 쳐?
-			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
-				return BadRequest("Not in game");
+            // 네 이놈 게임 룸에 있지도 않은 주제에 게임 시작이라고 뻥카를 쳐?
+            if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
+                return BadRequest("Not in game");
 
             // 아직 이 방 게임 대기 중이 아닌데??? 미쳐버린거냐
             // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
@@ -59,17 +59,17 @@ namespace YoungManGomoku_WebServer.Controllers
             // SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(player.Account.UID, ct);
             SC_ResponseStringDTO response = new SC_ResponseStringDTO("Game Start Process", room.TryGameStart());
             return Ok(response);
-		}
+        }
 
         // Long Polling
         // 내 돌을 여기다 두겠다는 요청. 응답은 상대 돌이 두어졌을 때 해야 한다.
-		[HttpPost("PlaceStone")]
+        [HttpPost("PlaceStone")]
         public async Task<IActionResult> PlaceStone([FromBody] CS_PlaceStoneDTO userPlaceStoneDTO, CancellationToken ct)
-		{
+        {
             // 클라가 데이터를 JOAT같이 줬어요
             if (userPlaceStoneDTO == null)
-				return BadRequest("뭘 두겠다는 건데???");
-            
+                return BadRequest("뭘 두겠다는 건데???");
+
             // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
             PlayerSession? player = _serverManager.GetPlayerSession(userPlaceStoneDTO.IDToken);
 
@@ -82,22 +82,22 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 착수 요청을 해?
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
-				return BadRequest("Not in game");
+                return BadRequest("Not in game");
 
             // 내 돌은 두었고, 그 결과가 return됨
             PlaceStoneResultType result = room.PlaceStone(player.Account.UID, userPlaceStoneDTO.Row, userPlaceStoneDTO.Col);
 
             // 이번 착수로 내가 승리했기 때문에 상대방 착수를 대기할 필요가 없으니 즉시 return
-			if (result == PlaceStoneResultType.NowWin)
-				return Ok(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), userPlaceStoneDTO.Row, userPlaceStoneDTO.Col));
-			
-			// 내가 승리한 상황이 아닌데 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
-			if (result != PlaceStoneResultType.Success)
+            if (result == PlaceStoneResultType.NowWin)
+                return Ok(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), userPlaceStoneDTO.Row, userPlaceStoneDTO.Col));
+
+            // 내가 승리한 상황이 아닌데 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
+            if (result != PlaceStoneResultType.Success)
                 return Unauthorized($"Place Stone Result : {result}");
 
             // 내 돌 착수에 성공했으면 다음 이벤트(상대방 착수)까지 대기 후 상대방이 착수하면 await해서 정보를 받아옴
             return Ok(await room.WaitNextPlaceStoneAsync(player.Account.UID, ct));
-		}
+        }
 
         [HttpPost("TimerSynchronize")]
         public IActionResult ClientTimerSynchronize([FromBody] CS_RequestTimerSynchroDTO reqTimerSyncDTO)
@@ -118,9 +118,9 @@ namespace YoungManGomoku_WebServer.Controllers
 
             _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] Req Timer Sync By : {reqTimerSyncDTO.IDToken}");
 
-			// 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
-			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
-                return BadRequest("Not in game");            
+            // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
+            if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
+                return BadRequest("Not in game");
 
             return Ok(room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
@@ -145,9 +145,9 @@ namespace YoungManGomoku_WebServer.Controllers
             if (player == null)
             {
                 // 인증 정보는 왔지만 유효한 세션이 아니다
-                return Unauthorized($"[{uid}] Player Session Not Found.");
+                return Unauthorized($"Player Session Not Found. Please Re-Login.");
             }
-            
+
             player.LastRequestTime = DateTime.UtcNow;
 
 
@@ -168,6 +168,10 @@ namespace YoungManGomoku_WebServer.Controllers
                 case IngameRequestType.TakeBack:
                     room.RequestTakeBack(uid);
                     break;
+                case IngameRequestType.Rematch:
+                    if (room.RequestRematch(uid) == false)
+						return Unauthorized($"Not Finished Game!");
+					break;
             }
 
             return Ok(new SC_ResponseStringDTO("InGame Request Success", true));
@@ -205,28 +209,28 @@ namespace YoungManGomoku_WebServer.Controllers
         }
 
         // 상대방의 무르기 요청에 대한 승인/거부 결과를 서버로 전송
-		[HttpPost("TakeBackPermit")]
-		public IActionResult TakeBackPermit([FromBody] CS_TakeBackPermitDTO takebackPermitDTO, CancellationToken ct)
-		{
-			// 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
-			PlayerSession? player = _serverManager.GetPlayerSession(takebackPermitDTO.IDToken);
+        [HttpPost("TakeBackPermit")]
+        public IActionResult TakeBackPermit([FromBody] CS_PermitDTO takebackPermitDTO, CancellationToken ct)
+        {
+            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
+            PlayerSession? player = _serverManager.GetPlayerSession(takebackPermitDTO.IDToken);
 
-			// 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
-			// 인증 정보는 왔지만 유효한 세션이 아니다
-			if (player == null)
-				return Unauthorized($"[{takebackPermitDTO.IDToken}] Player Session Not Found.");
+            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
+            // 인증 정보는 왔지만 유효한 세션이 아니다
+            if (player == null)
+                return Unauthorized($"[{takebackPermitDTO.IDToken}] Player Session Not Found.");
 
-			player.LastRequestTime = DateTime.UtcNow;
+            player.LastRequestTime = DateTime.UtcNow;
 
             _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {takebackPermitDTO.IDToken}");
 
-			// 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
-			if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
-				return BadRequest("Not in game");
+            // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
+            if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom room) == false)
+                return BadRequest("Not in game");
 
-			room.TakeBackResult(player.Account.UID, takebackPermitDTO.IsTakeBackPermit);
-	
-			return Ok(new SC_ResponseStringDTO("Take Back Permit Response Success",true));
-		}
-	}
+            room.TakeBackResult(player.Account.UID, takebackPermitDTO.IsPermit);
+
+            return Ok(new SC_ResponseStringDTO("Take Back Permit Response Success", true));
+        }
+    }
 }
