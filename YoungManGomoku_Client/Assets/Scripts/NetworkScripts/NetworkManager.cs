@@ -177,7 +177,7 @@ public class NetworkManager : MonoBehaviour
 	/// <param name="takebackPermitDTO">  IdToken, 상대의 무르기를 승인할 것인지 거부할 것인지 여부의 bool 변수 </param>
 	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
 	/// <returns> 단순 성공 응답 문자열 </returns>
-	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_TakeBackPermitDTO takebackPermitDTO, int timeOutSeconds = 0)
+	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_PermitDTO takebackPermitDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
 

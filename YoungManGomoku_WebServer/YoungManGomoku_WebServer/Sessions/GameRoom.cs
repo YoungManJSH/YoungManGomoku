@@ -627,8 +627,24 @@ namespace YoungManGomoku_WebServer.Sessions
             }
         }
 
+		public bool RequestRematch(ulong UID)
+		{
+            // 일단 게임이 끝났는지부터 확인
+            if (State != GameRoomState.Finished)
+                return false;
+
+            // 리매치 요청을 두 클라가 다 한경우 재대결 성립
+            // 대기 큐를 만들어 두 클라를 등록후, 대기 카운트가 2가 되면 WaitEvent로 결과 등록
+
+
+
+            return true;
+		}
+
+
+
 		// 구버전 코드기는 한데 혹시 몰라서 일단 저장, 추후 제거할듯
-		public void CheckHeartbeat()
+		public void CheckHeartbeat(ulong UID)
 		{
             // 인게임 락
 			lock (_gameroomLock)
@@ -645,7 +661,7 @@ namespace YoungManGomoku_WebServer.Sessions
 		}
 
         // 착수, 항복에서 호출
-        private void FinishGame()
+        private async Task FinishGame()
 		{
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Finish Game] Game Finished!");
 			if (State == GameRoomState.Finished)
@@ -653,6 +669,10 @@ namespace YoungManGomoku_WebServer.Sessions
 
             State = GameRoomState.Finished;
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 승리한 유저 : {_winnerUID}");
+
+
+            // 재도전을 위한 10초 대기? 이거 너무 무식한것같은데
+            await Task.Delay(10000);
 
 			DispatchGameEndToAll();
 
