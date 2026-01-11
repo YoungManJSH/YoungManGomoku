@@ -451,7 +451,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     return PlaceStoneResultType.NowWin;
                 }
 
-                // 항복, 연결끊김 처리도 해야함
+                // 연결끊김 처리
 
 
 
@@ -467,19 +467,20 @@ namespace YoungManGomoku_WebServer.Sessions
                 return PlaceStoneResultType.Success;
             }
         }
-		public TimerSyncData SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+		public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
 		{
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
 			// 개 등신 코드인데 일단은 이렇게라도 동작시켜
-			
+			/*
             int loopCount = 0;
             while (turn != _board.NowTurn) ++loopCount;       
-            
+            */
 
 			// 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
-			//await WaitForSynchronizeTimerTurnAsync(turn);
-			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn} / Loop Count {loopCount}");
+			await WaitForSynchronizeTimerTurnAsync(turn);
+
+			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] 서버 턴과 클라이언트 턴 동기화 완료 : Turn {turn}");
 
             // 뭣이 타이머가 없다고?
             if (_userTimers.TryGetValue(UID, out UserTimer? timer) == false)
@@ -626,8 +627,24 @@ namespace YoungManGomoku_WebServer.Sessions
             }
         }
 
+		public bool RequestRematch(ulong UID)
+		{
+            // 일단 게임이 끝났는지부터 확인
+            if (State != GameRoomState.Finished)
+                return false;
+
+            // 리매치 요청을 두 클라가 다 한경우 재대결 성립
+            // 대기 큐를 만들어 두 클라를 등록후, 대기 카운트가 2가 되면 WaitEvent로 결과 등록
+
+
+
+            return true;
+		}
+
+
+
 		// 구버전 코드기는 한데 혹시 몰라서 일단 저장, 추후 제거할듯
-		public void CheckHeartbeat()
+		public void CheckHeartbeat(ulong UID)
 		{
             // 인게임 락
 			lock (_gameroomLock)
@@ -644,7 +661,7 @@ namespace YoungManGomoku_WebServer.Sessions
 		}
 
         // 착수, 항복에서 호출
-        private void FinishGame()
+        private async Task FinishGame()
 		{
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Finish Game] Game Finished!");
 			if (State == GameRoomState.Finished)
@@ -652,6 +669,10 @@ namespace YoungManGomoku_WebServer.Sessions
 
             State = GameRoomState.Finished;
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 승리한 유저 : {_winnerUID}");
+
+
+            // 재도전을 위한 10초 대기? 이거 너무 무식한것같은데
+            await Task.Delay(10000);
 
 			DispatchGameEndToAll();
 

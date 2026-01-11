@@ -22,7 +22,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         internal ConcurrentDictionary<ulong, PlayerSession> PlayerDatas { get; set; }
         public ConcurrentDictionary<string, ulong> UIDByIDToken { get; set; }
 
-		public SC_TimerSettingDTO DefaultTimerSetting { get; }
+		public TimerSettingData DefaultTimerSetting { get; }
 
 		public ServerManager(ILogger<ServerManager> logger)
         {
@@ -31,7 +31,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
 
-			DefaultTimerSetting = new SC_TimerSettingDTO(mainTime: 5f, byoyomiCount: 3, byoyomiSeconds: 10f, byoyomiPurchaseAmount: 2);
+			DefaultTimerSetting = new TimerSettingData(mainTime: 5f, byoyomiCount: 3, byoyomiSeconds: 10f, byoyomiPurchaseAmount: 2);
 		}
 
         public uint GenerateUID32() => _uidGenerator.GenerateUID32();

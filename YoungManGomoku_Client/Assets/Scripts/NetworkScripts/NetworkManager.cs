@@ -51,7 +51,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://192.168.200.156:5001"; //"https://localhost:5001";
+	[SerializeField] private const string baseURL = "https://115.21.221.6:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -177,7 +177,7 @@ public class NetworkManager : MonoBehaviour
 	/// <param name="takebackPermitDTO">  IdToken, 상대의 무르기를 승인할 것인지 거부할 것인지 여부의 bool 변수 </param>
 	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
 	/// <returns> 단순 성공 응답 문자열 </returns>
-	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_TakeBackPermitDTO takebackPermitDTO, int timeOutSeconds = 0)
+	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_PermitDTO takebackPermitDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
 

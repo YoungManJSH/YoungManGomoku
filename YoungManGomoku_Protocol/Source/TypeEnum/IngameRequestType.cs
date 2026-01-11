@@ -7,14 +7,20 @@
 
         /// <summary> 기권(게임 포기) </summary>
         Surrender,
-        
+
         /// <summary> 무르기 신청 구매 </summary>
         TakeBack,
-        
+
+        /// <summary> 무르기 승인 or 거부 허가 확답 </summary>
+        TakeBackResult,
+
         /// <summary> 초읽기 구매 </summary>
         PurchaseByoyomi,
 
-        /// <summary> 무르기 승인 or 거부 허가 확답 </summary>
-        TakeBackResult
+        /// <summary> 재대결 신청 </summary>
+        Rematch,
+
+        /// <summary> 재대결 승인 </summary>
+        RematchPermit
     }
 }

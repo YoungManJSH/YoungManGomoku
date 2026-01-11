@@ -5,7 +5,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 {
 	public interface IServerContext : IUIDProvider
 	{
-		public SC_TimerSettingDTO DefaultTimerSetting { get; }
+		public TimerSettingData DefaultTimerSetting { get; }
 
         public ulong GetPlayerUID(string id_Token);
 
