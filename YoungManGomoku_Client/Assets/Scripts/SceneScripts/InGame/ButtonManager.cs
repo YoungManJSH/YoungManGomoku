@@ -95,8 +95,11 @@ public class ButtonManager : MonoBehaviour
     }
 
     private void ExitInput()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
-    
+    {
+        // TODO: 추후 재대국 거부 요청 추가
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    }
+
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     
     private void OnGameEnd()

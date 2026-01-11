@@ -253,7 +253,9 @@ public class EventManager : MonoBehaviour
         
         IsGameEnd = true;
         OnServerReplyFailed!.Invoke();
-        _networkManager.RequestCloseSession(_gameManager.IdToken, 5).Cancel(); //일방적 통보
+        _networkManager.RequestCloseSession(_gameManager.IdToken, timeOutSeconds: 5).Cancel(); //일방적 통보
+        // 터지는 상황에서는 재로그인이 필요함
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene, seconds: 2f).Cancel();
     }
 
     /// <summary> 기권 판 쓸기 연출이 시작될 때 호출 </summary>

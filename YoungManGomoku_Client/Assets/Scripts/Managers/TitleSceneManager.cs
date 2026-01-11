@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class TitleSceneManager : MonoBehaviour
 {
     private const string VIDEO_NAME = "타이틀시네마틱";
-    private const string Audio_NAME = "whoosh-super-cape-390707";
+    private const string AUDIO_NAME = "whoosh-super-cape-390707";
     
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private AudioSource audioSource;
@@ -29,7 +29,7 @@ public class TitleSceneManager : MonoBehaviour
     private void Start()
     {
         videoPlayer.clip = AssetLoadManager.Instance.GetVideoClip(VIDEO_NAME);
-        audioSource.clip = AssetLoadManager.Instance.GetAudioClip(Audio_NAME);
+        audioSource.clip = AssetLoadManager.Instance.GetAudioClip(AUDIO_NAME);
         videoPlayer.Play();
     }
 

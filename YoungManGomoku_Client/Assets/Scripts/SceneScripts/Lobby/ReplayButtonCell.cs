@@ -48,6 +48,6 @@ public class ReplayButtonCell : MonoBehaviour
     public void LoadThisFile()
     {
         GiboFileManager.GiboFileName = _fileName;
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene);
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene).Cancel();
     }
 }

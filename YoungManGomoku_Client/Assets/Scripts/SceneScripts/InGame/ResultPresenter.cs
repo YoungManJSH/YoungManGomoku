@@ -95,13 +95,13 @@ public class ResultPresenter : MonoBehaviour
     private void OpenReplay()
     {
         /*TODO: 추후 재대국 신청 취소 처리*/
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene);
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene).Cancel();
     }
 
     private void AcceptRematch()
     {
         /*TODO: 추후 재대국 신청 수락 동작*/
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene);
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
     }
 
     private void DisableRematch()

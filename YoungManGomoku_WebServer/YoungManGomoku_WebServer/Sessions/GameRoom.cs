@@ -428,7 +428,7 @@ namespace YoungManGomoku_WebServer.Sessions
 					long opponentWaitingTime = opponentTimer.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds;
 
 					// 상대방의 타임아웃 이벤트를 동작시킨다.
-					if (_timeOutTimer.TryGetValue(UID, out Timer? opponentTimerCallback) == false)
+					if (_timeOutTimer.TryGetValue(opponent, out Timer? opponentTimerCallback) == false)
                         _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Place Stone] 상대 타이머 콜백이 등록되지 않았습니다!!!");
 					
 					opponentTimerCallback?.Change(opponentWaitingTime, -1L);

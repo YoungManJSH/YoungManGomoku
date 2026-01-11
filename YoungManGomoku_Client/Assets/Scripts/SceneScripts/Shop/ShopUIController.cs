@@ -60,5 +60,5 @@ public class ShopUIController : MonoBehaviour
     }
 
     public void MoveSceneToLobby()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
 }

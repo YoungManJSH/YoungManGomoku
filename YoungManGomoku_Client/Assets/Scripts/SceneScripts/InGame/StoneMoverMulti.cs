@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using YoungManGomoku_Protocol.ClientToServer;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 /// <summary> 멀티플레이 착수 제어 클래스 </summary>
 public class StoneMoverMulti : StoneMover

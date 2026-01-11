@@ -3067,7 +3067,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   stoneMover: {fileID: 362371478}
-  oppositeSweeper: {fileID: 1989689724}
   winSound: {fileID: 8300000, guid: 22a7897e60a63de4ca2ccf8dc45266eb, type: 3}
   loseSound: {fileID: 8300000, guid: afdd92fb925bf894fbe429635940c64a, type: 3}
   drawSound: {fileID: 8300000, guid: e9df61245f9732c4daee53d8d672d03c, type: 3}

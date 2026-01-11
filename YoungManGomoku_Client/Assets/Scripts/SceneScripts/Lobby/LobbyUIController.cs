@@ -67,7 +67,7 @@ public class LobbyUIController : MonoBehaviour
     }
 
     public void MoveSceneToShop()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.ShopScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.ShopScene).Cancel();
 
     public void OpenCloseReplayPanel()
     {
