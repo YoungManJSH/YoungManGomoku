@@ -62,6 +62,9 @@ public class ResultPresenter : MonoBehaviour
             detailText.text = playerDisconnectedText;
             DisableRematch();
         };
+
+        em.OnWaitingRematch += DisableRematch;
+        em.OnRematchFailed += DisableRematch;
         
         rematchButton.onClick.AddListener(AcceptRematch);
         replayButton.onClick.AddListener(OpenReplay);
@@ -76,10 +79,8 @@ public class ResultPresenter : MonoBehaviour
         
         if (remainTime <= 0f)
         {
+            EventManager.Instance.RequestRematch(isAccept: false);
             DisableRematch();
-            
-            /*TODO: 추후 재대국 신청 취소 처리*/
-            
             return;
         }
         
@@ -94,15 +95,12 @@ public class ResultPresenter : MonoBehaviour
     
     private void OpenReplay()
     {
-        /*TODO: 추후 재대국 신청 취소 처리*/
+        EventManager.Instance.RequestRematch(isAccept: false);
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene).Cancel();
     }
 
     private void AcceptRematch()
-    {
-        /*TODO: 추후 재대국 신청 수락 동작*/
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
-    }
+        => EventManager.Instance.RequestRematch(isAccept: true);
 
     private void DisableRematch()
     {

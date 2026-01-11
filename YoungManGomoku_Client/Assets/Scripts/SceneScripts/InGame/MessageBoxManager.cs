@@ -77,9 +77,9 @@ public class MessageBoxManager : MonoBehaviour
     
     private void OnConfirm()
     {
-        _requestedAction?.Invoke();
         gameObject.SetActive(false);
         TurnBackToGame!.Invoke();
+        _requestedAction?.Invoke();
     }
 
     private void OnCancel()

@@ -93,7 +93,7 @@ public class GameManager : MonoBehaviour
         OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount,
             opponent.LoseCount, opponent.Rating, opponent.EquipProfile);
 
-        SC_TimerSettingDTO timerInform = matchResult.TimerSettingDTO;
+        TimerSettingData timerInform = matchResult.TimerSettingDTO;
         PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
         OppositeTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);
         ByoyomiPurchaseAmount = timerInform.ByoyomiPurchaseAmount;

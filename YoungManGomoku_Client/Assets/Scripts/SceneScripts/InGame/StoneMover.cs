@@ -165,7 +165,7 @@ public abstract class StoneMover : MonoBehaviour
         }
     }
     
-    private void DisableUpdate() => enabled = false;
+    protected void DisableUpdate() => enabled = false;
     
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)

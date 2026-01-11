@@ -44,6 +44,9 @@ public class EventManager : MonoBehaviour
     /// <para>매개변수 false: 요청이 거절됨, 게임 재개</para>
     /// </summary>
     public event Action<bool> OnTakeBack;
+
+    public event Action OnWaitingRematch;
+    public event Action OnRematchFailed;
     
     public event Action OnServerReplyFailed;
 
@@ -172,6 +175,8 @@ public class EventManager : MonoBehaviour
     {
         try
         {
+            OnTakeBackRequested!.Invoke(true);
+            
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
@@ -187,7 +192,6 @@ public class EventManager : MonoBehaviour
             if (reply.IsSuccess)
             {
                 Debug.Log("무르기 요청이 확인됨!");
-                OnTakeBackRequested!.Invoke(true);
                 // 상대방의 승인 응답은 인게임 이벤트 응답으로 받음
             }
             else
@@ -195,6 +199,9 @@ public class EventManager : MonoBehaviour
                 /* 레이스 컨디션으로 게임 종료가 중간에 끼어들면 여기 들어올 수 있음
                  * 그밖의 경우는 클라이언트가 요청을 잘못한 것이므로 로직 확인할 것 */
                 Debug.LogWarning("무르기 요청이 거부됨! (게임 종료 레이스 컨디션이 아니라면 클라이언트 요청이 잘못된 것)");
+                
+                if (IsGameEnd is false)
+                    OnTakeBack!.Invoke(false);
             }
             
             // 요청-응답이 완료되었으면 DTO 멤버 초기화 (잘못된 사용을 미연에 방지)
@@ -243,6 +250,27 @@ public class EventManager : MonoBehaviour
         {
             Debug.LogError($"초읽기 구매 요청 에러: {e}");
             ServerReplyFailed();
+        }
+    }
+
+    public async void RequestRematch(bool isAccept)
+    {
+        try
+        {
+            if (isAccept)
+            {
+                OnWaitingRematch!.Invoke();
+                //TODO: 재대결 수락 요청
+            }
+            else
+            {
+                //TODO: 재대결 거부 요청
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"재대결 {(isAccept ? "수락" : "거절")} 요청 에러: {e}");
+            OnRematchFailed!.Invoke();
         }
     }
     
@@ -346,11 +374,11 @@ public class EventManager : MonoBehaviour
                 case IngameRequestType.TakeBack:
                     OnTakeBackRequested!.Invoke(false);
                     break;
-                case IngameRequestType.PurchaseByoyomi:
-                    OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
-                    break;
                 case IngameRequestType.TakeBackResult:
                     OnTakeBack!.Invoke(response.IsTakeBackSuccess);
+                    break;
+                case IngameRequestType.PurchaseByoyomi:
+                    OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
                     break;
                 default:
                     Debug.LogError("정의되지 않은 인게임 이벤트 종류");

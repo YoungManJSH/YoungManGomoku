@@ -11,11 +11,13 @@ public class UIPosition : ScriptableObject
     [SerializeField, Tooltip("StartCountDown")] private Rect countAnchors;
     [SerializeField, Tooltip("ResultPanel 세로 모드")] private Rect resultTallAnchors;
     [SerializeField, Tooltip("messageBox 세로 모드")] private Rect messageTallAnchors;
+    [SerializeField, Tooltip("toastBox 세로 모드")] private Rect toastTallAnchors;
     [SerializeField, Tooltip("topPanel 세로 모드 여백 비율")] private float topMarginRatio;
     
     [Header("Wide 버전용 UI 조정값")]
     [SerializeField, Tooltip("ResultPanel 가로 모드")] private Rect resultWideAnchors;
     [SerializeField, Tooltip("messageBox 가로 모드")] private Rect messageWideAnchors;
+    [SerializeField, Tooltip("toastBox 가로 모드")] private Rect toastWideAnchors;
     [SerializeField, Tooltip("topPanel 가로 모드 높이")] private float topHeight;
     [SerializeField, Tooltip("bottomPanel 가로 모드 높이")] private float bottomHeight;
     
@@ -28,13 +30,14 @@ public class UIPosition : ScriptableObject
     /// <param name="resultPanel">결과창 패널</param>
     /// <param name="messagePanel">메시지 박스 패널</param>
     /// <param name="respondPanel">응답용 박스 패널</param>
+    /// <param name="toastPanel">토스트 메시지 박스 패널</param>
     /// <param name="topPanel">상단 패널</param>
     /// <param name="bottomPanel">하단 패널</param>
     /// <param name="boardMin">오목판 스크린 좌표 좌하단</param>
     /// <param name="boardMax">오목판 스크린 좌표 우상단</param>
     /// <param name="nowAspect">출력되는 화면의 종횡비</param>
     public void PanelMovingAndScaling(RectTransform startCount, RectTransform resultPanel,
-        RectTransform messagePanel, RectTransform respondPanel,
+        RectTransform messagePanel, RectTransform respondPanel, RectTransform toastPanel,
         RectTransform topPanel, RectTransform bottomPanel,
         Vector3 boardMin, Vector3 boardMax, float nowAspect)
     {
@@ -56,6 +59,9 @@ public class UIPosition : ScriptableObject
             messagePanel.anchorMin = new Vector2(LerpX(messageTallAnchors.xMin), LerpY(messageTallAnchors.yMin));
             messagePanel.anchorMax = new Vector2(LerpX(messageTallAnchors.xMax), LerpY(messageTallAnchors.yMax));
 
+            toastPanel.anchorMin = new Vector2(LerpX(toastTallAnchors.xMin), LerpY(toastTallAnchors.yMin));
+            toastPanel.anchorMax = new Vector2(LerpX(toastTallAnchors.xMax), LerpY(toastTallAnchors.yMax));
+            
             // topPanel의 상단 앵커 위치
             float topLimit = 0.5f + (0.5f - topMarginRatio) * Mathf.Min(nowAspect / tallRatio, 1f);
             float bottomLimit = 0.5f - 0.5f * Mathf.Min(nowAspect / tallRatio, 1f);
@@ -76,6 +82,9 @@ public class UIPosition : ScriptableObject
             messagePanel.anchorMin = new Vector2(LerpX(messageWideAnchors.xMin), LerpY(messageWideAnchors.yMin));
             messagePanel.anchorMax = new Vector2(LerpX(messageWideAnchors.xMax), LerpY(messageWideAnchors.yMax));
             
+            toastPanel.anchorMin = new Vector2(LerpX(toastWideAnchors.xMin), LerpY(toastWideAnchors.yMin));
+            toastPanel.anchorMax = new Vector2(LerpX(toastWideAnchors.xMax), LerpY(toastWideAnchors.yMax));
+            
             // top, bottom panel을 board의 우측으로 배치
             float rightLimit = 0.5f + 0.5f * wideRatio / nowAspect; // UI 표시 한계선 (wideRatio만큼만 화면 표시)
 
@@ -94,6 +103,7 @@ public class UIPosition : ScriptableObject
         resultPanel.offsetMin = resultPanel.offsetMax = Vector2.zero;
         messagePanel.offsetMin = messagePanel.offsetMax = Vector2.zero;
         respondPanel.offsetMin = respondPanel.offsetMax = Vector2.zero;
+        toastPanel.offsetMin = toastPanel.offsetMax = Vector2.zero;
         topPanel.offsetMin = topPanel.offsetMax = Vector2.zero;
         bottomPanel.offsetMin = bottomPanel.offsetMax = Vector2.zero;
         

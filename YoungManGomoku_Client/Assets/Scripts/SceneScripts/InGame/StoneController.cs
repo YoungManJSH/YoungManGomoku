@@ -60,6 +60,7 @@ public class StoneController : MonoBehaviour
         }
         else
         {
+            _tween.Rewind();
             _tween.Kill();
             _tween = null;
         }

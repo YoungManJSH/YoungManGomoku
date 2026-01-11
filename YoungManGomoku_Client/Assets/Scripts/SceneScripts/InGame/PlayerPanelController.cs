@@ -30,7 +30,7 @@ public class PlayerPanelController : MonoBehaviour
     private ProfileImages profileImages;
     [SerializeField] private bool isPlayer;
 
-    private const float TOLERANCE = 0.7f;
+    private const float TOLERANCE = 0.5f;
     private static readonly Color Translucent = new (1f, 1f, 1f, 0.3f);
 
     public event Action OnLastByoyomi;

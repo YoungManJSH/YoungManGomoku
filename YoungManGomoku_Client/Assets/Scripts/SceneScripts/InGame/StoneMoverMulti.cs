@@ -25,6 +25,8 @@ public class StoneMoverMulti : StoneMover
         _placeStoneDTO = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
         
         OnStoneMove += OnTurnChanged;
+        _eventManager.OnTakeBackRequested += _ => DisableUpdate();
+        _eventManager.OnTakeBack += _ => enabled = _isPlayerTurn;
     }
 
     private void OnDisable() => NowPreview.SetActive(false);

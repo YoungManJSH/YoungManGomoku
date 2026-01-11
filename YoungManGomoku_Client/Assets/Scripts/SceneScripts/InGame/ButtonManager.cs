@@ -43,10 +43,13 @@ public class ButtonManager : MonoBehaviour
         _activateSet = new HashSet<ValueTuple<Button, TextMeshProUGUI>>();
         
         EventManager em = EventManager.Instance;
-        GameManager gm = GameManager.Instance;
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
         em.OnStartSweeping += DisableIngameButton;
+        em.OnWaitingRematch += () => ButtonInactivate(_exitSet);
+        em.OnRematchFailed += () => ButtonActivate(_exitSet);
+        
+        GameManager gm = GameManager.Instance;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
@@ -96,7 +99,7 @@ public class ButtonManager : MonoBehaviour
 
     private void ExitInput()
     {
-        // TODO: 추후 재대국 거부 요청 추가
+        EventManager.Instance.RequestRematch(isAccept: false);
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
     }
 
