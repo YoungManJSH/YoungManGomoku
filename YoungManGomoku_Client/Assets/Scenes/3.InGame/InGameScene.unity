@@ -6634,9 +6634,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.627451}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
+  m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -6673,9 +6673,12 @@ MonoBehaviour:
   messageUI: {fileID: 1230694820}
   waitingTakeBackString: "\uBB34\uB974\uAE30 \uC218\uB77D\uC744 \uAE30\uB2E4\uB9AC\uB294
     \uC911"
+  takeBackConfirmString: "\uBB34\uB974\uAE30\uAC00 \uC9C4\uD589\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
+  takeBackRejectedString: "\uBB34\uB974\uAE30\uAC00 \uAC70\uC808\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
   waitingRematchString: "\uC7AC\uB300\uACB0 \uC751\uB2F5\uC744 \uAE30\uB2E4\uB9AC\uB294
     \uC911"
   rematchFailedString: "\uC7AC\uB300\uACB0\uC774 \uC131\uC0AC\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4."
+  toastTime: 1.5
 --- !u!1 &1510754268
 GameObject:
   m_ObjectHideFlags: 0

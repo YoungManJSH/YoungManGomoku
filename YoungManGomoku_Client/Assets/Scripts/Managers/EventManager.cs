@@ -45,7 +45,9 @@ public class EventManager : MonoBehaviour
     /// </summary>
     public event Action<bool> OnTakeBack;
 
+    /// <summary>재대결 수락 요청을 보내는 시점에 발생</summary>
     public event Action OnWaitingRematch;
+    /// <summary>재대결 불성립 응답을 받았을 때 발생</summary>
     public event Action OnRematchFailed;
     
     public event Action OnServerReplyFailed;
