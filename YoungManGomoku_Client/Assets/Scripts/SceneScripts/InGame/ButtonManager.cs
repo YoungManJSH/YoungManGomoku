@@ -7,9 +7,9 @@ using UnityEngine.UI;
 public class ButtonManager : MonoBehaviour
 {
     [SerializeField] private MessageBoxManager messageBox;
-    [SerializeField] private BoardSweeper playerSweeper;
     [SerializeField] private PlayerPanelController playerPanel;
     [SerializeField] private StoneMover stoneMover;
+    [SerializeField] private ResultPresenter resultPresenter;
     
     [SerializeField] private Button surrenderButton;
     [SerializeField] private Button byoyomiPurchaseButton;
@@ -45,7 +45,6 @@ public class ButtonManager : MonoBehaviour
         EventManager em = EventManager.Instance;
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
-        em.OnStartSweeping += DisableIngameButton;
         em.OnWaitingRematch += () => ButtonInactivate(_exitSet);
         em.OnRematchFailed += () => ButtonActivate(_exitSet);
         
@@ -86,7 +85,7 @@ public class ButtonManager : MonoBehaviour
     }
     
     private void SurrenderInput()
-        => messageBox.MessageBoxOpen(surrenderConfirmMsg, playerSweeper.Sweeping);
+        => messageBox.MessageBoxOpen(surrenderConfirmMsg, RequestSurrender);
 
     private void TimePurchaseInput()
         => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
@@ -99,7 +98,7 @@ public class ButtonManager : MonoBehaviour
 
     private void ExitInput()
     {
-        EventManager.Instance.RequestRematch(isAccept: false);
+        resultPresenter.RejectRematch();
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
     }
 
@@ -131,6 +130,12 @@ public class ButtonManager : MonoBehaviour
         _activateSet.Add(_byoyomiPurchaseSet);
     }
 
+    private void RequestSurrender()
+    {
+        ButtonInactivate(_surrenderSet);
+        EventManager.Instance.RequestSurrender();
+    }
+    
     private void RequestTimePurchase()
     {
         ButtonInactivate(_byoyomiPurchaseSet);

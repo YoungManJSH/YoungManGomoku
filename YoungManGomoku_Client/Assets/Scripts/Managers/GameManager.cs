@@ -8,9 +8,6 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private StoneMover stoneMover;
-    [SerializeField] private AudioClip winSound;
-    [SerializeField] private AudioClip loseSound;
-    [SerializeField] private AudioClip drawSound;
     
     public static GameManager Instance { get; private set; }
     
@@ -28,7 +25,6 @@ public class GameManager : MonoBehaviour
     private CS_RequestTimerSynchroDTO _timerSynchroDTO; 
     private EventManager _eventManager;
     private NetworkManager _networkManager;
-    private AudioSource _audioSource;
     private long _lastTime;
 
     /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
@@ -39,22 +35,15 @@ public class GameManager : MonoBehaviour
         Instance = this;
         _eventManager = GetComponent<EventManager>();
         _networkManager = GetComponent<NetworkManager>();
-        _audioSource = GetComponent<AudioSource>();
         BoardInform = new Board();
         IsByoyomiPurchased = false;
         
         #region 타이머 진행 제어 (Update 활성화 여부)
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += DisableTimer;
-        _eventManager.OnStartSweeping += DisableTimer;
         _eventManager.OnBlackUnmovable += DisableTimer;
         #endregion
         
-        _eventManager.OnGameWin += () => _audioSource.PlayOneShot(winSound);
-        _eventManager.OnGameLose += () => _audioSource.PlayOneShot(loseSound);
-        _eventManager.OnGameDraw += PlayDrawSound;
-        _eventManager.OnServerReplyFailed += PlayDrawSound;
-        _networkManager.OnRequestFailed += _ => PlayDrawSound();
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         _eventManager.OnTakeBackRequested += _ => DisableTimer();
         _eventManager.OnTakeBack += OnTakeBack;
@@ -174,8 +163,6 @@ public class GameManager : MonoBehaviour
     
     /// <summary> MonoBehaviour 비활성화 (타이머 정지) </summary>
     private void DisableTimer() => enabled = false;
-
-    private void PlayDrawSound() => _audioSource.PlayOneShot(drawSound);
 
     /// <summary> 진행 중인 타이머 교체 및 내 타이머 동기화 요청 </summary>
     private async void OnStoneMove(bool isBlackTurn)

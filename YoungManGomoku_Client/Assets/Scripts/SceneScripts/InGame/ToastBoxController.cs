@@ -16,11 +16,12 @@ public class ToastBoxController : MonoBehaviour
     [SerializeField] private string waitingRematchString;
     [SerializeField] private string rematchFailedString;
     [SerializeField] private float toastTime;
+    [SerializeField] private float fadeDuration;
 
     private const int COUNTS = 3;
     
-    private TweenerCore<Color, Color, ColorOptions>[] _toastOpens;
-    private TweenerCore<Color, Color, ColorOptions>[] _toastCloses;
+    private TweenerCore<Color, Color, ColorOptions>[] _openAnims;
+    private TweenerCore<Color, Color, ColorOptions>[] _closeAnims;
     private CancellationTokenSource _cts;
     private string[] _waitingTakeBackStrings;
     private string[] _waitingRematchStrings;
@@ -30,9 +31,9 @@ public class ToastBoxController : MonoBehaviour
     {
         Image background = GetComponent<Image>();
         
-        _toastCloses = new TweenerCore<Color, Color, ColorOptions>[2];
-        _toastCloses[0] = background.DOFade(endValue: 0f, duration: 0.5f).SetAutoKill(false).Pause();
-        _toastCloses[1] = messageUI.DOFade(endValue:0f, duration:0.5f)
+        _closeAnims = new TweenerCore<Color, Color, ColorOptions>[2];
+        _closeAnims[0] = background.DOFade(endValue: 0f, fadeDuration).SetAutoKill(false).Pause();
+        _closeAnims[1] = messageUI.DOFade(endValue: 0f, fadeDuration)
             .OnComplete(() => gameObject.SetActive(false)).SetAutoKill(false).Pause();
 
         float bgAlpha = background.color.a;
@@ -40,9 +41,9 @@ public class ToastBoxController : MonoBehaviour
         background.color = Color.clear;
         messageUI.alpha = 0f;
         
-        _toastOpens = new TweenerCore<Color, Color, ColorOptions>[2];
-        _toastOpens[0] = background.DOFade(endValue:bgAlpha, duration:0.5f).SetAutoKill(false).Pause();
-        _toastOpens[1] = messageUI.DOFade(endValue:messageAlpha, duration:0.5f).SetAutoKill(false).Pause();
+        _openAnims = new TweenerCore<Color, Color, ColorOptions>[2];
+        _openAnims[0] = background.DOFade(endValue:bgAlpha, fadeDuration).SetAutoKill(false).Pause();
+        _openAnims[1] = messageUI.DOFade(endValue:messageAlpha, fadeDuration).SetAutoKill(false).Pause();
         
         #region 대기용 문자열 소스 생성
         _waitingTakeBackStrings = new string[COUNTS];
@@ -64,24 +65,13 @@ public class ToastBoxController : MonoBehaviour
 
         gameObject.SetActive(false);
     }
-
-    private void OnEnable()
-    {
-        StopAwaitable();
-
-        foreach (var closeAnim in _toastCloses)
-            closeAnim.Pause();
-        
-        foreach (var openAnim in _toastOpens)
-            openAnim.Restart();
-    }
-
+    
     private void OnDestroy()
     {
-        foreach (var openAnim in _toastOpens)
+        foreach (var openAnim in _openAnims)
             openAnim.Kill();
         
-        foreach (var closeAnim in _toastCloses)
+        foreach (var closeAnim in _closeAnims)
             closeAnim.Kill();
     }
 
@@ -102,50 +92,60 @@ public class ToastBoxController : MonoBehaviour
         gameObject.SetActive(true);
     }
     
-
     private async void OnTakeBack(bool isAccepted)
     {
         try
         {
-            StopAwaitable();
-
-            if (isAccepted)
-                messageUI.text = takeBackConfirmString;
-            else if (_isMyTakeback)
-                messageUI.text = takeBackRejectedString;
-
             if (isAccepted || _isMyTakeback)
             {
+                RestartAnims();
+                
+                messageUI.text = isAccepted ? takeBackConfirmString : takeBackRejectedString;
                 gameObject.SetActive(true);
                 
                 _cts = new  CancellationTokenSource();
                 await Awaitable.WaitForSecondsAsync(toastTime, _cts.Token);
                 
-                foreach (var closeAnim in _toastCloses)
+                foreach (var closeAnim in _closeAnims)
                     closeAnim.Restart();
             }
         }
         catch (Exception e)
         {
-            if (e is not OperationCanceledException)
-                Debug.LogError($"토스트 메시지 박스 에러: {e}");
+            if (e is OperationCanceledException) return;
+            
+            Debug.LogError($"토스트 메시지 박스 에러: {e}");
         }
     }
 
-    private void OnRematchFailed()
+    private async void OnRematchFailed()
     {
-        /* case1: OnWaitingRematch 중에 응답받은 경우
-         * case2: 재대결 요청 전에 먼저 응답받은 경우 */
-        
-        /* TODO: 투명도 조절 애니메이션 넣기
-         * 3초 정도 메시지 띄웠다가 사라지도록 조정하기 */ 
+        try
+        {
+            RestartAnims();
+
+            messageUI.text = rematchFailedString;
+            gameObject.SetActive(true);
+
+            _cts = new CancellationTokenSource();
+            await Awaitable.WaitForSecondsAsync(toastTime, _cts.Token);
+                
+            foreach (var closeAnim in _closeAnims)
+                closeAnim.Restart();
+        }
+        catch (Exception e)
+        {
+            if (e is OperationCanceledException) return;
+            
+            Debug.LogError($"토스트 메시지 박스 에러: {e}");
+        }
     }
     
     private async Awaitable StartStringChange(string[] strings)
     {
         try
         {
-            _cts?.Dispose();
+            RestartAnims();
             _cts = new CancellationTokenSource();
             
             while (true)
@@ -160,13 +160,18 @@ public class ToastBoxController : MonoBehaviour
         catch (OperationCanceledException) { }
     }
     
-    /// <summary>Awaitable을 활용한 연출의 취소</summary>
-    private void StopAwaitable()
+    /// <summary>기존 진행 중이던 연출을 취소 후 재시작</summary>
+    private void RestartAnims()
     {
+        foreach (var closeAnim in _closeAnims)
+            closeAnim.Pause();
+        
+        foreach (var openAnim in _openAnims)
+            openAnim.Restart();
+
         if (_cts == null) return;
         
         _cts.Cancel();
-        _cts.Dispose();
         _cts = null;
     }
 }

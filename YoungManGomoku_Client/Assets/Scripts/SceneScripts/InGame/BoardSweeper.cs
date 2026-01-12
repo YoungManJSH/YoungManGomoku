@@ -3,11 +3,17 @@ using UnityEngine;
 
 public class BoardSweeper : MonoBehaviour
 {
-    [SerializeField] private Vector2 middleVelocity;
-    [SerializeField] private Vector2 endVelocity;
+    [Header("세로 모드일 때의 손 이동 속도")]
+    [SerializeField] private Vector2 tallMiddleVel;
+    [SerializeField] private Vector2 tallEndVel;
+    [Header("가로 모드일 때의 손 이동 속도")]
+    [SerializeField] private Vector2 wideMiddleVel;
+    [SerializeField] private Vector2 wideEndVel;
+    [Header("구간별 이동 시간")]
     [SerializeField] private float toMiddleDuration;
     [SerializeField] private float switchingDuration;
     [SerializeField] private float toEndDuration;
+    [Header("돌과 부딪힐 때 낼 효과음")]
     [SerializeField] private AudioClip stoneSound;
     [SerializeField] private bool isPlayerHand;
     
@@ -20,6 +26,11 @@ public class BoardSweeper : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
         _audioSource = GetComponent<AudioSource>();
         _boardScaler = GetComponentInParent<IngameBoardScaler>();
+
+        if (isPlayerHand)
+            EventManager.Instance.OnPlayerSurrender += Sweeping;
+        else
+            EventManager.Instance.OnOppositeSurrender += Sweeping;
         
         gameObject.SetActive(false);
     }
@@ -32,32 +43,25 @@ public class BoardSweeper : MonoBehaviour
         }
     }
     
-    public void Sweeping()
+    private void Sweeping()
     {
-        EventManager.Instance.StartSweeping();
-        
         gameObject.SetActive(true);
-        _rb.simulated = true;
-
         _audioSource.Play();
+        _rb.simulated = true;
+        
         Sequence seq = DOTween.Sequence();
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
-            endValue: middleVelocity / (_boardScaler.IsWide ? _boardScaler.UIPos.TallRatio : 1f), toMiddleDuration).
+            endValue: _boardScaler.IsWide ? wideMiddleVel : tallMiddleVel, toMiddleDuration).
             SetEase(Ease.OutQuad));
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
-            endValue: endVelocity / (_boardScaler.IsWide ? _boardScaler.UIPos.TallRatio : 1f), switchingDuration).
+            endValue: _boardScaler.IsWide ? wideEndVel : tallEndVel, switchingDuration).
             SetEase(Ease.InOutQuad));
         
         seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             Vector2.zero, toEndDuration).SetEase(Ease.InQuad));
 
-        seq.OnComplete(() =>
-        {
-            if (isPlayerHand) EventManager.Instance.RequestSurrender();
-            
-            gameObject.SetActive(false);
-        });
+        seq.OnComplete(() => gameObject.SetActive(false));
     }
 }

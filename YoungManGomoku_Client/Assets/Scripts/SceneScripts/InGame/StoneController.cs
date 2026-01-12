@@ -18,15 +18,20 @@ public class StoneController : MonoBehaviour
         _collider = GetComponent<CircleCollider2D>();
         _rb.simulated = false;
         _collider.enabled = false;
-        EventManager.Instance.OnStartSweeping += OnStartSweeping;
+
+        EventManager.Instance.OnPlayerSurrender += OnStartSweeping;
+        EventManager.Instance.OnOppositeSurrender += OnStartSweeping;
     }
 
     private void OnDestroy()
     {
         _tween?.Kill();
-        
+
         if (EventManager.Instance != null)
-            EventManager.Instance.OnStartSweeping -= OnStartSweeping;
+        {
+            EventManager.Instance.OnPlayerSurrender -= OnStartSweeping;
+            EventManager.Instance.OnOppositeSurrender -= OnStartSweeping;
+        }
     }
 
     private void OnStartSweeping()

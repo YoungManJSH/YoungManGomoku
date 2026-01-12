@@ -6,8 +6,6 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class EventManager : MonoBehaviour
 {
-    [SerializeField] private BoardSweeper oppositeHand;
-    
     public event Action OnGameStart;
     public event Action OnGameEnd;
     
@@ -21,8 +19,7 @@ public class EventManager : MonoBehaviour
     
     public event Action OnPlayerSurrender;
     public event Action OnOppositeSurrender;
-    public event Action OnStartSweeping;
-
+    
     public event Action OnPlayerTimeOut;
     public event Action OnOppositeTimeOut;
 
@@ -287,9 +284,6 @@ public class EventManager : MonoBehaviour
         // 터지는 상황에서는 재로그인이 필요함
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene, seconds: 2f).Cancel();
     }
-
-    /// <summary> 기권 판 쓸기 연출이 시작될 때 호출 </summary>
-    public void StartSweeping() => OnStartSweeping!.Invoke();
     
     /// <summary> 서버 응답 중 None이 아닌 GameEndCode가 있을 경우 호출 </summary>
     private void HandleGameEndCode(GameEndCode gameEndCode)
@@ -311,7 +305,6 @@ public class EventManager : MonoBehaviour
                 OnBlackUnmovable!.Invoke();
                 break;
             case GameEndCode.SurrenderWin:
-                oppositeHand.Sweeping(); // TODO: 그냥 이벤트에 넣는 쪽으로 수정하기
                 OnOppositeSurrender!.Invoke();
                 break;
             case GameEndCode.SurrenderLose:

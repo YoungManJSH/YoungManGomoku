@@ -95,7 +95,6 @@ public class PlayerPanelController : MonoBehaviour
         InputUserInform(myUser.name, myUser.win, myUser.draw, myUser.lose, myUser.rating, myUser.imageNum);
         
         EventManager em = EventManager.Instance;
-        em.OnStartSweeping += DisableTimer;
         em.OnGameEnd += DisableTimer;
         em.OnGameEnd += CancelByoyomiUse;
         /* 무르기 관련 MonoBehaviour 정지&재개는 적용하지 않음

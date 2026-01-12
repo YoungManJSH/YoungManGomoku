@@ -20,7 +20,6 @@ public class MessageBoxManager : MonoBehaviour
     {
         _rect = GetComponent<RectTransform>();
         EventManager.Instance.OnGameEnd += OnGameEnd;
-        EventManager.Instance.OnStartSweeping += OnGameEnd;
         
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);

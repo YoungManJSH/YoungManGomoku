@@ -16,6 +16,13 @@ public abstract class StoneMover : MonoBehaviour
     [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject recentMark;
 
+    [Header("키보드 입력 세팅값, 초 단위"),
+     SerializeField, Tooltip("연속 이동이 작동할 때까지의 시간")]
+    private float delay;
+    [SerializeField, Tooltip("다음 이동까지의 시간 간격")]
+    private float interval;
+    
+    
     protected Transform BlackParent { get; private set; }
     protected Transform WhiteParent { get; private set; }
     protected GameObject NowPreview { get; set; }
@@ -39,6 +46,9 @@ public abstract class StoneMover : MonoBehaviour
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
     private float _firstLineWorld; // 첫 번째 격자 위치
     private float _cellSizeWorld; // World 좌표 단위 격자 간격
+
+    private float _holdTime;
+    private bool _isMoving;
     private bool _isBlackTurn;
     private bool _muteDeniedSound;
     
@@ -81,7 +91,6 @@ public abstract class StoneMover : MonoBehaviour
         _em.OnGameStart += OnGameStart;
         _em.OnGameEnd += DisableUpdate;
         _em.OnGameEnd += UnmarkTakeBack;
-        _em.OnStartSweeping += DisableUpdate;
         _em.OnTakeBackRequested += _ => MarkTakeBack();
         _em.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
@@ -170,6 +179,8 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> [row, col] 위치에 착수 위치 미리보기 표시 </summary>
     private void UpdatePreview((int row, int col) coord)
     {
+        NowCoord = coord;
+        
         NowPreview.transform.position = _spriteRenderer.bounds.min +
                                         new Vector3(_firstLineWorld + _cellSizeWorld * coord.col,
                                             _firstLineWorld + _cellSizeWorld * (Board.MaxCoord - coord.row), 0f);
@@ -193,7 +204,6 @@ public abstract class StoneMover : MonoBehaviour
                 _boardInform[coord.row, coord.col] == StoneColorType.Empty &&
                 _forbiddenCoords.Contains(coord) is false)
             {
-                NowCoord = coord;
                 UpdatePreview(coord);
             }
         }
@@ -234,28 +244,49 @@ public abstract class StoneMover : MonoBehaviour
             int hor = (int)Input.GetAxisRaw("Horizontal");
             int ver = (int)Input.GetAxisRaw("Vertical");
 
-            int row = NowCoord.row;
-            int col = NowCoord.col;
-            
-            for (int i = 0; i < Board.BoardSize; ++i)
+            if (TryChangeCoord(out var coord, hor, ver))
             {
-                row -= ver;
-                col += hor;
-
-                if (row < 0) row = Board.MaxCoord;
-                else if (Board.MaxCoord < row) row = 0;
-
-                if (col < 0) col = Board.MaxCoord;
-                else if (Board.MaxCoord < col) col = 0;
-                
-                if (_boardInform[row, col] == StoneColorType.Empty &&
-                    _forbiddenCoords.Contains((row, col)) is false)
-                {
-                    NowCoord = (row, col);
-                    UpdatePreview(NowCoord);
-                    break;
-                }
+                UpdatePreview(coord);
             }
+
+            _holdTime = 0f;
+            _isMoving = false;
+            return;
+        }
+
+        if (Input.GetButton("Horizontal") || Input.GetButton("Vertical"))
+        {
+            _holdTime += Time.deltaTime;
+
+            if (_isMoving)
+            {
+                if (_holdTime < interval) return;
+                
+                int hor = (int)Input.GetAxisRaw("Horizontal");
+                int ver = (int)Input.GetAxisRaw("Vertical");
+
+                if (TryChangeCoord(out var coord, hor, ver))
+                {
+                    UpdatePreview(coord);
+                }
+
+                _holdTime = 0f;
+                return;
+            }
+            
+            if (_holdTime >= delay)
+            {
+                _isMoving = true;
+                _holdTime = interval; // 다음 Update 때 바로 이동할 수 있도록
+            }
+
+            return;
+        }
+
+        if (Input.GetButtonUp("Horizontal") || Input.GetButtonUp("Vertical"))
+        {
+            _holdTime = 0f;
+            _isMoving = false;
         }
         
 #elif UNITY_ANDROID
@@ -277,12 +308,11 @@ public abstract class StoneMover : MonoBehaviour
             if (TryGetBoardCoord(worldPos, out var coord))
             {
                 if (coord == NowCoord) return;
-
-                NowCoord = coord;
                 
                 if (_boardInform[coord.row, coord.col] != StoneColorType.Empty ||
                     _forbiddenCoords.Contains(coord))
                 {
+                    NowCoord = coord;
                     NowPreview.SetActive(false);
                     return;
                 }
@@ -291,6 +321,42 @@ public abstract class StoneMover : MonoBehaviour
             }
         }
 #endif
+    }
+
+    /// <summary>NowCoord에서 입력 방향으로 좌표 이동을 시도</summary>
+    /// <param name="coord">Circular navigation 방식으로 이동된 좌표</param>
+    /// <param name="hor">Horizontal 이동값</param>
+    /// <param name="ver">Vertical 이동값</param>
+    /// <returns>
+    /// <para>true: 비어있는 좌표로 이동하였음</para>
+    /// <para>false: 한 바퀴 순환하여도 비어있는 좌표가 없음</para>
+    /// </returns>
+    private bool TryChangeCoord(out (int row, int col) coord, int hor, int ver)
+    {
+        int row = NowCoord.row;
+        int col = NowCoord.col;
+            
+        for (int i = 0; i < Board.BoardSize; ++i)
+        {
+            row -= ver;
+            col += hor;
+
+            if (row < 0) row = Board.MaxCoord;
+            else if (Board.MaxCoord < row) row = 0;
+
+            if (col < 0) col = Board.MaxCoord;
+            else if (Board.MaxCoord < col) col = 0;
+                
+            if (_boardInform[row, col] == StoneColorType.Empty &&
+                _forbiddenCoords.Contains((row, col)) is false)
+            {
+                coord = (row, col);
+                return true;
+            }
+        }
+
+        coord = NowCoord;
+        return false;
     }
     
     /// <summary> position에 Stone prefab을 Instantiate </summary>
