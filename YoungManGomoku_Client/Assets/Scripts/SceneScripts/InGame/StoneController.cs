@@ -21,6 +21,10 @@ public class StoneController : MonoBehaviour
 
         EventManager.Instance.OnPlayerSurrender += OnStartSweeping;
         EventManager.Instance.OnOppositeSurrender += OnStartSweeping;
+        
+        float originScale = gameObject.transform.localScale.x;
+        gameObject.transform.localScale *= 1.5f;
+        gameObject.transform.DOScale(endValue: originScale, duration: 0.4f);
     }
 
     private void OnDestroy()
@@ -33,14 +37,7 @@ public class StoneController : MonoBehaviour
             EventManager.Instance.OnOppositeSurrender -= OnStartSweeping;
         }
     }
-
-    private void OnStartSweeping()
-    {
-        _collider.enabled = true;
-        _rb.simulated = true;
-        Destroy(gameObject, 3f);
-    }
-
+    
     public void GomokuAction()
     {
         float targetScale = transform.localScale.x * 1.5f;
@@ -70,4 +67,20 @@ public class StoneController : MonoBehaviour
             _tween = null;
         }
     }
+
+    public void TakeBack()
+    {
+        XMarking(isActivate: false);
+        
+        gameObject.transform.DOScale(endValue: 0f, duration: 0.4f).
+            OnComplete(() => Destroy(gameObject));
+    }
+    
+    private void OnStartSweeping()
+    {
+        _collider.enabled = true;
+        _rb.simulated = true;
+        Destroy(gameObject, 3f);
+    }
+
 }
