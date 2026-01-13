@@ -8,7 +8,6 @@ public class StoneMoverMulti : StoneMover
 {
     private bool _isPlayerTurn;
     private NetworkManager _networkManager;
-    private EventManager _eventManager;
     private GameManager _gameManager;
     private UserTimer _playerTimer;
     private UserTimer _oppositeTimer;
@@ -17,7 +16,6 @@ public class StoneMoverMulti : StoneMover
     protected override void OnAwake()
     {
         _networkManager = NetworkManager.Instance;
-        _eventManager = EventManager.Instance;
         _gameManager = GameManager.Instance;
         
         _isPlayerTurn = _gameManager.IsPlayerBlack;
@@ -26,8 +24,8 @@ public class StoneMoverMulti : StoneMover
         _placeStoneDTO = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
         
         OnStoneMove += OnTurnChanged;
-        _eventManager.OnTakeBackRequested += _ => DisableUpdate();
-        _eventManager.OnTakeBack += _ => enabled = _isPlayerTurn;
+        eventManager.OnTakeBackRequested += _ => DisableUpdate();
+        eventManager.OnTakeBack += _ => enabled = _isPlayerTurn;
     }
 
     private void OnDisable() => NowPreview.SetActive(false);
@@ -60,7 +58,7 @@ public class StoneMoverMulti : StoneMover
     {
         try
         {
-            if (_eventManager.IsGameEnd) return;
+            if (eventManager.IsGameEnd) return;
 
             _isPlayerTurn = !_isPlayerTurn;
             enabled = _isPlayerTurn;
@@ -78,7 +76,7 @@ public class StoneMoverMulti : StoneMover
                 {
                     // 나머지는 OnRequestFailed 이벤트로 처리됨
                     Debug.LogError("Error in Receive Opponent Move");
-                    _eventManager.ServerReplyFailed();
+                    eventManager.ServerReplyFailed();
                     return;
                 }
 
@@ -99,7 +97,7 @@ public class StoneMoverMulti : StoneMover
         catch (Exception e)
         {
             Debug.LogError($"Multi Stone Mover Error, in Turn Change Logic : {e}");
-            _eventManager.ServerReplyFailed();
+            eventManager.ServerReplyFailed();
         }
     }
 }

@@ -45,6 +45,7 @@ public class ButtonManager : MonoBehaviour
         EventManager em = EventManager.Instance;
         em.OnGameStart += OnGameStart;
         em.OnGameEnd += OnGameEnd;
+        em.OnTakeBack += OnTakeBack;
         em.OnWaitingRematch += () => ButtonInactivate(_exitSet);
         em.OnRematchFailed += () => ButtonActivate(_exitSet);
         
@@ -121,6 +122,27 @@ public class ButtonManager : MonoBehaviour
     private void OnTurnBackActivate()
         => _activateSet.Add(_takeBackSet);
 
+    private async void OnTakeBack(bool isAccepted)
+    {
+        try
+        {
+            if (isAccepted is false) return;
+
+            // 물러진 후로 상태가 변경되기까지 대기
+            await Awaitable.NextFrameAsync();
+
+            if (GameManager.Instance.BoardInform.NowTurn < 3)
+            {
+                _activateSet.Remove(_takeBackSet);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"무르기에 따른 버튼 상태 변경 로직 에러: {e}");
+            EventManager.Instance.ServerReplyFailed();
+        }
+    }
+    
     private void OnLastByoyomi()
     {
         if (GameManager.Instance.IsByoyomiPurchased)

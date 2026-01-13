@@ -30,6 +30,7 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 직전에 인식한 오목판 좌표 </summary>
     protected (int row, int col) NowCoord { get; private set; }
     
+    protected EventManager eventManager;
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
     private AudioSource _audioSource;
@@ -40,7 +41,6 @@ public abstract class StoneMover : MonoBehaviour
     private (StoneController black, StoneController white) _recentStone;
     private StoneController[,] _stoneObjects;
     private Camera _mainCamera;
-    private EventManager _em;
 
     private Vector3 _prevMousePos;
     private float _marginWorld; // Board 가장자리 인식하지 않는 영역 넓이
@@ -87,12 +87,12 @@ public abstract class StoneMover : MonoBehaviour
         messageBox.TurnBackToGame += MessageBoxClosed;
         messageBox.TurnBackToGame += UnmarkTakeBack;
 
-        _em = EventManager.Instance;
-        _em.OnGameStart += OnGameStart;
-        _em.OnGameEnd += DisableUpdate;
-        _em.OnGameEnd += UnmarkTakeBack;
-        _em.OnTakeBackRequested += _ => MarkTakeBack();
-        _em.OnTakeBack += OnTakeBack;
+        eventManager = EventManager.Instance;
+        eventManager.OnGameStart += OnGameStart;
+        eventManager.OnGameEnd += DisableUpdate;
+        eventManager.OnGameEnd += UnmarkTakeBack;
+        eventManager.OnTakeBackRequested += _ => MarkTakeBack();
+        eventManager.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
         PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
@@ -115,8 +115,8 @@ public abstract class StoneMover : MonoBehaviour
     {
         if (_recentStone.black == null || _recentStone.white == null)
         {
-            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 요청!");
-            EventManager.Instance.ServerReplyFailed();
+            Debug.LogError("무르기를 할 수 없는 상황에서의 무르기 요청!");
+            eventManager.ServerReplyFailed();
             return;
         }
         
@@ -435,28 +435,66 @@ public abstract class StoneMover : MonoBehaviour
     }
     
     /// <summary> 무르기 적용 - 최근 돌 2개 제거 </summary>
-    private void OnTakeBack(bool isAccepted)
+    private async void OnTakeBack(bool isAccepted)
     {
-        if (isAccepted is false)
+        try
         {
-            UnmarkTakeBack();
-            return;
+            if (isAccepted is false)
+            {
+                UnmarkTakeBack();
+                return;
+            }
+
+            if (_recentStone.black == null || _recentStone.white == null)
+            {
+                Debug.LogError("무르기를 할 수 없는 상황에서의 무르기 실행!");
+                eventManager.ServerReplyFailed();
+                return;
+            }
+            
+            recentMark.transform.position =
+                (_isBlackTurn ? _recentStone.black : _recentStone.white).transform.position;
+            _recentStone.black.TakeBack();
+            _recentStone.white.TakeBack();
+            _audioSource.PlayOneShot(takeBackSound);
+            ClearForbiddenMarks();
+            
+            // 물러진 후로 상태가 변경되기까지 대기
+            await Awaitable.NextFrameAsync();
+
+            if (_boardInform.TryGetRecordCoord(out var prevCoord, _boardInform.NowTurn))
+            {
+                NowCoord = prevCoord;
+                
+                if (_isBlackTurn)
+                    _recentStone.white = _stoneObjects[prevCoord.row, prevCoord.col];
+                else
+                    _recentStone.black = _stoneObjects[prevCoord.row, prevCoord.col];
+            }
+            else
+            {
+                Debug.LogError("무르기 이후 마지막 턴 좌표를 가져올 수 없음!");
+                eventManager.ServerReplyFailed();
+            }
+
+            if (_boardInform.TryGetRecordCoord(out var prev2Coord, _boardInform.NowTurn - 1))
+            {
+                if (_isBlackTurn)
+                    _recentStone.black = _stoneObjects[prev2Coord.row, prev2Coord.col];
+                else
+                    _recentStone.white = _stoneObjects[prev2Coord.row, prev2Coord.col];
+            }
+            else
+            {
+                Debug.Assert(_boardInform.NowTurn == 1);
+                _recentStone.white = null;
+            }
         }
-        
-        if (_recentStone.black == null || _recentStone.white == null)
+        catch (Exception e)
         {
-            Debug.LogError("무르기를 할 수 없는 상항에서의 무르기 실행!");
-            EventManager.Instance.ServerReplyFailed();
-            return;
+            Debug.LogError($"무르기에 따른 착수 입력 스크립트 상태 변경 로직 에러: {e}");
+            eventManager.ServerReplyFailed();
         }
-        
-        NowCoord = (7, 7); // NowCoord가 물러진 위치에 있지 않도록 변경 
-        recentMark.transform.position =
-            (_isBlackTurn ? _recentStone.black : _recentStone.white).transform.position;
-        _recentStone.black.TakeBack();
-        _recentStone.white.TakeBack();
-        _audioSource.PlayOneShot(takeBackSound);
-        ClearForbiddenMarks();
     }
 
     /// <summary> 오목 상황에서 적용할 연출 </summary>

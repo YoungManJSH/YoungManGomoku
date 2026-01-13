@@ -99,6 +99,18 @@ public class Board
         
         return true;
     }
+
+    public bool TryGetRecordCoord(out (int row, int col) coord, int turn)
+    {
+        if (turn <= 0 || NowTurn < turn)
+        {
+            coord = (-1, -1);
+            return false;
+        }
+
+        coord = _record[turn - 1];
+        return true;
+    }
     
     private void UpdateBlackJudges()
     {

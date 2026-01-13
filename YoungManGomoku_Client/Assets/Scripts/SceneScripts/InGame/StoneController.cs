@@ -10,7 +10,9 @@ public class StoneController : MonoBehaviour
     
     private Rigidbody2D _rb;
     private CircleCollider2D _collider;
-    private TweenerCore<Color, Color, ColorOptions> _tween;
+    private TweenerCore<Color, Color, ColorOptions> _xMarkTween;
+    private TweenerCore<Vector3, Vector3, VectorOptions> _scaleTween;
+    private float _originScale;
 
     private void Awake()
     {
@@ -18,18 +20,18 @@ public class StoneController : MonoBehaviour
         _collider = GetComponent<CircleCollider2D>();
         _rb.simulated = false;
         _collider.enabled = false;
+        _originScale = transform.localScale.x;
 
         EventManager.Instance.OnPlayerSurrender += OnStartSweeping;
         EventManager.Instance.OnOppositeSurrender += OnStartSweeping;
         
-        float originScale = gameObject.transform.localScale.x;
-        gameObject.transform.localScale *= 1.5f;
-        gameObject.transform.DOScale(endValue: originScale, duration: 0.4f);
+        transform.localScale *= 1.5f;
+        _scaleTween = transform.DOScale(endValue: _originScale, duration: 0.4f);
     }
 
     private void OnDestroy()
     {
-        _tween?.Kill();
+        _xMarkTween?.Kill();
 
         if (EventManager.Instance != null)
         {
@@ -38,37 +40,48 @@ public class StoneController : MonoBehaviour
         }
     }
     
+    /// <summary>이 개체가 오목의 구성원일 때 적용할 애니메이션을 시작</summary>
     public void GomokuAction()
     {
-        float targetScale = transform.localScale.x * 1.5f;
-
-        transform.DOScale(endValue: targetScale, duration: 0.25f).
+        if (_scaleTween.IsPlaying())
+        {
+            _scaleTween.OnComplete(() => circle.SetActive(true));
+            return;
+            
+            /* 애니메이션 재생 종료 타이밍의 경계에 있으면 위험한 코드임.
+             * 하지만 현재 호출 구조에서는 애니메이션 극초반 타이밍에 들어옴.
+             * 게다가 조금 틀어져도 게임 핵심 로직에 영향이 없는 연출임.
+             * 그러니 그냥 적당히 편하게 처리하는 코드로 작성하였음. */
+        }
+        
+        transform.DOScale(endValue: _originScale * 1.5f, duration: 0.2f).
             SetLoops(2, LoopType.Yoyo).SetEase(Ease.InOutSine).
-            OnComplete(() =>
-            {
-                // TODO: 원래 값으로 명확하게 박아주기
-                circle.SetActive(true);
-            });
+            OnComplete(() => circle.SetActive(true));
     }
 
+    /// <summary>무르기 대상 돌인지를 표시/해제</summary>
+    /// <param name="isActivate">표시/해제 여부</param>
     public void XMarking(bool isActivate)
     {
-        // 중복 호출 시 DOTween 관리 꼬임 방지를 위해 early exit
-        if (xMark.gameObject.activeSelf == isActivate)
+        /* 1. Fake null 상황에서 Early Exit
+         * 2. 상태가 변경되지 않는 호출이면 Early Exit */
+        if (xMark == null || xMark.gameObject.activeSelf == isActivate)
             return;
         
         xMark.gameObject.SetActive(isActivate);
 
         if (isActivate)
         {
-            _tween = xMark.DOFade(endValue: 0.3f, duration: 0.25f).
+            _xMarkTween = xMark.DOFade(endValue: 0.3f, duration: 0.25f).
                 SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
         }
         else
         {
-            _tween.Rewind();
-            _tween.Kill();
-            _tween = null;
+            /* 함수 도입부에서 Early Exit을 통과했으므로 가능한 코드
+             * 즉, 여기서 tween은 항상 살아있다고 가정함 */
+            _xMarkTween.Rewind();
+            _xMarkTween.Kill();
+            _xMarkTween = null;
         }
     }
 
