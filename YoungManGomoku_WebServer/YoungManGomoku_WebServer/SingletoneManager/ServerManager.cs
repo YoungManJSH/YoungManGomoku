@@ -7,15 +7,14 @@ using System.Security.Cryptography;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_WebServer.Data;
+using YoungManGomoku_WebServer.Data.DatabaseContext;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
     public class ServerManager : IServerContext
-    {
-        private ApplicationDBContext _context;
-        private readonly ILogger<ServerManager> _logger;
+    {        private readonly ILogger<ServerManager> _logger;
 
         private readonly UIDGenerator _uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
@@ -26,9 +25,10 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
 		public TimerSettingData DefaultTimerSetting { get; }
 
-		public ServerManager(ILogger<ServerManager> logger, ApplicationDBContext context)
+		public ServerManager(ILogger<ServerManager> logger)
         {
             _logger = logger;
+
             _uidGenerator = new UIDGenerator();
             PlayerDatas = new ConcurrentDictionary<ulong, PlayerSession>();
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
@@ -74,8 +74,35 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         }
 
         public string UserInfo(string idToken) => UserInfo(GetPlayerUID(idToken));
+        public PlayerStatus? GetPlayerStatus(ulong UID)
+        {
+            PlayerSession? playerSession = GetPlayerSession(UID);
+            if (playerSession == null)
+                return null;
 
-		public bool CloseSession(ulong UID)
+            return playerSession.Account.Status;
+        }
+
+        public PlayerMoney? GetPlayerMoney(ulong UID)
+        {
+            PlayerSession? playerSession = GetPlayerSession(UID);
+            if (playerSession == null)
+                return null;
+
+            return playerSession.Account.Money;
+        }
+
+        public PlayerBattleRecord? GetPlayerBattleRecord(ulong UID)
+        {
+            PlayerSession? playerSession = GetPlayerSession(UID);
+            if (playerSession == null)
+                return null;
+
+            return playerSession.Account.GomokuBattleRecord;
+        }
+
+
+        public bool CloseSession(ulong UID)
         {
             if (PlayerDatas.TryRemove(UID, out PlayerSession? logoutUser))
             {
@@ -159,22 +186,17 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             return null;
         }
 
-
-
-        public bool TryDBUpdateGameResult(ulong UID)
+        public bool TryDBUpdateGameResult(ulong UID, ApplicationDBContext context)
         {
             PlayerSession? playerSession = GetPlayerSession(UID);
             if (playerSession == null)
-            {
                 return false;
-            }
-
             
-            _context.PlayerStatusTable.Update(playerSession.Account.Status);
-            _context.PlayerMoneyTable.Update(playerSession.Account.Money);
-            _context.PlayerGomokuBattleRecordTable.Update(playerSession.Account.GomokuBattleRecord);
+            context.PlayerStatusTable.Update(playerSession.Account.Status);
+            context.PlayerMoneyTable.Update(playerSession.Account.Money);
+            context.PlayerGomokuBattleRecordTable.Update(playerSession.Account.GomokuBattleRecord);
 
-            _context.SaveChanges();
+            context.SaveChanges();
             return true;
         }
     }

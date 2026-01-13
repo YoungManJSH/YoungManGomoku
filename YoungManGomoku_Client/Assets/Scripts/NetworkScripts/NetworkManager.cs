@@ -204,7 +204,7 @@ public class NetworkManager : MonoBehaviour
 	/// <param name="timeOutSeconds"></param>
 	/// <returns></returns>
 	public async Awaitable<GameRecord> RequestGameResult(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
+		=> await RequestPostServer<GameRecord>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
 
 	
 

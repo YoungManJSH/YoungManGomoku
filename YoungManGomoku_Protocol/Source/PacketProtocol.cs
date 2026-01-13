@@ -308,12 +308,32 @@ namespace YoungManGomoku_Protocol.ServerToClient
         }
     }
 
+    public struct RematchOpponentData
+    {
+        public int Level { get; set; }
+        public float Rating { get; set; }
+        public uint WinCount { get; set; }
+        public uint DrawCount { get; set; }
+        public uint LoseCount { get; set; }
+
+        public RematchOpponentData(int level, float rating, uint winCount, uint drawCount, uint loseCount)
+        {
+            Level = level;
+            Rating = rating;
+            WinCount = winCount;
+            DrawCount = drawCount;
+            LoseCount = loseCount;
+        }
+    }
+
     public class SC_RematchResultDTO
     {
+        public RematchOpponentData opponentPlayer { get; set; }
         public bool IsRematchSuccess { get; set; }
 
         public SC_RematchResultDTO(bool isRematchable)
         {
+            opponentPlayer = new RematchOpponentData();
             IsRematchSuccess = isRematchable;
         }
     }
