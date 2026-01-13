@@ -7,6 +7,10 @@ namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 	{
 		public TimerSettingData DefaultTimerSetting { get; }
 
+        public bool TryDBUpdateGameResult(ulong UID);
+
+
+
         public ulong GetPlayerUID(string id_Token);
 
         public string UserInfo(string id_Token);
@@ -16,5 +20,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager.Interface
 		public PlayerData? ComposePlayerData(ulong UID);
 
 		public bool CloseSession(ulong UID);
-	}
+
+        
+
+    }
 }

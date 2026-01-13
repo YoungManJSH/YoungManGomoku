@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 //using System.Security.Cryptography;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
+using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager.Interface;
 
@@ -13,6 +14,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 {
     public class ServerManager : IServerContext
     {
+        private ApplicationDBContext _context;
         private readonly ILogger<ServerManager> _logger;
 
         private readonly UIDGenerator _uidGenerator;
@@ -24,7 +26,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
 		public TimerSettingData DefaultTimerSetting { get; }
 
-		public ServerManager(ILogger<ServerManager> logger)
+		public ServerManager(ILogger<ServerManager> logger, ApplicationDBContext context)
         {
             _logger = logger;
             _uidGenerator = new UIDGenerator();
@@ -155,6 +157,25 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             }
             _logger.LogWarning($"[{DateTime.Now}] Failed : ComposeOpponentPlayerData By UID ({opponentPlayerUID}).\nPlayerSession has not UID Data.");
             return null;
+        }
+
+
+
+        public bool TryDBUpdateGameResult(ulong UID)
+        {
+            PlayerSession? playerSession = GetPlayerSession(UID);
+            if (playerSession == null)
+            {
+                return false;
+            }
+
+            
+            _context.PlayerStatusTable.Update(playerSession.Account.Status);
+            _context.PlayerMoneyTable.Update(playerSession.Account.Money);
+            _context.PlayerGomokuBattleRecordTable.Update(playerSession.Account.GomokuBattleRecord);
+
+            _context.SaveChanges();
+            return true;
         }
     }
 }

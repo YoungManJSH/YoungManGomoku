@@ -161,8 +161,7 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_OpponentPlaceStoneDTO> RequestPlaceStone(CS_PlaceStoneDTO placeStoneDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_OpponentPlaceStoneDTO>("GomokuIngame/PlaceStone", JsonConvert.SerializeObject(placeStoneDTO), timeOutSeconds, "Gomoku Ingame : Place Stone Success");
 	
-	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청 </summary>
-	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
+	/// <summary> 내 턴을 진행하고 있는 동안 응답 대기용으로 보낼 요청, 무르기 초읽기 구매 등등 온갖 이벤트 짬통 </summary>
 	public async Awaitable<SC_WaitEventDTO> RequestWaitForEvent(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_WaitEventDTO>("GomokuIngame/WaitForEvent", $"\"{idToken}\"", timeOutSeconds, "Gomoku Ingame : Request Wait For Event Success");
 	
@@ -186,7 +185,6 @@ public class NetworkManager : MonoBehaviour
 	/// </summary>
 	/// <param name="requestRematchDTO"> IdToken, Rematch를 신청할 것인지 신청하지 않을 것인지 여부의 bool 변수 (시간 초과시 자동 false) </param>
 	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
-	/// <returns> 재대결 성사 여부 bool 변수가 담긴 DTO </returns>
 	public async Awaitable<SC_ResponseStringDTO> RequestRematch(CS_PermitDTO requestRematchDTO, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/RematchRequest", JsonConvert.SerializeObject(requestRematchDTO), timeOutSeconds, "Gomoku Rematch Request Success");
 	
@@ -199,9 +197,18 @@ public class NetworkManager : MonoBehaviour
 		=> await RequestPostServer<SC_RematchResultDTO>("GomokuIngame/RematchResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Rematch Result Response Success");
 
 	
+	/// <summary>
+	/// 게임 종료 정보를 받아오기 위한 요청
+	/// </summary>
+	/// <param name="idToken"></param>
+	/// <param name="timeOutSeconds"></param>
+	/// <returns></returns>
+	public async Awaitable<GameRecord> RequestGameResult(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
+
+	
 
 	/// <summary> 서버가 응답이 이상하거나 클라가 이상한 등 아무튼 클라의 접속을 끊어버리고 서버의 관리에서 죽여버리고 싶을 때(로그아웃) </summary>
-	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
 	public async Awaitable<SC_ResponseStringDTO> RequestCloseSession(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_ResponseStringDTO>("Session/Close", $"\"{idToken}\"", timeOutSeconds, "Session Close");
 
