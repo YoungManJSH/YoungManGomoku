@@ -2,6 +2,8 @@
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
 using Microsoft.VisualBasic;
+using YoungManGomoku_Protocol.ServerToClient;
+
 /*
  Protocol의 PlayerData는 단순 서버와 통신용
  서버 DB 테이블과의 구조 역시 다르다
@@ -123,6 +125,15 @@ namespace YoungManGomoku_Protocol
         // 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
         public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
+
+        public void UpdateData(RematchOpponentData data)
+        {
+	        Level = data.Level;
+	        Rating = data.Rating;
+	        WinCount = data.WinCount;
+	        DrawCount = data.DrawCount;
+	        LoseCount = data.LoseCount;
+        }
     }
 
     /// <summary> 서버-클라이언트 간 타이머 전송용 DTO </summary>
@@ -340,12 +351,12 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
     public class SC_RematchResultDTO
     {
-        public RematchOpponentData opponentPlayer { get; set; }
+        public RematchOpponentData OpponentPlayer { get; set; }
         public bool IsRematchSuccess { get; set; }
 
         public SC_RematchResultDTO(bool isRematchable)
         {
-            opponentPlayer = new RematchOpponentData();
+            OpponentPlayer = new RematchOpponentData();
             IsRematchSuccess = isRematchable;
         }
     }

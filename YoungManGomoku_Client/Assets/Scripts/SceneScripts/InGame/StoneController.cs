@@ -44,7 +44,11 @@ public class StoneController : MonoBehaviour
 
         transform.DOScale(endValue: targetScale, duration: 0.25f).
             SetLoops(2, LoopType.Yoyo).SetEase(Ease.InOutSine).
-            OnComplete(() => circle.SetActive(true));
+            OnComplete(() =>
+            {
+                // TODO: 원래 값으로 명확하게 박아주기
+                circle.SetActive(true);
+            });
     }
 
     public void XMarking(bool isActivate)
