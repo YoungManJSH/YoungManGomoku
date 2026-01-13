@@ -37,7 +37,7 @@ public class RespondTakeBack : MonoBehaviour
         acceptButton.onClick.AddListener(Accept);
         denyButton.onClick.AddListener(Deny);
         messageUI.text = $"{message} - {timeLimit:D2}";
-        _takeBackPermitDTO = new CS_PermitDTO(GameManager.Instance.IdToken, takeback: false);
+        _takeBackPermitDTO = new CS_PermitDTO(GameManager.Instance.IdToken, isPermit: false);
         
         EventManager.Instance.OnTakeBackRequested += async isMyRequest =>
         {

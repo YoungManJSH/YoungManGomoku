@@ -197,14 +197,9 @@ public class NetworkManager : MonoBehaviour
 		=> await RequestPostServer<SC_RematchResultDTO>("GomokuIngame/RematchResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Rematch Result Response Success");
 
 	
-	/// <summary>
-	/// 게임 종료 정보를 받아오기 위한 요청
-	/// </summary>
-	/// <param name="idToken"></param>
-	/// <param name="timeOutSeconds"></param>
-	/// <returns></returns>
+	/// <summary>게임 종료 정보를 받아오기 위한 요청</summary>
 	public async Awaitable<GameRecord> RequestGameResult(string idToken, int timeOutSeconds = 0)
-		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
+		=> await RequestPostServer<GameRecord>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
 
 	
 
