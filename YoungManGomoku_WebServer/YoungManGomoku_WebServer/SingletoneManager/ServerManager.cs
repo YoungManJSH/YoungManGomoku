@@ -154,7 +154,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     LastPlayDate = playerSession.Account.LastPlayDate,
 
                     WinCount = playerSession.Account.GomokuBattleRecord.WinCount,
-                    DrawCount = playerSession.Account.GomokuBattleRecord.LoseCount,
+                    DrawCount = playerSession.Account.GomokuBattleRecord.DrawCount,
                     LoseCount = playerSession.Account.GomokuBattleRecord.LoseCount,
                     DisconnectCount = playerSession.Account.GomokuBattleRecord.DisconnectCount
                 };

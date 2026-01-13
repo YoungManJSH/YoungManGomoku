@@ -353,13 +353,13 @@ namespace YoungManGomoku_Protocol.ServerToClient
     {
         public RematchOpponentData OpponentPlayer { get; set; }
         StoneColorType MyStoneColor { get; set; }
-        StoneColorType OpponentStoneColor { get; set; }
         public bool IsRematchSuccess { get; set; }
 
-        public SC_RematchResultDTO(bool isRematchable)
+        public SC_RematchResultDTO(bool isRematchable, StoneColorType myStoneColor)
         {
             OpponentPlayer = new RematchOpponentData();
             IsRematchSuccess = isRematchable;
+            MyStoneColor = myStoneColor;
         }
     }
 }
