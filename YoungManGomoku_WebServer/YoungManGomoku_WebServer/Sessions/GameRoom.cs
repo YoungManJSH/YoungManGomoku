@@ -336,7 +336,7 @@ namespace YoungManGomoku_WebServer.Sessions
             lock (_gameroomLock)
             {
                 
-                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitEventAsync] Room {RoomID} : {UID} 특수 게임 발생 이벤트 대기\n");
+                _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitGameResultAsync] Room {RoomID} : {UID} 게임 종료 이벤트 대기\n");
 
                 // 대기자용 TCS 조립 (대기 결과 반환용)
                 TaskCompletionSource<GameRecord> tcs = new TaskCompletionSource<GameRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -395,7 +395,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     continue;
                 }
                 
-                _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 착수 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 이벤트 응답");
+                _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 착수 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 착수 이벤트 응답");
                 waitingPlayer.TaskCompSrc?.TrySetResult(new SC_OpponentPlaceStoneDTO(waitingUserTimer.SyncData, 255, 255));
                 waitingPlayer.CancellationTokenRegist.Dispose();
             }
@@ -404,14 +404,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
 			foreach (GomokuGameEventWaitingPlayer waitingPlayer in _waitingEventMap.Values)
 			{
-                // 원래는 여기서 게임종료 코드를 보내줬었는데, 이제 이벤트에서 게임종료가 제거되고 게임종료 결과는 이사를 갔다
-				if(_userEndCodes.TryGetValue(waitingPlayer.UID, out GameEndCode endCode) == false)
-                {
-					// 큰일나는 예외 상황, Assert 상황이지만 있을 수 있으니 방심할 수 없다.
-					_gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] 착수 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]의 엔드코드를 찾을 수 없었습니다!");
-                    continue;
-				}
-				_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 이벤트 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 이벤트 응답");
+				_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 이벤트 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 시점 빈 이벤트 응답");
 				waitingPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.None));
 				waitingPlayer.CancellationTokenRegist.Dispose();
 			}
@@ -540,6 +533,11 @@ namespace YoungManGomoku_WebServer.Sessions
 					if (_timeOutTimer.TryGetValue(opponent, out Timer? opponentTimerCallback) == false)
                         _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Place Stone] 상대 타이머 콜백이 등록되지 않았습니다!!!");
 					
+                    if (opponentWaitingTime < -1)
+                    {
+                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Place Stone] 데드라인 값 {opponentWaitingTime} < -1 입니다! => 데드라인 계산값 : {opponentTimer.DeadLine(_gameProgressMilliseconds)}, 게임 진행 시간 : {_gameProgressMilliseconds} ");
+                    }
+
 					opponentTimerCallback?.Change(opponentWaitingTime, -1L);
                 }
 
@@ -752,7 +750,6 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public bool RequestRematch(ulong UID, bool isRematch)
         {
-
             // 일단 게임이 끝났는지부터 확인, 클라 뚜따인 경우 재대결 요청이 겜중에도 들어올 수도 있다
             if (State != GameRoomState.Finished)
                 return false;
@@ -783,11 +780,12 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 모든 대기중인 리매치 이벤트에 리매치 실패를 전송
                 foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 결과 응답");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 실패 응답");
                     waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(false));
                 }
-
+                
                 _waitingEventMap.Clear();
+                _gameRoomManager.CloseRoom(this);
                 return false;
             }
             else
@@ -821,7 +819,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 // 모든 대기중인 리매치 이벤트에 리매치 성공을 전송
                 foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
                 {
-                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 결과 응답");
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 성공 응답");
                     SC_RematchResultDTO rematchResult = new SC_RematchResultDTO(true);
 
 
@@ -834,7 +832,7 @@ namespace YoungManGomoku_WebServer.Sessions
                         return false;
                     }
 
-                    rematchResult.opponentPlayer = new RematchOpponentData
+                    rematchResult.OpponentPlayer = new RematchOpponentData
                     (
                         level : opponentStatus.Level,
                         rating : opponentStatus.Rating,
@@ -847,8 +845,9 @@ namespace YoungManGomoku_WebServer.Sessions
                 }
 
                 _waitingEventMap.Clear();
-
+                _gameRoomManager.CloseRoom(this);
                 _gameRoomManager.CreateRoom(BlackPlayerUID, WhitePlayerUID);
+                
             }
             else if (_waitingRematchQueue.Count > 2)
             {
@@ -856,7 +855,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 return false;
             }
 
-            _gameRoomManager.CloseRoom(this);
+            
 
             return true;
         }
@@ -905,17 +904,20 @@ namespace YoungManGomoku_WebServer.Sessions
             if (_userEndCodes.TryGetValue(UID, out GameEndCode endCode) == false)
             {
                 // 큰일나는 예외 상황, Assert 상황이지만 있을 수 있으니 방심할 수 없다.
-                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Game Record] 착수 대기자({GetColor(UID)})[{UID}]의 엔드코드를 찾을 수 없었습니다!");
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Game Record] ({GetColor(UID)})[{UID}]의 엔드코드를 찾을 수 없었습니다!");
             }
             else
             {
-                result.endCode = endCode;
+                result.EndCode = endCode;
 
                 PlayerStatus? playerStatus = _gameRoomManager.ServerContext.GetPlayerStatus(UID);
                 PlayerMoney? playerMoney = _gameRoomManager.ServerContext.GetPlayerMoney(UID);
                 PlayerBattleRecord? playerBattleRecord = _gameRoomManager.ServerContext.GetPlayerBattleRecord(UID);
                 if (playerBattleRecord == null || playerStatus == null || playerMoney == null)
+                {
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Game Record] ({GetColor(UID)})[{UID}]의 플레이어 스테이터스, 재화, 전적 검색에 실패했습니다!");
                     return result;
+                }
 
                 if (_winnerUID == UID)
                 {

@@ -352,6 +352,8 @@ namespace YoungManGomoku_Protocol.ServerToClient
     public class SC_RematchResultDTO
     {
         public RematchOpponentData OpponentPlayer { get; set; }
+        StoneColorType MyStoneColor { get; set; }
+        StoneColorType OpponentStoneColor { get; set; }
         public bool IsRematchSuccess { get; set; }
 
         public SC_RematchResultDTO(bool isRematchable)
