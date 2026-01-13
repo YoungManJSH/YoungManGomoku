@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-
+using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,6 +61,9 @@ namespace YoungManGomoku_WebServer.Sessions
 
     public class GameRoom
 	{
+        // Elo Rating 전용 가중치
+        public const int K_Factor = 20;
+
         // 방 식별자, 게임룸매니저에서 게임룸 Dictionary를 관리할 때 사용
 		public ulong RoomID { get; }
 
@@ -815,12 +818,23 @@ namespace YoungManGomoku_WebServer.Sessions
                     _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Rematch Request] Room [{RoomID}] : 리매치 결과 응답을 하기 위한 클라이언트가 2명이 아닙니다. 해당 방의 일부 혹은 모든 클라이언트가 연결이 끊긴 것 같습니다.");
                 }
 
+                // 다음 판 색 변경 정책은 여기서, 색 변경 후에 재대결 결과로 돌 색을 전달해야 함
+                int colorRandomValue = new Random().Next(0, 2);
+                ulong beforeBlack = BlackPlayerUID;
+                ulong beforeWhite = WhitePlayerUID;
+                if (colorRandomValue == 1)
+                {
+                    BlackPlayerUID = beforeWhite;
+                    WhitePlayerUID = beforeBlack;
+                }
 
                 // 모든 대기중인 리매치 이벤트에 리매치 성공을 전송
                 foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
                 {
                     _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 성공 응답");
-                    SC_RematchResultDTO rematchResult = new SC_RematchResultDTO(true);
+
+                    
+                    SC_RematchResultDTO rematchResult = new SC_RematchResultDTO(true, GetColor(waitingPlayer.UID));
 
 
                     PlayerStatus? opponentStatus = _gameRoomManager.ServerContext.GetPlayerStatus(UID);
@@ -911,6 +925,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 result.EndCode = endCode;
 
                 PlayerStatus? playerStatus = _gameRoomManager.ServerContext.GetPlayerStatus(UID);
+                PlayerStatus? opponentStauts = _gameRoomManager.ServerContext.GetPlayerStatus(GetOpponent(UID));
                 PlayerMoney? playerMoney = _gameRoomManager.ServerContext.GetPlayerMoney(UID);
                 PlayerBattleRecord? playerBattleRecord = _gameRoomManager.ServerContext.GetPlayerBattleRecord(UID);
                 if (playerBattleRecord == null || playerStatus == null || playerMoney == null)
@@ -919,17 +934,23 @@ namespace YoungManGomoku_WebServer.Sessions
                     return result;
                 }
 
+
+                float gameResultValue = 0f;
+               
                 if (_winnerUID == UID)
                 {
                     ++playerBattleRecord.WinCount;
                     playerStatus.AddExperience(75);
                     playerMoney.GameMoney += 125;
+                    gameResultValue = 1f;
+                    
                 }
                 else if (_winnerUID == 0)
                 {
                     ++playerBattleRecord.DrawCount;
                     playerStatus.AddExperience(50);
                     playerMoney.GameMoney += 75;
+                    gameResultValue = 0.5f;
                 }
                 else
                 {
@@ -937,6 +958,24 @@ namespace YoungManGomoku_WebServer.Sessions
                     playerStatus.AddExperience(15);
                     playerMoney.GameMoney += 25;
                 }
+
+                Func<float, float, float> EloRating = (rating, opponentRating) =>
+                {
+                    double predictedWinrate = 1 / (1 + Math.Pow(10, (opponentRating - rating) / 400));
+                    return rating + K_Factor * (gameResultValue - (float)predictedWinrate);
+                };
+
+                if (opponentStauts != null)
+                    playerStatus.Rating = EloRating(playerStatus.Rating, opponentStauts.Rating);
+
+                result.Rating = playerStatus.Rating;
+                result.Level = playerStatus.Level;
+                result.ExperiencePoint = playerStatus.ExperiencePoint;
+                result.MaxExperiencePoint = playerStatus.MaxExperiencePoint;
+                result.GameMoney = playerMoney.GameMoney;
+                result.WinCount = playerBattleRecord.WinCount;
+                result.DrawCount = playerBattleRecord.DrawCount;
+                result.LoseCount = playerBattleRecord.LoseCount;
             }
             return result;
         }
