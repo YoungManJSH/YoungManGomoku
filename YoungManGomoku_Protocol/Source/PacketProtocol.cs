@@ -218,10 +218,10 @@ namespace YoungManGomoku_Protocol.ClientToServer
         /// <summary> JSON 역직렬화를 위한 기본 생성자 </summary>
         public CS_PermitDTO() { }
 
-        public CS_PermitDTO(string idToken, bool takeback)
+        public CS_PermitDTO(string idToken, bool isPermit)
         {
             IDToken = idToken;
-			IsPermit = takeback;
+			IsPermit = isPermit;
         }
     }
 }
@@ -296,6 +296,16 @@ namespace YoungManGomoku_Protocol.ServerToClient
             OpponentRequest = opponentRequest;
         }
     }
+
+    public class SC_RematchResultDTO
+    {
+        public bool IsRematchSuccess { get; set; }
+
+        public SC_RematchResultDTO(bool isRematchable)
+        {
+            IsRematchSuccess = isRematchable;
+        }
+    }
 }
 
 
@@ -303,52 +313,13 @@ namespace YoungManGomoku_Protocol.ServerToClient
 단촐한 예정도 및 변경, 관련 사항 제작 완료 시 제거 예정
 패킷타입은 웹서버 URL로 대체 예정
 
-
- public enum CS_PacketType
+    // 어드레서블 -> 웹서버 안쓰고 AWS로 바로?
+    public class AddressableData
     {
-        None,
 
-        HeartBeat, // 심장박동, 이게 끊기면 클라 접속 끊긴거임
-                   // 대상 A가 심장박동을 보냈을 때 대상 B의 심장박동이 1분째 끊겼다? 접속끊김
-
-        Login,  // 로그인했어
-                // ReLogin, // 팅겨서 재로그인했으니 저장된 보드정보를 넘겨줘
-        MatchMaking, // 매칭시켜줘
-        MatchingCancel, // 매칭취소
-        ShopData,   // 상점정보 내놔
-        BuyItem_Shop,   // 상점템 이거 살게
-        BuyItem_Ingame, // 인게임 중 구매
-        TakeBack,   // 무르기
-        SetStone,   // 내돌 뒀다
-        TimeOver,   // 내 시간 다 끝남
-        Surrender,  // 항복
-
-
-        MAXCount
-    }
-
-
-
-    // 서버가 클라로 보내는건데... 서버가 수동적이라 '클라의 요청'에만 반응해야함
-    public enum SC_PacketType
-    {
-        GameResult, // 게임결과를 클라로 보냄
-        Announce // 공지
-    }
-
-    // 매치메이킹 시 매칭된 상대 정보
-    public class SC_MatchMaking_EnemyData // Packet
-    {
-        public string Nickname { get; set; }
-        // 승률
-        // 승리횟수
-        // 프로필사진
-
-        // 돌 타입을 서버에서 랜덤하게 정하기?
     }
 
     //상점
-
     public class SC_ShopData
     {
         // 상점 판매 카테고리
@@ -356,37 +327,6 @@ namespace YoungManGomoku_Protocol.ServerToClient
         // 돌 스킨
         // 판 스킨
     }
-
-
-    // 어드레서블 -> 웹서버 안쓰고 AWS로 바로?
-    public class AddressableData
-    {
-
-    }
-
-
-
-
-
-    // 인게임
-    public class CS_SetStone
-    {
-        // 내가 둔 돌 위치를 서버에게 전달
-        // row col
-        // 내가 둔 시간을 서버에게 전달
-        // 서버는 지금 서버시간초와 내가 둔 시간초를 비교할 것
-    }
-
-    public class CS_Surrender
-    {
-        // 클라가 항복을 눌렀음
-    }
-
-    public class CS_TakeBack
-    {
-
-    }
-
 
     // ItemID
     public enum ItemIDType
@@ -400,17 +340,9 @@ namespace YoungManGomoku_Protocol.ServerToClient
         // 
     }
 
-
     public class CS_BuyItem
     {
         public CS_PacketType type { get; set; }
         public ItemIDType ItemID { get; set; }
-    }
-
-
-    public class SC_pos // (2명 다 줘야됨)
-    {
-        // 상대가 둔 돌 위치 row col
-        // bool 돌 시간차 계산해서 실격이면 false
     }
 */
