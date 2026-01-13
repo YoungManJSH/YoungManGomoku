@@ -77,6 +77,18 @@ namespace YoungManGomoku_Protocol
         // 전체 승률은 승리 횟수 / 전체 판수 형태로 계산한다.
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
         public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
+
+        public void UpdateData(ref GameRecord record)
+        {
+	        Rating = record.Rating;
+	        Level = record.Level;
+	        ExperiencePoint = record.ExperiencePoint;
+	        MaxExperiencePoint = record.MaxExperiencePoint;
+	        GameMoney = record.GameMoney;
+	        WinCount = record.WinCount;
+	        DrawCount = record.DrawCount;
+	        LoseCount = record.LoseCount;
+        }
     }
 
     public class OpponentPlayerData
@@ -153,7 +165,7 @@ namespace YoungManGomoku_Protocol
 
     public struct GameRecord
     {
-        public GameEndCode endCode { get; set; }
+        public GameEndCode EndCode { get; set; }
         public float Rating { get; set; }
         public int Level { get; set; }
         public int ExperiencePoint { get; set; }

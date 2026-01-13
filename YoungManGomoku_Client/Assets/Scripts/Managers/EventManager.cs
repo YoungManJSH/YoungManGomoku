@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
@@ -128,6 +129,7 @@ public class EventManager : MonoBehaviour
             
             OnGameStart!.Invoke();
             HandleIngameEvent();
+            HandleGameResult();
         }
         catch (Exception e)
         {
@@ -252,24 +254,22 @@ public class EventManager : MonoBehaviour
         }
     }
 
-    public async void RequestRematch(bool isAccept)
+    /// <summary>재대결 수락 여부 전송</summary>
+    /// <param name="isAccept">수락 여부</param>
+    public void RequestRematch(bool isAccept)
     {
         try
         {
-            if (isAccept)
-            {
-                OnWaitingRematch!.Invoke();
-                //TODO: 재대결 수락 요청
-            }
-            else
-            {
-                //TODO: 재대결 거부 요청
-            }
+            if (isAccept) OnWaitingRematch!.Invoke();
+            
+            CS_PermitDTO accept = new CS_PermitDTO(_gameManager.IdToken, isAccept);
+            _networkManager.RequestRematch(accept, timeOutSeconds: 5).Cancel();
         }
         catch (Exception e)
         {
             Debug.LogError($"재대결 {(isAccept ? "수락" : "거절")} 요청 에러: {e}");
-            OnRematchFailed!.Invoke();
+            /* 이 요청은 예외 발생 시 별도 처리 없이 지나가도 무방함
+             * Why? 재대결이 성사되지 않을뿐이고 서버가 알아서 처리할 영역이기 때문 */
         }
     }
     
@@ -285,10 +285,37 @@ public class EventManager : MonoBehaviour
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene, seconds: 2f).Cancel();
     }
     
-    /// <summary> 서버 응답 중 None이 아닌 GameEndCode가 있을 경우 호출 </summary>
+    /// <summary>게임 종료 결과를 받아서 처리</summary>
+    private async void HandleGameResult()
+    {
+        try
+        {
+            GameRecord result =
+                await _networkManager.RequestGameResult(_gameManager.IdToken);
+
+            if (result.EndCode == GameEndCode.None)
+            {
+                Debug.LogError("게임 종료 코드로 None이 응답됨!");
+                ServerReplyFailed();
+                return;
+            }
+
+            HandleGameEndCode(result.EndCode);
+            PlayerDataFromWebServer.Instance.PlayerData.UpdateData(ref result);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"게임 결과 요청 및 응답 처리 실패: {e}");
+            ServerReplyFailed();
+        }
+    }
+    
+    /// <summary>GameEndCode에 따라 게임 종료 이벤트 실행</summary>
     private void HandleGameEndCode(GameEndCode gameEndCode)
     {
         if (IsGameEnd) return; // 중복 호출 방어
+
+        bool rematchPossible = true;
         
         switch (gameEndCode)
         {
@@ -318,9 +345,11 @@ public class EventManager : MonoBehaviour
                 break;
             case GameEndCode.DisconnectedWin:
                 OnOppositeDisconnectedWin!.Invoke();
+                rematchPossible = false;
                 break;
             case GameEndCode.DisconnectedLose:
                 OnPlayerDisconnectedLose!.Invoke();
+                rematchPossible = false;
                 break;
             case GameEndCode.Draw:
                 OnGameDraw!.Invoke();
@@ -328,12 +357,15 @@ public class EventManager : MonoBehaviour
             default:
                 Debug.LogError("정의되지 않은 GameEndCode!");
                 ServerReplyFailed();
-                break;
+                return; // 이후 과정 생략, 바로 return
         }
 
         IsGameEnd = true;
-    }
 
+        if (rematchPossible) WaitForRematch();
+    }
+    
+    /// <summary>인게임 이벤트 대기 요청-응답 사이클 관리 함수</summary>
     private async void HandleIngameEvent()
     {
         try
@@ -348,33 +380,35 @@ public class EventManager : MonoBehaviour
                 ServerReplyFailed();
                 return;
             }
-
-            if (response.GameEndCode != GameEndCode.None)
-            {
-                HandleGameEndCode(response.GameEndCode);
-                return;
-            }
-            // 여기부터는 게임 종료 이벤트가 아닌 경우
             
             switch (response.OpponentRequest)
             {
                 case IngameRequestType.None:
                     if (IsGameEnd) return; // 게임이 끝났으면 완전 종료
+                    
                     Debug.LogWarning("비어있는 인게임 이벤트가 응답됨!");
+                    await Awaitable.WaitForSecondsAsync(0.5f);
+                    if (IsGameEnd)
+                        return; // 레이스 컨디션 이슈를 고려하여 0.5초 대기 후 다시 체크
                     break; // 게임이 끝나지 않았으면 switch문만 종료
+                
                 case IngameRequestType.Surrender:
-                    Debug.LogError("GameEndCode가 None이라매?");
-                    ServerReplyFailed();
+                    Debug.Log("상대방의 기권 이벤트가 응답됨!");
+                    // 승패 처리는 게임 결과 요청에서 일괄적으로
                     return;
+                
                 case IngameRequestType.TakeBack:
                     OnTakeBackRequested!.Invoke(false);
                     break;
+                
                 case IngameRequestType.TakeBackResult:
                     OnTakeBack!.Invoke(response.IsTakeBackSuccess);
                     break;
+                
                 case IngameRequestType.PurchaseByoyomi:
                     OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
                     break;
+                
                 default:
                     Debug.LogError("정의되지 않은 인게임 이벤트 종류");
                     ServerReplyFailed();
@@ -387,6 +421,41 @@ public class EventManager : MonoBehaviour
         {
             Debug.LogError($"인게임 이벤트 대기 요청 실패: {e}");
             ServerReplyFailed();
+        }
+    }
+    
+    /// <summary>게임 종료 후 재대결 성사 여부 응답 요청</summary>
+    private async void WaitForRematch()
+    {
+        try
+        {
+            SC_RematchResultDTO result =
+                await _networkManager.RequestRematchResult(_gameManager.IdToken);
+            
+            if (result == null)
+            {
+                // 나머지는 OnRequestFailed 이벤트로 처리됨
+                Debug.LogError("재대결 결과 응답으로 null이 왔음");
+                OnRematchFailed!.Invoke();
+                return;
+            }
+
+            if (result.IsRematchSuccess)
+            {
+                Debug.Log("재대결이 성사되었음!");
+                //TODO: 상대방 Rating 정보 서버에서 추가로 보내줘야 함!
+                SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
+            }
+            else
+            {
+                Debug.Log("재대결이 성사되지 않았음!");
+                OnRematchFailed!.Invoke();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"재대결 대기 요청 실패: {e}");
+            OnRematchFailed!.Invoke();
         }
     }
     
