@@ -107,26 +107,26 @@ public class CheckData : MonoBehaviour
     /// <returns></returns>
     private string GetFileSize(long byteCnt)
     {
-        string patchSize = "0 Bytes";
+        string patchSizeString = "0 Bytes";
 
         if (byteCnt >= 1073741824.0)
         {
-            patchSize = string.Format("{0:##.##}", byteCnt / 1073741824.0) + " GB";
+            patchSizeString = string.Format("{0:##.##}", byteCnt / 1073741824.0) + " GB";
         }
         else if (byteCnt >= 1048576.0)
         {
-            patchSize = string.Format("{0:##.##}", byteCnt / 1048576.0) + " MB";
+            patchSizeString = string.Format("{0:##.##}", byteCnt / 1048576.0) + " MB";
         }
         else if (byteCnt >= 1024.0)
         {
-            patchSize = string.Format("{0:##.##}", byteCnt / 1024.0) + " KB";
+            patchSizeString = string.Format("{0:##.##}", byteCnt / 1024.0) + " KB";
         }
         else if (0 < byteCnt && byteCnt <= 1024.0)
         {
-            patchSize = $"{byteCnt} Bytes";
+            patchSizeString = $"{byteCnt} Bytes";
         }
 
-        return patchSize;
+        return patchSizeString;
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ public class CheckData : MonoBehaviour
     {
         patchMap.Add(label, 0);
 
-        var handle = Addressables.DownloadDependenciesAsync(label, false);
+        var handle = Addressables.DownloadDependenciesAsync(label, autoReleaseHandle: false);
 
         while (!handle.IsDone)
         {
@@ -231,7 +231,7 @@ public class CheckData : MonoBehaviour
     /// 현재 플랫폼에 맞춰 다른 씬을 로드한다.
     /// </summary>
     private void LoadSceneViaPlatform()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.TitleScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.TitleScene).Cancel();
 
     /// <summary>
     /// 다운로드 실패시, 리턴값으로 알려주며, 안내창을 띄운다.
@@ -254,5 +254,5 @@ public class CheckData : MonoBehaviour
     /// 다운로드 에셋 실패시 나오는 버튼에 할당되어, 씬을 다시 시작하도록 한다.
     /// </summary>
     public void ReloadNowScene()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene).Cancel();
 }

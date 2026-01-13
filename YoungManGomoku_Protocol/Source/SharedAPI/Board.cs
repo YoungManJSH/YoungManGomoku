@@ -88,15 +88,14 @@ public class Board
     public bool TryTakeBack()
     {
         if (NowTurn < 3 || NowTurn != _record.Count)
-        {
             return false;
-        }
 
         _nowBoard[_record[^1].row, _record[^1].col] = StoneColorType.Empty;
         _nowBoard[_record[^2].row, _record[^2].col] = StoneColorType.Empty;
         
         _record.RemoveRange(_record.Count - 2, 2);
         NowTurn -= 2;
+        UpdateBlackJudges();
         
         return true;
     }

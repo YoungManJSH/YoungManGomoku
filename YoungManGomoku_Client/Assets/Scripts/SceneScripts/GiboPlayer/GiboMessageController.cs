@@ -55,5 +55,5 @@ public class GiboMessageController : MonoBehaviour
 
     // TODO: 로비씬 이동하면서 리스트 열려 있도록 수정
     private void BackToList()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
 }

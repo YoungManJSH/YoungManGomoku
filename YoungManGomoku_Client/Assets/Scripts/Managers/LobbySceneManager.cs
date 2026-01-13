@@ -48,7 +48,7 @@ public class LobbySceneManager : MonoBehaviour
         }
         
         PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene);
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
     }
     
     public async void CancelMatchMaking()

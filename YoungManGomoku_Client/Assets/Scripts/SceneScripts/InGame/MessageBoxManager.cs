@@ -20,7 +20,6 @@ public class MessageBoxManager : MonoBehaviour
     {
         _rect = GetComponent<RectTransform>();
         EventManager.Instance.OnGameEnd += OnGameEnd;
-        EventManager.Instance.OnStartSweeping += OnGameEnd;
         
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
@@ -77,9 +76,9 @@ public class MessageBoxManager : MonoBehaviour
     
     private void OnConfirm()
     {
-        _requestedAction?.Invoke();
         gameObject.SetActive(false);
         TurnBackToGame!.Invoke();
+        _requestedAction?.Invoke();
     }
 
     private void OnCancel()

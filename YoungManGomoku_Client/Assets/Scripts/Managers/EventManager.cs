@@ -6,8 +6,6 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class EventManager : MonoBehaviour
 {
-    [SerializeField] private BoardSweeper oppositeHand;
-    
     public event Action OnGameStart;
     public event Action OnGameEnd;
     
@@ -21,8 +19,7 @@ public class EventManager : MonoBehaviour
     
     public event Action OnPlayerSurrender;
     public event Action OnOppositeSurrender;
-    public event Action OnStartSweeping;
-
+    
     public event Action OnPlayerTimeOut;
     public event Action OnOppositeTimeOut;
 
@@ -44,6 +41,11 @@ public class EventManager : MonoBehaviour
     /// <para>매개변수 false: 요청이 거절됨, 게임 재개</para>
     /// </summary>
     public event Action<bool> OnTakeBack;
+
+    /// <summary>재대결 수락 요청을 보내는 시점에 발생</summary>
+    public event Action OnWaitingRematch;
+    /// <summary>재대결 불성립 응답을 받았을 때 발생</summary>
+    public event Action OnRematchFailed;
     
     public event Action OnServerReplyFailed;
 
@@ -172,6 +174,8 @@ public class EventManager : MonoBehaviour
     {
         try
         {
+            OnTakeBackRequested!.Invoke(true);
+            
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
@@ -187,7 +191,6 @@ public class EventManager : MonoBehaviour
             if (reply.IsSuccess)
             {
                 Debug.Log("무르기 요청이 확인됨!");
-                OnTakeBackRequested!.Invoke(true);
                 // 상대방의 승인 응답은 인게임 이벤트 응답으로 받음
             }
             else
@@ -195,6 +198,9 @@ public class EventManager : MonoBehaviour
                 /* 레이스 컨디션으로 게임 종료가 중간에 끼어들면 여기 들어올 수 있음
                  * 그밖의 경우는 클라이언트가 요청을 잘못한 것이므로 로직 확인할 것 */
                 Debug.LogWarning("무르기 요청이 거부됨! (게임 종료 레이스 컨디션이 아니라면 클라이언트 요청이 잘못된 것)");
+                
+                if (IsGameEnd is false)
+                    OnTakeBack!.Invoke(false);
             }
             
             // 요청-응답이 완료되었으면 DTO 멤버 초기화 (잘못된 사용을 미연에 방지)
@@ -245,6 +251,27 @@ public class EventManager : MonoBehaviour
             ServerReplyFailed();
         }
     }
+
+    public async void RequestRematch(bool isAccept)
+    {
+        try
+        {
+            if (isAccept)
+            {
+                OnWaitingRematch!.Invoke();
+                //TODO: 재대결 수락 요청
+            }
+            else
+            {
+                //TODO: 재대결 거부 요청
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"재대결 {(isAccept ? "수락" : "거절")} 요청 에러: {e}");
+            OnRematchFailed!.Invoke();
+        }
+    }
     
     /// <summary> 서버의 응답에 결함이 있을 경우 실행 </summary>
     public void ServerReplyFailed()
@@ -253,11 +280,10 @@ public class EventManager : MonoBehaviour
         
         IsGameEnd = true;
         OnServerReplyFailed!.Invoke();
-        _networkManager.RequestCloseSession(_gameManager.IdToken, 5).Cancel(); //일방적 통보
+        _networkManager.RequestCloseSession(_gameManager.IdToken, timeOutSeconds: 5).Cancel(); //일방적 통보
+        // 터지는 상황에서는 재로그인이 필요함
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene, seconds: 2f).Cancel();
     }
-
-    /// <summary> 기권 판 쓸기 연출이 시작될 때 호출 </summary>
-    public void StartSweeping() => OnStartSweeping!.Invoke();
     
     /// <summary> 서버 응답 중 None이 아닌 GameEndCode가 있을 경우 호출 </summary>
     private void HandleGameEndCode(GameEndCode gameEndCode)
@@ -279,7 +305,6 @@ public class EventManager : MonoBehaviour
                 OnBlackUnmovable!.Invoke();
                 break;
             case GameEndCode.SurrenderWin:
-                oppositeHand.Sweeping(); // TODO: 그냥 이벤트에 넣는 쪽으로 수정하기
                 OnOppositeSurrender!.Invoke();
                 break;
             case GameEndCode.SurrenderLose:
@@ -344,11 +369,11 @@ public class EventManager : MonoBehaviour
                 case IngameRequestType.TakeBack:
                     OnTakeBackRequested!.Invoke(false);
                     break;
-                case IngameRequestType.PurchaseByoyomi:
-                    OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
-                    break;
                 case IngameRequestType.TakeBackResult:
                     OnTakeBack!.Invoke(response.IsTakeBackSuccess);
+                    break;
+                case IngameRequestType.PurchaseByoyomi:
+                    OnOppositeByoyomiPurchase!.Invoke(_gameManager.ByoyomiPurchaseAmount);
                     break;
                 default:
                     Debug.LogError("정의되지 않은 인게임 이벤트 종류");

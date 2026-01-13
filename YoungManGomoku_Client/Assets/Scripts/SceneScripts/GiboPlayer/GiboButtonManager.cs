@@ -196,7 +196,7 @@ public class GiboButtonManager : MonoBehaviour
 
     // Todo: 기보 리스트 열려있도록 수정
     private void LoadLobbyScene()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
     
     private void SetSpeed(AutoPlaySpeed speed)
     {

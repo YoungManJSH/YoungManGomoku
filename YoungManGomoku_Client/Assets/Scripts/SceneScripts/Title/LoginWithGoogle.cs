@@ -225,5 +225,5 @@ public class LoginWithGoogle : MonoBehaviour
     }
 
     private void MoveToLobbyScene()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene);
+        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
 }

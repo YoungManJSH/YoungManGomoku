@@ -314,7 +314,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
         Login,  // 로그인했어
                 // ReLogin, // 팅겨서 재로그인했으니 저장된 보드정보를 넘겨줘
         MatchMaking, // 매칭시켜줘
-        MatchingCancle, // 매칭취소
+        MatchingCancel, // 매칭취소
         ShopData,   // 상점정보 내놔
         BuyItem_Shop,   // 상점템 이거 살게
         BuyItem_Ingame, // 인게임 중 구매

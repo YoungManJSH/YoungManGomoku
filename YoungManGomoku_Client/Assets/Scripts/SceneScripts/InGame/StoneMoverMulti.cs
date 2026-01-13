@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using YoungManGomoku_Protocol.ClientToServer;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 /// <summary> 멀티플레이 착수 제어 클래스 </summary>
 public class StoneMoverMulti : StoneMover
@@ -26,6 +25,8 @@ public class StoneMoverMulti : StoneMover
         _placeStoneDTO = new CS_PlaceStoneDTO(_gameManager.IdToken, default, 0, 0);
         
         OnStoneMove += OnTurnChanged;
+        _eventManager.OnTakeBackRequested += _ => DisableUpdate();
+        _eventManager.OnTakeBack += _ => enabled = _isPlayerTurn;
     }
 
     private void OnDisable() => NowPreview.SetActive(false);

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,19 +13,31 @@ public class RespondTakeBack : MonoBehaviour
     [SerializeField] private Button acceptButton;
     [SerializeField] private Button denyButton;
     [SerializeField] private TextMeshProUGUI messageUI;
+    [SerializeField] private Color emphasizedColor;
+    [SerializeField] private Color translucentColor;
     [SerializeField] private string message;
     
     private long _requestedTime;
     private int _remainSecond;
+    private Sequence _colorSequence;
     private CancellationTokenSource _cts;
-    private CS_TakeBackPermitDTO _takeBackPermitDTO;
+    private CS_PermitDTO _takeBackPermitDTO;
 
     private void Awake()
     {
+        Image boxImage = GetComponent<Image>();
+        
+        // DOTween 개체 관리 최적화를 위해 캐싱
+        _colorSequence = DOTween.Sequence()
+            .Append(boxImage.DOColor(endValue: emphasizedColor, duration: 0.5f))
+            .Append(boxImage.DOColor(endValue: translucentColor, duration: 1f))
+            .SetAutoKill(false); // SetAutoKill(false)를 해줘야 2번째에도 재생된다.
+        _colorSequence.Pause();
+        
         acceptButton.onClick.AddListener(Accept);
         denyButton.onClick.AddListener(Deny);
         messageUI.text = $"{message} - {timeLimit:D2}";
-        _takeBackPermitDTO = new CS_TakeBackPermitDTO(GameManager.Instance.IdToken, takeback: false);
+        _takeBackPermitDTO = new CS_PermitDTO(GameManager.Instance.IdToken, takeback: false);
         
         EventManager.Instance.OnTakeBackRequested += async isMyRequest =>
         {
@@ -67,9 +80,13 @@ public class RespondTakeBack : MonoBehaviour
         }
     }
 
+    private void OnEnable() => _colorSequence.Restart();
+    private void OnDisable() => _colorSequence.Pause();
+    private void OnDestroy() => _colorSequence.Kill();
+
     private void Accept()
     {
-        _takeBackPermitDTO.IsTakeBackPermit = true;
+        _takeBackPermitDTO.IsPermit = true;
         _cts.Cancel();
     }
 
@@ -79,7 +96,7 @@ public class RespondTakeBack : MonoBehaviour
     {
         _requestedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _remainSecond = timeLimit;
-        _takeBackPermitDTO.IsTakeBackPermit = false; // 유저 입력이 없을 경우 적용할 기본값 (거절)
+        _takeBackPermitDTO.IsPermit = false; // 유저 입력이 없을 경우 적용할 기본값 (거절)
         _cts = new CancellationTokenSource();
         
         try
