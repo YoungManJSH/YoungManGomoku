@@ -15,12 +15,6 @@
         TakeBackResult,
 
         /// <summary> 초읽기 구매 </summary>
-        PurchaseByoyomi,
-
-        /// <summary> 재대결 신청 </summary>
-        Rematch,
-
-        /// <summary> 재대결 승인 </summary>
-        RematchPermit
+        PurchaseByoyomi
     }
 }

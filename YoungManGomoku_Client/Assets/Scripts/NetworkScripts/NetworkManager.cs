@@ -181,6 +181,24 @@ public class NetworkManager : MonoBehaviour
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
 
+	/// <summary>
+	/// 서버로 자신이 재대결할 의사 여부에 대해 전달
+	/// </summary>
+	/// <param name="requestRematchDTO"> IdToken, Rematch를 신청할 것인지 신청하지 않을 것인지 여부의 bool 변수 (시간 초과시 자동 false) </param>
+	/// <param name="timeOutSeconds"> Connection Error 한계 시간, 0 이하이면 무한 대기 </param>
+	/// <returns> 재대결 성사 여부 bool 변수가 담긴 DTO </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestRematch(CS_PermitDTO requestRematchDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/RematchRequest", JsonConvert.SerializeObject(requestRematchDTO), timeOutSeconds, "Gomoku Rematch Request Success");
+	
+	
+	/// <summary>
+	/// 서버가 각 클라이언트의 재대결 의사를 확인한 재대결 성사 결과를 요청, 재대결 의사 여부와 함께 요청할 것
+	/// </summary>
+	/// <returns> 재대결 성사 여부 bool 변수가 담긴 DTO </returns>
+	public async Awaitable<SC_RematchResultDTO> RequestRematchResult(string idToken, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_RematchResultDTO>("GomokuIngame/RematchResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Rematch Result Response Success");
+
+	
 
 	/// <summary> 서버가 응답이 이상하거나 클라가 이상한 등 아무튼 클라의 접속을 끊어버리고 서버의 관리에서 죽여버리고 싶을 때(로그아웃) </summary>
 	/// <returns> 게임 종료 상황 발생 시 해당 enum값 수신, 그밖에는 None </returns>
