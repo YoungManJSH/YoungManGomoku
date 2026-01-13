@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using YoungManGomoku_Protocol.ClientToServer;
+using YoungManGomoku_Protocol.ServerToClient;
 
 /// <summary> 멀티플레이 착수 제어 클래스 </summary>
 public class StoneMoverMulti : StoneMover
@@ -70,7 +71,7 @@ public class StoneMoverMulti : StoneMover
                 _placeStoneDTO.Row = (byte)NowCoord.row;
                 _placeStoneDTO.Col = (byte)NowCoord.col;
 
-                var opponentMove =
+                SC_OpponentPlaceStoneDTO opponentMove =
                     await _networkManager.RequestPlaceStone(_placeStoneDTO);
 
                 if (opponentMove == null)

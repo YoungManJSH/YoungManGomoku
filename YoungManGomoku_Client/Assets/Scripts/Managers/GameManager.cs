@@ -81,9 +81,6 @@ public class GameManager : MonoBehaviour
         OpponentPlayerData opponent = matchResult.OpponentPlayer;
         OppositePlayer = new BasicPlayerData(opponent.Nickname, opponent.WinCount, opponent.DrawCount,
             opponent.LoseCount, opponent.Rating, opponent.EquipProfile);
-        _eventManager.OnGameWin += () => ++opponent.LoseCount;
-        _eventManager.OnGameDraw += () => ++opponent.DrawCount;
-        _eventManager.OnGameLose += () => ++opponent.WinCount;
 
         TimerSettingData timerInform = matchResult.TimerSettingDTO;
         PlayerTimer = new UserTimer(timerInform.MainTime, timerInform.ByoyomiCount, timerInform.ByoyomiSeconds);

@@ -443,7 +443,8 @@ public class EventManager : MonoBehaviour
             if (result.IsRematchSuccess)
             {
                 Debug.Log("재대결이 성사되었음!");
-                //TODO: 상대방 Rating 정보 서버에서 추가로 보내줘야 함!
+                PlayerDataFromWebServer.Instance.MatchResultDTO.
+                    OpponentPlayer.UpdateData(result.OpponentPlayer);
                 SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
             }
             else

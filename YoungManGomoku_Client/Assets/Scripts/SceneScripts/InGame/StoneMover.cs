@@ -80,8 +80,8 @@ public abstract class StoneMover : MonoBehaviour
         recentMark.SetActive(false);
         
         _ingameBoardScaler.OnBoardScaled += CalcWorldValue;
-        _boardInform.OnBlackGomoku += async() => await OnGomoku();
-        _boardInform.OnWhiteGomoku += async() => await OnGomoku();
+        _boardInform.OnBlackGomoku += async() => await OnGomoku(StoneColorType.Black);
+        _boardInform.OnWhiteGomoku += async() => await OnGomoku(StoneColorType.White);
         _boardInform.OnBlackUnmovable += OnBlackUnmovable;
         messageBox.OnOpened += MessageBoxOpened;
         messageBox.TurnBackToGame += MessageBoxClosed;
@@ -460,14 +460,13 @@ public abstract class StoneMover : MonoBehaviour
     }
 
     /// <summary> 오목 상황에서 적용할 연출 </summary>
-    private async Awaitable OnGomoku()
+    private async Awaitable OnGomoku(StoneColorType stoneColor)
     {
         // 월드에서 착수 처리가 완료되고 다음 프레임에 실행 
         await Awaitable.NextFrameAsync();
         
-        // 착수 처리가 완료돼 있으므로 현재 턴은 오목 완성자의 상대방임에 유의!
-        var informs = JudgeMove.OmokLineInforms(_boardInform,
-            NowCoord, _isBlackTurn ? StoneColorType.White : StoneColorType.Black);
+        Dictionary<LineDirection, List<(int row, int col)>> informs =
+            JudgeMove.OmokLineInforms(_boardInform, NowCoord, stoneColor);
         
         foreach (var coordList in informs.Values)
         {
