@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -230,25 +231,32 @@ namespace YoungManGomoku_WebServer.Controllers
         }
 
         [HttpPost("GameResult")]
-        public async Task<IActionResult> GameResult([FromBody] CS_PermitDTO requestRematchDTO, CancellationToken ct)
+        public async Task<IActionResult> GameResult([FromBody] string IDToken, CancellationToken ct)
         {
-            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
-            PlayerSession? player = _serverManager.GetPlayerSession(requestRematchDTO.IDToken);
+            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result] 게임 결과 요청 : {IDToken}");
 
+            // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
+            PlayerSession? player = _serverManager.GetPlayerSession(IDToken);
+          
             // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
-                return Unauthorized($"[{requestRematchDTO.IDToken}] Player Session Not Found.");
+                return Unauthorized($"[{IDToken}] Player Session Not Found.");
 
             player.LastRequestTime = DateTime.UtcNow;
 
-            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {requestRematchDTO.IDToken}");
+            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {IDToken}");
 
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}][Gomoku Controller] [Game Result] {player.Account.UID} 유저가 게임 방 탐색에 실패했습니다...");
                 return BadRequest("Not in game");
+            }
 
+            //_logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result]");
             GameRecord gameResult = await room.WaitGameResultAsync(player.Account.UID, ct);
+            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result] Success");
 
             _gameRoomManager.ServerContext.TryDBUpdateGameResult(player.Account.UID, _context);
 
@@ -260,7 +268,7 @@ namespace YoungManGomoku_WebServer.Controllers
         {
             // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
             PlayerSession? player = _serverManager.GetPlayerSession(requestRematchDTO.IDToken);
-
+            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result] 리매치 요청 : {requestRematchDTO.IDToken}");
             // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
@@ -268,33 +276,38 @@ namespace YoungManGomoku_WebServer.Controllers
 
             player.LastRequestTime = DateTime.UtcNow;
 
-            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {requestRematchDTO.IDToken}");
-
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] 리매치 요청 실패 : 방이 없습니다. {requestRematchDTO.IDToken}");
                 return BadRequest("Not in game");
+            }
 
             return Ok(new SC_ResponseStringDTO("Rematch Request Response", room.RequestRematch(player.Account.UID, requestRematchDTO.IsPermit)));
         }
 
         [HttpPost("RematchResult")]
-        public async Task<IActionResult> RematchResult([FromBody] CS_PermitDTO requestRematchDTO, CancellationToken ct)
+        public async Task<IActionResult> RematchResult([FromBody] string IDToken, CancellationToken ct)
         {
             // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
-            PlayerSession? player = _serverManager.GetPlayerSession(requestRematchDTO.IDToken);
+            PlayerSession? player = _serverManager.GetPlayerSession(IDToken);
+            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result] 리매치 결과 요청 : {IDToken}");
 
             // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
-                return Unauthorized($"[{requestRematchDTO.IDToken}] Player Session Not Found.");
+                return Unauthorized($"[{IDToken}] Player Session Not Found.");
 
             player.LastRequestTime = DateTime.UtcNow;
 
-            _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {requestRematchDTO.IDToken}");
+            
 
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] 리매치 결과 요청 실패 : 방이 없습니다. {IDToken}");
                 return BadRequest("Not in game");
+            }
 
             return Ok(await room.WaitRematchAsync(player.Account.UID, ct));
         }

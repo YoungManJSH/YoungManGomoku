@@ -340,12 +340,14 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
     public class SC_RematchResultDTO
     {
-        public RematchOpponentData opponentPlayer { get; set; }
+        public RematchOpponentData OpponentPlayer { get; set; }
+        StoneColorType myStoneColor { get; set; }
+        StoneColorType OpponentStoneColor { get; set; }
         public bool IsRematchSuccess { get; set; }
 
         public SC_RematchResultDTO(bool isRematchable)
         {
-            opponentPlayer = new RematchOpponentData();
+            OpponentPlayer = new RematchOpponentData();
             IsRematchSuccess = isRematchable;
         }
     }
