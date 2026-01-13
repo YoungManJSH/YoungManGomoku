@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
+using YoungManGomoku_WebServer.Data.DatabaseContext;
 using YoungManGomoku_WebServer.SingletoneManager;
 
 namespace YoungManGomoku_WebServer.Sessions
@@ -40,6 +41,13 @@ namespace YoungManGomoku_WebServer.Sessions
     {
         public ulong UID { get; set; }
         public TaskCompletionSource<SC_WaitEventDTO>? TaskCompSrc { get; set; }
+        public CancellationTokenRegistration CancellationTokenRegist { get; set; }
+    }
+
+    class GomokuGameResultWaitingPlayer
+    {
+        public ulong UID { get; set; }
+        public TaskCompletionSource<GameRecord>? TaskCompSrc { get; set; }
         public CancellationTokenRegistration CancellationTokenRegist { get; set; }
     }
 
@@ -76,10 +84,14 @@ namespace YoungManGomoku_WebServer.Sessions
         private readonly Dictionary<ulong, GomokuIngamePlaceStoneWaitingPlayer> _waitingPlaceStoneMap;
         private readonly Dictionary<ulong, GomokuGameEventWaitingPlayer> _waitingEventMap;
         private readonly Dictionary<int, TaskCompletionSource<bool>> _synchronizeTimerTurnWaiters;
+        private readonly Dictionary<ulong, GomokuGameResultWaitingPlayer> _waitingResultMap;
         private readonly Dictionary<ulong, GomokuRematchWaitingPlayer> _waitingRematchMap;
 
-		// 하트비트, n 초 이상 미 요청 시 접속 끊김으로 간주
-		private readonly Dictionary<ulong, DateTime> _lastRequestTime;
+        // 재대결 대기자 Queue
+        private readonly Queue<ulong> _waitingRematchQueue;
+
+        // 하트비트, n 초 이상 미 요청 시 접속 끊김으로 간주
+        private readonly Dictionary<ulong, DateTime> _lastRequestTime;
 
 		// 시간패 함수 콜백
 		private readonly Dictionary<ulong, Timer> _timeOutTimer;
@@ -90,8 +102,10 @@ namespace YoungManGomoku_WebServer.Sessions
         // 유저별 게임 결과
         private readonly Dictionary<ulong, GameEndCode> _userEndCodes;
 
-		// 서버에 캐싱된 마지막 타이머 갱신 시간
-		private long _gameProgressMilliseconds;
+        
+
+        // 서버에 캐싱된 마지막 타이머 갱신 시간
+        private long _gameProgressMilliseconds;
 
 		// 서버에 캐싱된 무르기 요청이 들어온 시간
 		private long _lastTakebackRequestTime;
@@ -137,8 +151,12 @@ namespace YoungManGomoku_WebServer.Sessions
             // 타이머 동기화 대기
             _synchronizeTimerTurnWaiters = new Dictionary<int, TaskCompletionSource<bool>>();
 
+            // 게임 종료 대기
+            _waitingResultMap = new Dictionary<ulong, GomokuGameResultWaitingPlayer>();
+
             // 재대결 대기
             _waitingRematchMap = new Dictionary<ulong, GomokuRematchWaitingPlayer>();
+            _waitingRematchQueue = new Queue<ulong>();
 
             // 유저별 타이머 정보 등록
             _userTimers = new Dictionary<ulong, UserTimer>()
@@ -349,6 +367,7 @@ namespace YoungManGomoku_WebServer.Sessions
 
 			foreach (GomokuGameEventWaitingPlayer waitingPlayer in _waitingEventMap.Values)
 			{
+                // 원래는 여기서 게임종료 코드를 보내줬었는데, 이제 이벤트에서 게임종료가 제거되고 게임종료 결과는 이사를 갔다
 				if(_userEndCodes.TryGetValue(waitingPlayer.UID, out GameEndCode endCode) == false)
                 {
 					// 큰일나는 예외 상황, Assert 상황이지만 있을 수 있으니 방심할 수 없다.
@@ -356,11 +375,14 @@ namespace YoungManGomoku_WebServer.Sessions
                     continue;
 				}
 				_gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 이벤트 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 이벤트 응답");
-				waitingPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(endCode, IngameRequestType.None));
+				waitingPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.None));
 				waitingPlayer.CancellationTokenRegist.Dispose();
 			}
 
             _waitingEventMap.Clear();
+
+
+
 
 			// Unmanaged Heap
 			foreach (Timer timeOutCallback in _timeOutTimer.Values)
@@ -493,7 +515,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 }
 
 
-                // 이번 착수로 네가 지금 즉시 승리했음
+                // 이번 착수로 네가 지금 즉시 승리했음, 무승부를 제외한 모든 오목 승/패는 여기로 들어옴
                 if (UID == _winnerUID)
                 {
                     _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_gameRoomManager.ServerContext.UserInfo(UID)}차례에서 승리");
@@ -597,7 +619,7 @@ namespace YoungManGomoku_WebServer.Sessions
             if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
             {
                 _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}유저에게 무르기 요청 전달!");
-                waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBack));
+                waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.TakeBack));
 
                 // 대기 끝, 상대 플레이어에게 이벤트 응답을 보내라
                 _waitingEventMap.Remove(opponent);
@@ -613,7 +635,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 long takebackWaitTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _lastTakebackRequestTime;
                 _gameProgressMilliseconds += takebackWaitTime;
 
-                SC_WaitEventDTO endEvent = new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.TakeBackResult);
+                SC_WaitEventDTO endEvent = new SC_WaitEventDTO(IngameRequestType.TakeBackResult);
                 endEvent.IsTakeBackSuccess = isTakebackable && takebackWaitTime < 11000; // 무르기 요청이 온 후 15000ms 이내로 온 무르기 승인에만 무르기 성공
 
                 if (endEvent.IsTakeBackSuccess) _board.TryTakeBack();
@@ -676,7 +698,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
                     {
                         _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}상대방 유저에게 초읽기 구매했음을 알림!");
-                        waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(GameEndCode.None, IngameRequestType.PurchaseByoyomi));
+                        waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.PurchaseByoyomi));
 
                         // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
                         _waitingEventMap.Remove(opponent);
@@ -692,54 +714,90 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public bool RequestRematch(ulong UID, bool isRematch)
         {
-            lock (_gameroomLock)
+
+            // 일단 게임이 끝났는지부터 확인, 클라 뚜따인 경우 재대결 요청이 겜중에도 들어올 수도 있다
+            if (State != GameRoomState.Finished)
+                return false;
+
+            // 리매치 요청을 두 클라가 다 한경우 재대결 성립
+
+            // 플레이어 하나라도 리매치를 거절한 경우
+            if (isRematch == false)
             {
-                // 일단 게임이 끝났는지부터 확인, 클라 뚜따인 경우 재대결 요청이 겜중에도 들어올 수도 있다
-                if (State != GameRoomState.Finished)
-                    return false;
-
-                // 리매치 요청을 두 클라가 다 한경우 재대결 성립
-
-                // 플레이어 하나라도 리매치를 거절한 경우
-                if (isRematch == false)
+                // 죽은 클라일 수도 있으니 무한 대기 방지를 위한 한계 설정
+                const int MAX_TRYCOUNT = 25;
+                int tryCnt = 0;
+                for (; tryCnt < MAX_TRYCOUNT; ++tryCnt)
                 {
-                    // 죽은 클라일 수도 있으니 무한 대기 방지를 위한 한계 설정
-                    const int MAX_TRYCOUNT = 25;
-                    int tryCnt = 0;
-                    for (; tryCnt < MAX_TRYCOUNT; ++tryCnt)
+                    if (_waitingRematchMap.Count < 2)
                     {
-                        if (_waitingRematchMap.Count < 2 )
-                        {
-                            Task.Delay(500);
-                            continue;
-                        }
+                        Task.Delay(500);
+                        continue;
                     }
-
-                    if (tryCnt == MAX_TRYCOUNT)
-                    {
-                        // 아무래도 클라가 뒤져버려서 이벤트 대기가 오랫동안 못 온 모양이다.
-                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Rematch Request] Room [{RoomID}] : 리매치 결과 응답을 하기 위한 클라이언트가 2명이 아닙니다. 해당 방의 일부 혹은 모든 클라이언트가 연결이 끊긴 것 같습니다.");
-                    }
-
-
-                    // 모든 대기중인 리매치 이벤트에 리매치 실패를 전송
-                    foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
-                    {
-                        _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 결과 응답");
-                        waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(false));
-                    }
-
-                    _waitingEventMap.Clear();
-
+                }
+                if (tryCnt == MAX_TRYCOUNT)
+                {
+                    // 아무래도 클라가 뒤져버려서 이벤트 대기가 오랫동안 못 온 모양이다.
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Rematch Request] Room [{RoomID}] : 리매치 결과 응답을 하기 위한 클라이언트가 2명이 아닙니다. 해당 방의 일부 혹은 모든 클라이언트가 연결이 끊긴 것 같습니다.");
                 }
 
 
+                // 모든 대기중인 리매치 이벤트에 리매치 실패를 전송
+                foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
+                {
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 결과 응답");
+                    waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(false));
+                }
 
-                // 두 플레이어가 모두 true인 경우
-
+                _waitingEventMap.Clear();
+                return false;
             }
+            else
+            {
+                _waitingRematchQueue.Enqueue(UID);
+            }
+
+
+            // 무식한 복붙 코딩, 추후 리팩토링 예정
+            // 두 플레이어가 모두 true인 경우
+            if (_waitingRematchQueue.Count == 2)
+            {
+                // 죽은 클라일 수도 있으니 무한 대기 방지를 위한 한계 설정
+                const int MAX_TRYCOUNT = 25;
+                int tryCnt = 0;
+                for (; tryCnt < MAX_TRYCOUNT; ++tryCnt)
+                {
+                    if (_waitingRematchMap.Count < 2)
+                    {
+                        Task.Delay(500);
+                        continue;
+                    }
+                }
+                if (tryCnt == MAX_TRYCOUNT)
+                {
+                    // 아무래도 클라가 뒤져버려서 이벤트 대기가 오랫동안 못 온 모양이다.
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Rematch Request] Room [{RoomID}] : 리매치 결과 응답을 하기 위한 클라이언트가 2명이 아닙니다. 해당 방의 일부 혹은 모든 클라이언트가 연결이 끊긴 것 같습니다.");
+                }
+
+
+                // 모든 대기중인 리매치 이벤트에 리매치 실패를 전송
+                foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
+                {
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 결과 응답");
+                    waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(true));
+                }
+
+                _waitingEventMap.Clear();
+            }
+            else if (_waitingRematchQueue.Count > 2)
+            {
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Rematch Request] Room [{RoomID}] : Thread Unsafe Error! 재대결 대기 큐의 인원이 2명 초과입니다.");
+                return false;
+            }
+
+
             return true;
-		}
+        }
 
 
 
@@ -770,9 +828,7 @@ namespace YoungManGomoku_WebServer.Sessions
             State = GameRoomState.Finished;
 			_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 승리한 유저 : {_winnerUID}");
 
-
-            // 재도전을 위한 10초 대기? 이거 너무 무식한것같은데
-            //await Task.Delay(10000);
+            ProcessGameResult();
 
 			DispatchGameEndToAll();
 
@@ -783,7 +839,69 @@ namespace YoungManGomoku_WebServer.Sessions
 			// _gameRoomManager.CloseRoom(this);
 		}
 
-		private void OnBlackWin()
+
+        private GameRecord ComposeGameRecord(ulong UID)
+        {
+            GameRecord result = new GameRecord();
+            if (_userEndCodes.TryGetValue(UID, out GameEndCode endCode) == false)
+            {
+                // 큰일나는 예외 상황, Assert 상황이지만 있을 수 있으니 방심할 수 없다.
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] 착수 대기자({GetColor(UID)})[{UID}]의 엔드코드를 찾을 수 없었습니다!");
+            }
+            else
+            {
+                result.endCode = endCode;
+
+                if (_winnerUID == UID)
+                {
+                    
+                }
+                else if (_winnerUID == 0)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+            return result;
+        }
+
+        private void ProcessGameResult()
+        {
+            // 죽은 클라일 수도 있으니 무한 대기 방지를 위한 한계 설정
+            // 5초 정도면 많이 기다려 줬다.
+            const int MAX_TRYCOUNT = 10;
+            int tryCnt = 0;
+            for (; tryCnt < MAX_TRYCOUNT; ++tryCnt)
+            {
+                if (_waitingResultMap.Count < 2)
+                {
+                    Task.Delay(500);
+                    continue;
+                }
+            }
+            if (tryCnt == MAX_TRYCOUNT)
+            {
+                // 아무래도 클라가 뒤져버려서 게임 응답이 못 온 모양이다.
+                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Game Result] Room [{RoomID}] : 게임 결과 응답을 하기 위한 클라이언트가 2명이 아닙니다. 해당 방의 일부 혹은 모든 클라이언트가 연결이 끊긴 것 같습니다.");
+            }
+
+            foreach (GomokuGameResultWaitingPlayer waitingPlayer in _waitingResultMap.Values)
+            {
+                _gameRoomManager.Logger.LogInformation($"[{DateTime.Now}] 이벤트 대기자({GetColor(waitingPlayer.UID)})[{waitingPlayer.UID}]에게 게임 종료 응답");
+                waitingPlayer.TaskCompSrc?.TrySetResult(ComposeGameRecord(waitingPlayer.UID));
+                _gameRoomManager.ServerContext.TryDBUpdateGameResult(waitingPlayer.UID);
+                waitingPlayer.CancellationTokenRegist.Dispose();
+            }
+
+           
+            _waitingEventMap.Clear();
+        }
+
+        // 착수 도중 호출
+        private void OnBlackWin()
 		{
 			_userEndCodes[BlackPlayerUID] = GameEndCode.GomokuWin;
 			_userEndCodes[WhitePlayerUID] = GameEndCode.GomokuLose;
@@ -791,6 +909,7 @@ namespace YoungManGomoku_WebServer.Sessions
             _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 흑돌의 오목 승리!");
 		}
 
+        // 착수 도중 호출
 		private void OnWhiteWin()
 		{
             _userEndCodes[BlackPlayerUID] = GameEndCode.GomokuLose;
@@ -799,6 +918,7 @@ namespace YoungManGomoku_WebServer.Sessions
             _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] 백돌의 오목 승리!");
 		}
 
+        // 착수 도중 호출
 		private void OnDraw()
 		{
 			_userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.Draw;
@@ -806,6 +926,7 @@ namespace YoungManGomoku_WebServer.Sessions
             FinishGame();
 		}
 
+        // 백 착수 도중 호출 (백이 여길 두면 흑이 더이상 둘 곳이 없어서 백이 승리 판정)
         private void OnBlackUnmovable()
         {
             _userEndCodes[BlackPlayerUID] = _userEndCodes[WhitePlayerUID] = GameEndCode.BlackUnmovable;
@@ -837,6 +958,8 @@ namespace YoungManGomoku_WebServer.Sessions
                 waitingPlaceStonePlayer.TaskCompSrc?.TrySetResult(new SC_OpponentPlaceStoneDTO(new TimerSyncData(0f, 0), 255, 255));
                 _waitingPlaceStoneMap.Remove(opponent);
             }
+
+            FinishGame();
         }
 
         private void OnBlackTimeOut(object? parameter)
@@ -847,8 +970,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 _userEndCodes[BlackPlayerUID] = GameEndCode.TimeOutLose;
                 _userEndCodes[WhitePlayerUID] = GameEndCode.TimeOutWin;
                 _winnerUID = WhitePlayerUID;
-                ProcessTimeOut();
-				FinishGame();
+                ProcessTimeOut();				
 			}
         }
 
@@ -861,7 +983,6 @@ namespace YoungManGomoku_WebServer.Sessions
                 _userEndCodes[WhitePlayerUID] = GameEndCode.TimeOutLose;
                 _winnerUID = BlackPlayerUID;
                 ProcessTimeOut();
-				FinishGame();
 			}
         }
 	

@@ -1,6 +1,7 @@
 ﻿using System;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
+using Microsoft.VisualBasic;
 /*
  Protocol의 PlayerData는 단순 서버와 통신용
  서버 DB 테이블과의 구조 역시 다르다
@@ -148,6 +149,20 @@ namespace YoungManGomoku_Protocol
 			ByoyomiPurchaseAmount = byoyomiPurchaseAmount;
 		}
 	}
+    
+
+    public struct GameRecord
+    {
+        public GameEndCode endCode { get; set; }
+        public float Rating { get; set; }
+        public int Level { get; set; }
+        public int ExperiencePoint { get; set; }
+        public int MaxExperiencePoint { get; set; }
+        public int GameMoney { get; set; }
+        public uint WinCount { get; set; }
+        public uint DrawCount { get; set; }
+        public uint LoseCount { get; set; }
+    }
 }
 
 namespace YoungManGomoku_Protocol.ClientToServer
@@ -282,17 +297,13 @@ namespace YoungManGomoku_Protocol.ServerToClient
 
     public class SC_WaitEventDTO
     {
-		/// <summary> 게임이 끝난 경우 알맞은 값을 넣어주세요 </summary>
-		public GameEndCode GameEndCode { get; set; }
-
         // 상대방이 항복, 무르기 요청, 초읽기 구매 등을 했을 때
         public IngameRequestType OpponentRequest { get; set; }
 
         public bool IsTakeBackSuccess { get; set; }
 
-        public SC_WaitEventDTO(GameEndCode gameEndCode, IngameRequestType opponentRequest)
+        public SC_WaitEventDTO(IngameRequestType opponentRequest)
         {
-            GameEndCode = gameEndCode;
             OpponentRequest = opponentRequest;
         }
     }
