@@ -7,6 +7,8 @@ using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 public class EventManager : MonoBehaviour
 {
+    private const long HEARTBEAT_TERM = 10_000L; // 10초
+    
     public event Action OnGameStart;
     public event Action OnGameEnd;
     
@@ -47,7 +49,7 @@ public class EventManager : MonoBehaviour
     public event Action OnWaitingRematch;
     /// <summary>재대결 불성립 응답을 받았을 때 발생</summary>
     public event Action OnRematchFailed;
-    
+    /// <summary>서버의 응답에 결함이 있을 때 발생 (게임 중단)</summary>
     public event Action OnServerReplyFailed;
 
     public static EventManager Instance { get; private set; }
@@ -56,6 +58,7 @@ public class EventManager : MonoBehaviour
     private GameManager _gameManager;
     private NetworkManager _networkManager;
     private CS_InGameRequestDTO _ingameRequestDTO;
+    private long _lastRequestTime;
     
     /* 다른 오브젝트들의 Awake가 일어나기 전에 이 Awake가 먼저 실행되어야 함!
      * 프로젝트 세팅 - Script Execution Order에서 이 스크립트를 -1로 설정하였음. */
@@ -103,8 +106,25 @@ public class EventManager : MonoBehaviour
         
         OnOppositeDisconnectedWin += OnGameWin;
         OnPlayerDisconnectedLose += OnGameLose;
+
+        enabled = false;
     }
 
+    private void Update()
+    {
+        long nowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        
+        if (nowTime - _lastRequestTime > HEARTBEAT_TERM)
+        {
+            _networkManager.RequestHeartbeat(_gameManager.IdToken, timeOutSeconds: 5).Cancel();
+            _lastRequestTime = nowTime;
+        }
+    }
+    
+    /// <summary>마지막 요청 시각을 현재로 업데이트 (Heartbeat 구현용)</summary>
+    public void UpdateLastRequestTime()
+        => _lastRequestTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    
     /// <summary> 게임 시작 요청 </summary>
     public async void StartGame()
     {
@@ -130,6 +150,8 @@ public class EventManager : MonoBehaviour
             OnGameStart!.Invoke();
             HandleIngameEvent();
             HandleGameResult();
+            
+            enabled = true;
         }
         catch (Exception e)
         {
@@ -177,7 +199,8 @@ public class EventManager : MonoBehaviour
         try
         {
             OnTakeBackRequested!.Invoke(true);
-            
+
+            UpdateLastRequestTime();
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
@@ -220,6 +243,7 @@ public class EventManager : MonoBehaviour
     {
         try
         {
+            UpdateLastRequestTime();
             _ingameRequestDTO.IngameRequest = IngameRequestType.PurchaseByoyomi;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
@@ -277,7 +301,8 @@ public class EventManager : MonoBehaviour
     public void ServerReplyFailed()
     {
         if (IsGameEnd) return;
-        
+
+        enabled = false;
         IsGameEnd = true;
         OnServerReplyFailed!.Invoke();
         _networkManager.RequestCloseSession(_gameManager.IdToken, timeOutSeconds: 5).Cancel(); //일방적 통보
@@ -360,6 +385,7 @@ public class EventManager : MonoBehaviour
                 return; // 이후 과정 생략, 바로 return
         }
 
+        enabled = false;
         IsGameEnd = true;
 
         if (rematchPossible) WaitForRematch();
@@ -370,6 +396,7 @@ public class EventManager : MonoBehaviour
     {
         try
         {
+            UpdateLastRequestTime();
             SC_WaitEventDTO response =
                 await _networkManager.RequestWaitForEvent(_gameManager.IdToken);
             
@@ -464,7 +491,8 @@ public class EventManager : MonoBehaviour
     {
         // 게임이 끝난 상황에서는 해당 이벤트 처리가 불필요
         if (IsGameEnd) return;
-        
+
+        enabled = false;
         IsGameEnd = true;
         OnGameEnd!.Invoke();
     }

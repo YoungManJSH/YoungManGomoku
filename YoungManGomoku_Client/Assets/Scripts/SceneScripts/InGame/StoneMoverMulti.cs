@@ -69,6 +69,7 @@ public class StoneMoverMulti : StoneMover
                 _placeStoneDTO.Row = (byte)NowCoord.row;
                 _placeStoneDTO.Col = (byte)NowCoord.col;
 
+                eventManager.UpdateLastRequestTime();
                 SC_OpponentPlaceStoneDTO opponentMove =
                     await _networkManager.RequestPlaceStone(_placeStoneDTO);
 

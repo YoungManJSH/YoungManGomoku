@@ -108,6 +108,7 @@ public class RespondTakeBack : MonoBehaviour
         finally
         {
             gameObject.SetActive(false);
+            EventManager.Instance.UpdateLastRequestTime();
             NetworkManager.Instance.RequestTakeBackPermit(_takeBackPermitDTO, timeOutSeconds: 5).Cancel();
             _cts.Dispose();
             _cts = null;
