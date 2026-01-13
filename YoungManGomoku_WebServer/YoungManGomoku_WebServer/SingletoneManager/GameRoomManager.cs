@@ -27,29 +27,29 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             ServerContext = serverContext;
 		}
 
-        public GameRoom CreateRoom(ulong playerA, ulong playerB)
+        public GameRoom CreateRoom(ulong blackPlayer, ulong whitePlayer)
         {
-            GameRoom room = new GameRoom(ServerContext.GenerateUID64(), playerA, playerB, this);
+            GameRoom room = new GameRoom(ServerContext.GenerateUID64(), blackPlayer, whitePlayer, this);
             _rooms[room.RoomID] = room;
 
-            _roomByPlayer[playerA] = room.RoomID;
-            _roomByPlayer[playerB] = room.RoomID;
+            _roomByPlayer[blackPlayer] = room.RoomID;
+            _roomByPlayer[whitePlayer] = room.RoomID;
 
             return room;
         }
 
-        public GameRoom CreateRoom(ulong roomID, ulong playerA, ulong playerB)
+        public GameRoom CreateRoom(ulong roomID, ulong blackPlayer, ulong whitePlayer)
 		{
-            GameRoom room = new GameRoom(roomID, playerA, playerB, this);
+            GameRoom room = new GameRoom(roomID, blackPlayer, whitePlayer, this);
 			_rooms[roomID] = room;
 
-			_roomByPlayer[playerA] = roomID;
-			_roomByPlayer[playerB] = roomID;
+			_roomByPlayer[blackPlayer] = roomID;
+			_roomByPlayer[whitePlayer] = roomID;
 
 			return room;
 		}
 
-		public bool TryGetRoomByPlayer(ulong playerUID, out GameRoom room)
+		public bool TryGetRoomByPlayer(ulong playerUID, out GameRoom? room)
 		{
 			// 못 찾았으면 null
 			room = null;
@@ -64,7 +64,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         internal void CloseRoom(ulong roomID)
         {
 			// Remove 하고 나서 삭제한 값을 따로 쓸 일은 없으니 그냥 _ 때림
-			if (_rooms.TryGetValue(roomID, out GameRoom room))
+			if (_rooms.TryGetValue(roomID, out GameRoom? room))
 			{
 				_roomByPlayer.TryRemove(room.BlackPlayerUID, out _);
 				_roomByPlayer.TryRemove(room.WhitePlayerUID, out _);

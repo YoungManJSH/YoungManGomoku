@@ -9,24 +9,24 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public ulong UID { get; set; }
 
         [ForeignKey(nameof(UID))]
-        public PlayerAccount Account { get; set; }
-
+        public PlayerAccount Account { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 
         // 실력 판단용 내부 지표 레이팅
         public float Rating { get; set; }
 
         // 게임을 얼마나 많이 했는지 판단하는 지표, Exp가 일정량 찰 때마다 레벨 업
         public int Level { get; set; }
+
+        // EF Core 규칙 상 자동 구현 프로퍼티만 가능, 실제 Setting 시에는 AddExp(amount) 함수로 사용
         public int ExperiencePoint { get; set; }
         public int MaxExperiencePoint { get; set; }
 
         // Max Exp 초기값을 0으로 세팅해서 테스트할 수 있기 때문에 Assert 하지 않음
-        // 아니 잠깐, 웹서버가 Assert걸면 그냥 터지잖아, 안되지그건
+        // 아니 잠깐, 웹서버가 Assert걸면 그냥 터지잖아, 안되지 그건
         // 만렙 개념이 있다면 Max Exp가 0일 수도 있는데 기획이 확정된 것이 없으므로 일단 예외처리
         [NotMapped]
         public float ExperienceRate =>
             MaxExperiencePoint != 0 ? (float)ExperiencePoint / MaxExperiencePoint : 0f;
-
 
         public PlayerStatus() { }
         public PlayerStatus(PlayerAccount account)
@@ -37,6 +37,26 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
             Level = 1;
             ExperiencePoint = 0;
             MaxExperiencePoint = 100;
+        }
+
+        public void AddExperience(int amount)
+        {
+            if (MaxExperiencePoint <= 0) return;
+
+            ExperiencePoint += amount;
+
+            while (ExperiencePoint >= MaxExperiencePoint)
+            {
+                ExperiencePoint -= MaxExperiencePoint;
+                MaxExperiencePoint = LevelToMaxExp(++Level);
+            }
+
+            // 이후에 별도 DB 갱신
+        }
+
+        public static int LevelToMaxExp(int level)
+        {
+            return 75 + (level * 25);
         }
     }
 }
