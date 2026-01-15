@@ -1614,13 +1614,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoneMoverMulti
   blackStone: {fileID: 157165968846281731, guid: f3268151f9f2f42468e8645e9dd5ff21, type: 3}
   whiteStone: {fileID: 9020664146314456184, guid: 00a3216d908dfe94abea5cda38ed9ad6, type: 3}
+  confirmButton: {fileID: 1802698111}
   forbiddenMark: {fileID: 5372146143770715992, guid: e768997e296529345a5406d70507e0ae, type: 3}
   deniedSound: {fileID: 8300000, guid: 799e1d12cf0c07c4fb8f0f354737d2c2, type: 3}
   takeBackSound: {fileID: 8300000, guid: a59f2ace2467e2c498053f825255d207, type: 3}
   messageBox: {fileID: 530988113}
-  previewAlpha: 0.7
   mainCamera: {fileID: 519420031}
   recentMark: {fileID: 787886031}
+  previewAlpha: 0.7
   delay: 0.3
   interval: 0.1
 --- !u!1 &373960744
@@ -7151,7 +7152,7 @@ GameObject:
   - component: {fileID: 1802698108}
   - component: {fileID: 1802698111}
   m_Layer: 5
-  m_Name: MobileMoveConfirmButton
+  m_Name: MobileStoneConfirmButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7220,19 +7221,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1802698109}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 362371478}
-        m_TargetAssemblyTypeName: StoneMoverMulti, Assembly-CSharp
-        m_MethodName: MoveConfirmed
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1802698109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7285,6 +7274,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConfirmButtonMoving
   dragStartTime: 0.6
   blackButtonSprite: {fileID: 21300000, guid: c458810e213fc2144a775b6d4bcd8344, type: 3}
+  whiteButtonSprite: {fileID: 21300000, guid: c11ce2c7fc69dc8439f216e735d2b1bf, type: 3}
+  buttonImage: {fileID: 1802698109}
+  buttonText: {fileID: 1958054187}
   stoneMover: {fileID: 362371478}
 --- !u!1 &1897755328
 GameObject:
@@ -7584,7 +7576,7 @@ GameObject:
   - component: {fileID: 1958054188}
   - component: {fileID: 1958054187}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: StoneConfirmButtonText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

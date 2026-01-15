@@ -2,6 +2,9 @@ using System;
 using UnityEngine;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
+#if UNITY_ANDROID
+using UnityEngine.UI;
+#endif
 
 /// <summary> 멀티플레이 착수 제어 클래스 </summary>
 public class StoneMoverMulti : StoneMover
@@ -12,6 +15,9 @@ public class StoneMoverMulti : StoneMover
     private UserTimer _playerTimer;
     private UserTimer _oppositeTimer;
     private CS_PlaceStoneDTO _placeStoneDTO;
+#if UNITY_ANDROID
+    private Button _confirmButton;
+#endif
 
     protected override void OnAwake()
     {
@@ -26,20 +32,15 @@ public class StoneMoverMulti : StoneMover
         OnStoneMove += OnTurnChanged;
         eventManager.OnTakeBackRequested += _ => DisableUpdate();
         eventManager.OnTakeBack += _ => enabled = _isPlayerTurn;
+
+#if UNITY_ANDROID
+        confirmButton.ButtonImageChange(_gameManager.IsPlayerBlack);
+        _confirmButton = confirmButton.GetComponent<Button>();
+        _confirmButton.interactable = false;
+#endif
     }
 
     private void OnDisable() => NowPreview.SetActive(false);
-
-    public override void MoveConfirmed()
-    {
-#if UNITY_ANDROID
-        if (NowPreview.activeSelf)
-        {
-            NowPreview.SetActive(false);
-            MoveStone(NowCoord);
-        }
-#endif
-    }
     
     protected override void MessageBoxClosed() => enabled = _isPlayerTurn;
     
@@ -62,6 +63,9 @@ public class StoneMoverMulti : StoneMover
 
             _isPlayerTurn = !_isPlayerTurn;
             enabled = _isPlayerTurn;
+#if UNITY_ANDROID
+            _confirmButton.interactable = _isPlayerTurn;
+#endif
 
             if (_isPlayerTurn is false) // 내가 착수를 완료한 상황
             {

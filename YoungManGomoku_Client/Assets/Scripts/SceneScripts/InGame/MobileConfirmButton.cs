@@ -3,47 +3,31 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class MobileConfirmButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [SerializeField] private float dragStartTime;
     [SerializeField] private Sprite blackButtonSprite;
-    [SerializeField] private StoneMover stoneMover;
-
+    [SerializeField] private Sprite whiteButtonSprite;
+    [SerializeField] private Image buttonImage;
+    [SerializeField] private TextMeshProUGUI buttonText;
+    
     private RectTransform _myRect;
     private RectTransform _parentRect;
-    private Image _buttonImage;
-    private Button _button;
 
     private bool _isHolding;
     private bool _isDragging;
     private float _holdTime;
     private (float min, float max) _xLimits;
     private (float min, float max) _yLimits;
-    private bool _isPlayerBlack;
-
+    
     private void Awake()
     {
-#if UNITY_STANDALONE || UNITY_EDITOR
-        Destroy(gameObject);
-#elif UNITY_ANDROID
         _myRect = GetComponent<RectTransform>();
         _parentRect = _myRect.parent.GetComponent<RectTransform>();
-        _buttonImage = GetComponent<Image>();
-        _button = GetComponent<Button>();
-        _button.interactable = false;
-
-        _isPlayerBlack = GameManager.Instance.IsPlayerBlack;
-        if (_isPlayerBlack)
-        {
-            _buttonImage.sprite = blackButtonSprite;
-            GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
-        }
         
         _isHolding = false;
         _isDragging = false;
         _holdTime = 0f;
-        stoneMover.OnStoneMove += OnStoneMove;
-#endif
     }
 
     private void Update()
@@ -51,10 +35,11 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         if (_isHolding && _isDragging is false)
         {
             _holdTime += Time.unscaledDeltaTime;
+            
             if (_holdTime >= dragStartTime)
             {
                 _isDragging = true;
-                _buttonImage.color = new Color(1f, 1f, 1f, 0.45f);
+                buttonImage.color = new Color(1f, 1f, 1f, 0.45f);
                 _xLimits = (-_parentRect.rect.width / 2f, _parentRect.rect.width / 2f);
                 _yLimits = (-_parentRect.rect.height, -_parentRect.rect.width * 0.06f);
                 /* parentRect.height가 종횡비에 따라 가변적임
@@ -63,6 +48,23 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
         }
     }
 
+#if UNITY_ANDROID
+    public void ButtonImageChange(bool isBlack)
+    {
+        if (isBlack)
+        {
+            buttonImage.sprite = blackButtonSprite;
+            buttonText.color = Color.white;
+        }
+        else
+        {
+            buttonImage.sprite = whiteButtonSprite;
+            buttonText.color = Color.black;
+        }
+    }
+#endif
+    
+    #region 드래그 인터페이스 구현부
     public void OnPointerDown(PointerEventData eventData)
     {
         _isHolding = true;
@@ -88,9 +90,7 @@ public class ConfirmButtonMover : MonoBehaviour, IPointerDownHandler, IPointerUp
     {
         _isHolding = false;
         _isDragging = false;
-        _buttonImage.color = Color.white;
+        buttonImage.color = Color.white;
     }
-    
-    private void OnStoneMove(bool isBlackTurn)
-        => _button.interactable = isBlackTurn == _isPlayerBlack;
+    #endregion
 }

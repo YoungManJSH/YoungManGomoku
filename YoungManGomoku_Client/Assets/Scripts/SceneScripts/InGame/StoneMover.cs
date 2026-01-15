@@ -2,19 +2,23 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
+#if UNITY_ANDROID
+using UnityEngine.UI;
+#endif
 
 /// <summary> 착수 제어 추상 클래스 </summary>
 public abstract class StoneMover : MonoBehaviour
 {
     [SerializeField] protected StoneController blackStone;
     [SerializeField] protected StoneController whiteStone;
+    [SerializeField] protected MobileConfirmButton confirmButton;
     [SerializeField] private GameObject forbiddenMark;
     [SerializeField] private AudioClip deniedSound;
     [SerializeField] private AudioClip takeBackSound;
     [SerializeField] private MessageBoxManager messageBox;
-    [SerializeField] private float previewAlpha;
     [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject recentMark;
+    [SerializeField] private float previewAlpha;
 
     [Header("키보드 입력 세팅값, 초 단위"),
      SerializeField, Tooltip("연속 이동이 작동할 때까지의 시간")]
@@ -98,6 +102,12 @@ public abstract class StoneMover : MonoBehaviour
         PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
         OnAwake(); // 자식 클래스에서 추가적으로 정의한 Awake 로직
         CreatePreview(); // 추상 함수는 OnAwake 다음으로 순서 보장
+        
+#if UNITY_STANDALONE || UNITY_EDITOR
+        Destroy(confirmButton.gameObject);
+#elif UNITY_ANDROID
+        confirmButton.GetComponent<Button>().onClick.AddListener(MoveConfirmed);
+#endif
     }
 
     /// <summary> 자식 클래스에서 추가적으로 실행할 Awake </summary>
@@ -106,9 +116,6 @@ public abstract class StoneMover : MonoBehaviour
     protected void Start() => enabled = false;
 
     protected void Update() => InputProcessing();
-    
-    /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
-    public abstract void MoveConfirmed();
     
     /// <summary> 무르기가 적용될 돌을 표시 </summary>
     public void MarkTakeBack()
@@ -322,6 +329,18 @@ public abstract class StoneMover : MonoBehaviour
         }
 #endif
     }
+    
+#if UNITY_ANDROID
+    /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
+    private void MoveConfirmed()
+    {
+        if (NowPreview.activeSelf)
+        {
+            NowPreview.SetActive(false);
+            MoveStone(NowCoord);
+        }
+    }
+#endif
 
     /// <summary>NowCoord에서 입력 방향으로 좌표 이동을 시도</summary>
     /// <param name="coord">Circular navigation 방식으로 이동된 좌표</param>

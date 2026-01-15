@@ -9,30 +9,13 @@ public sealed class StoneMoverSingle : StoneMover
     protected override void OnAwake()
     {
         EventManager.Instance.OnGameStart += () => enabled = true;
-        OnStoneMove += isBlack
-            => NowPreview = isBlack ? _blackPreview : _whitePreview;
+        OnStoneMove += OnTurnChanged;
     }
 
     private void OnDisable()
     {
         _blackPreview.SetActive(false);
         _whitePreview.SetActive(false);
-    }
-    
-    public override void MoveConfirmed()
-    {
-#if UNITY_ANDROID
-        if (_blackPreview.activeSelf)
-        {
-            _blackPreview.SetActive(false);
-            MoveStone(NowCoord);
-        }
-        else if (_whitePreview.activeSelf)
-        {
-            _whitePreview.SetActive(false);
-            MoveStone(NowCoord);
-        }
-#endif
     }
 
     protected override void MessageBoxClosed() => enabled = true;
@@ -48,5 +31,13 @@ public sealed class StoneMoverSingle : StoneMover
         _whitePreview.GetComponent<SpriteRenderer>().color = PreviewColor;
         _whitePreview.name = "White Preview";
         _whitePreview.SetActive(false);
+    }
+
+    private void OnTurnChanged(bool isBlack)
+    {
+        NowPreview = isBlack ? _blackPreview : _whitePreview;
+#if UNITY_ANDROID
+        confirmButton.ButtonImageChange(isBlack);
+#endif
     }
 }
