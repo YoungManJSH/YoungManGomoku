@@ -77,7 +77,6 @@ public class GiboBoardManager : MonoBehaviour
     private RectTransform[] _recordStones;
     private RectTransform[,] _forbiddenMarks;
     private ForbiddenRecords _forbiddenRecords;
-    private List<RectTransform> _gomokuStoneList;
     private GiboStone[] _gomokuStones;
     private int _nowTurn;
 
@@ -221,19 +220,21 @@ public class GiboBoardManager : MonoBehaviour
             }
         }
 
+        List<RectTransform> gomokuStoneList = null;
+        
         // 흑돌 오목이고 턴이 정상적으로 종료된 경우
         if (gomokuColor == StoneColorType.Black && turn == LastTurn)
         {
             var gomokuInform = JudgeMove.OmokLineInforms(simulator,
                 _moveStoneData[LastTurn - 1], StoneColorType.Black);
 
-            _gomokuStoneList = new List<RectTransform>();
+            gomokuStoneList = new List<RectTransform>();
             
             foreach (var coordList in gomokuInform.Values)
             {
                 foreach (var coord in coordList)
                 {
-                    _gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)]);
+                    gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)]);
                 }
             }
             
@@ -275,13 +276,13 @@ public class GiboBoardManager : MonoBehaviour
             var gomokuInform = JudgeMove.OmokLineInforms(simulator,
                 _moveStoneData[LastTurn - 1], StoneColorType.Black);
 
-            _gomokuStoneList = new List<RectTransform>();
+            gomokuStoneList = new List<RectTransform>();
             
             foreach (var coordList in gomokuInform.Values)
             {
                 foreach (var coord in coordList)
                 {
-                    _gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)].GetComponent<RectTransform>());
+                    gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)].GetComponent<RectTransform>());
                 }
             }
         }
@@ -291,13 +292,13 @@ public class GiboBoardManager : MonoBehaviour
         await Awaitable.MainThreadAsync();
 
         // GetComponent는 유니티 함수이므로 불가피하게 메인 스레드 복귀 이후에...
-        if (_gomokuStoneList != null)
+        if (gomokuStoneList != null)
         {
-            _gomokuStones = new GiboStone[_gomokuStoneList.Count];
+            _gomokuStones = new GiboStone[gomokuStoneList.Count];
             
             for (int i = 0; i < _gomokuStones.Length; ++i)
             {
-                _gomokuStones[i] = _gomokuStoneList[i].GetComponent<GiboStone>();
+                _gomokuStones[i] = gomokuStoneList[i].GetComponent<GiboStone>();
             }
         }
         

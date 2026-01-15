@@ -97,9 +97,9 @@ public class GameManager : MonoBehaviour
             BasicPlayerData whiteUser = OppositePlayer;
 
             _eventManager.OnPlayerGomoku += ()
-                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 승리");
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 오목승");
             _eventManager.OnOppositeGomoku += ()
-                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 패배");
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 오목패");
             _eventManager.OnBlackUnmovable += ()
                 => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "흑 금수패");
             _eventManager.OnGameDraw += ()
@@ -123,9 +123,9 @@ public class GameManager : MonoBehaviour
             BasicPlayerData whiteUser = MyPlayer;
             
             _eventManager.OnPlayerGomoku += ()
-                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 승리");
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 오목승");
             _eventManager.OnOppositeGomoku += ()
-                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 패배");
+                => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 오목패");
             _eventManager.OnBlackUnmovable += ()
                 => GiboFileManager.CreateGiboFile(BoardInform.Record, blackUser, whiteUser, "백 금수승");
             _eventManager.OnGameDraw += ()

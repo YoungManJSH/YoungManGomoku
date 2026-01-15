@@ -13,8 +13,11 @@ public class IngameBoardScaler : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private Camera _mainCamera;
     private float _worldSize;
+
+#if UNITY_STANDALONE || UNITY_EDITOR
     private int _lastWidth;
     private int _lastHeight;
+#endif
     
     public event Action OnBoardScaled;
 
@@ -32,10 +35,13 @@ public class IngameBoardScaler : MonoBehaviour
         AdjustBoardScale();
         OnBoardScaled!.Invoke(); // 이벤트 구조로 순서 보장
         
+#if UNITY_STANDALONE || UNITY_EDITOR
         _lastWidth = Screen.width;
         _lastHeight = Screen.height;
+#endif
     }
 
+#if UNITY_STANDALONE || UNITY_EDITOR // 모바일은 런타임 해상도 변경에 대응하지 않음
     private void Update()
     {
         if (Screen.width != _lastWidth || Screen.height != _lastHeight)
@@ -47,6 +53,7 @@ public class IngameBoardScaler : MonoBehaviour
             OnBoardScaled!.Invoke();
         }
     }
+#endif
 
     private void AdjustBoardScale()
     {

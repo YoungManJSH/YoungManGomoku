@@ -106,7 +106,7 @@ public abstract class StoneMover : MonoBehaviour
 #if UNITY_STANDALONE || UNITY_EDITOR
         Destroy(confirmButton.gameObject);
 #elif UNITY_ANDROID
-        confirmButton.GetComponent<Button>().onClick.AddListener(MoveConfirmed);
+        confirmButton.GetComponent<Button>().onClick.AddListener(MoveConfirm);
 #endif
     }
 
@@ -202,6 +202,7 @@ public abstract class StoneMover : MonoBehaviour
         Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mousePos.z = 0;
         
+        // 마우스를 움직였을 때 착수 가능한 위치면 preview 업데이트
         if (mousePos != _prevMousePos)
         {
             _prevMousePos = mousePos;
@@ -215,6 +216,7 @@ public abstract class StoneMover : MonoBehaviour
             }
         }
 
+        // 마우스를 클릭하면 preview를 끄고 착수 가능한 위치면 착수 시도 
         if (Input.GetMouseButtonDown(0))
         {
             NowPreview.SetActive(false);
@@ -229,23 +231,21 @@ public abstract class StoneMover : MonoBehaviour
             return;
         }
 
+        // Cancel에 할당된 키가 입력되면 preview 해제
         if (Input.GetButtonDown("Cancel"))
         {
             NowPreview.SetActive(false);
             return;
         }
 
+        // Submit에 할당된 키가 입력되면 착수 시도
         if (Input.GetButtonDown("Submit"))
         {
-            if (NowPreview.activeSelf)
-            {
-                NowPreview.SetActive(false);
-                MoveStone(NowCoord);
-            }
-
+            MoveConfirm();
             return;
         }
         
+        #region 키보드 방향 입력에 따른 preview 이동 프로세스
         if (Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical"))
         {
             int hor = (int)Input.GetAxisRaw("Horizontal");
@@ -295,52 +295,56 @@ public abstract class StoneMover : MonoBehaviour
             _holdTime = 0f;
             _isMoving = false;
         }
+        #endregion
         
 #elif UNITY_ANDROID
+        // 뒤로 가기 소프트키 입력 시 preview 해제
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             NowPreview.SetActive(false);
             return;
         }
         
+        // 입력된 터치가 없으면 동작하지 않음
         if (Input.touchCount == 0) return;
         
+        // 터치 위치 중 하나만 사용 (동시 터치는 고려하지 않음)
         Touch touch = Input.GetTouch(0);
         
+        // 터치 상황 및 드래그 상황에서 동일하게 처리
         if (touch.phase is TouchPhase.Began or TouchPhase.Moved)
         {
             Vector3 worldPos = mainCamera.ScreenToWorldPoint(touch.position);
             worldPos.z = 0;
 
-            if (TryGetBoardCoord(worldPos, out var coord))
+            // 터치 위치가 보드 바깥쪽이거나 현재 위치와 똑같으면 상태 유지
+            if (TryGetBoardCoord(worldPos, out var coord) is false || coord == NowCoord)
+                return;
+            
+            // 이미 착수된 위치거나 금수 마크가 표시된 위치면 preview 해제
+            if (_boardInform[coord.row, coord.col] != StoneColorType.Empty ||
+                _forbiddenCoords.Contains(coord))
             {
-                if (coord == NowCoord) return;
-                
-                if (_boardInform[coord.row, coord.col] != StoneColorType.Empty ||
-                    _forbiddenCoords.Contains(coord))
-                {
-                    NowCoord = coord;
-                    NowPreview.SetActive(false);
-                    return;
-                }
-
-                UpdatePreview(coord);
+                NowCoord = coord;
+                NowPreview.SetActive(false);
+                return;
             }
+
+            // 위의 조건에 해당하지 않는 빈 위치일 때만 preview 갱신
+            UpdatePreview(coord);
         }
 #endif
     }
     
-#if UNITY_ANDROID
-    /// <summary> 모바일용 착수 확인 버튼 동작 함수 </summary>
-    private void MoveConfirmed()
+    /// <summary>preview가 표시된 곳에 착수를 결정</summary>
+    private void MoveConfirm()
     {
-        if (NowPreview.activeSelf)
-        {
-            NowPreview.SetActive(false);
-            MoveStone(NowCoord);
-        }
+        if (NowPreview.activeSelf is false)
+            return;
+        
+        NowPreview.SetActive(false);
+        MoveStone(NowCoord);
     }
-#endif
 
     /// <summary>NowCoord에서 입력 방향으로 좌표 이동을 시도</summary>
     /// <param name="coord">Circular navigation 방식으로 이동된 좌표</param>

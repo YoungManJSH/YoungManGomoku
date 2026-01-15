@@ -20,8 +20,11 @@ public class AdjustScaler : MonoBehaviour
     public UIPosition UIPos => uiPos;
     
     private CanvasScaler _canvasScaler;
+    
+#if UNITY_STANDALONE || UNITY_EDITOR
     private int _lastWidth;
     private int _lastHeight;
+#endif
 
     private void Awake()
     {
@@ -29,6 +32,7 @@ public class AdjustScaler : MonoBehaviour
         AdjustScale();
     }
 
+#if UNITY_STANDALONE || UNITY_EDITOR // 모바일은 런타임 해상도 변경에 대응하지 않음
     private void Update()
     {
         if (Screen.width != _lastWidth || Screen.height != _lastHeight)
@@ -36,11 +40,14 @@ public class AdjustScaler : MonoBehaviour
             AdjustScale();
         }
     }
+#endif
 
     private void AdjustScale()
     {
+#if UNITY_STANDALONE || UNITY_EDITOR
         _lastWidth = Screen.width;
         _lastHeight = Screen.height;
+#endif
         
         float nowAspect = (float)Screen.width / Screen.height;
         bool isWide = nowAspect >= uiPos.WideRatio;
