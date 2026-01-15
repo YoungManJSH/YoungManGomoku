@@ -126,13 +126,15 @@ namespace YoungManGomoku_Protocol
         // 게임을 1판도 플레이하지 않으면 DIV 0 예외이기 때문에 승률 0% 처리
         public float WinRate => BattleCount > 0 ? (float)WinCount / BattleCount : 0;
 
-        public void UpdateData(RematchOpponentData data)
+        /// <summary>재대결 성사 상황에서 상대 정보 최신화</summary>
+        /// <param name="rematchInform">재대결 성사 정보 DTO</param>
+        public void UpdateData(SC_RematchResultDTO rematchInform)
         {
-	        Level = data.Level;
-	        Rating = data.Rating;
-	        WinCount = data.WinCount;
-	        DrawCount = data.DrawCount;
-	        LoseCount = data.LoseCount;
+	        Level = rematchInform.OpponentPlayer.Level;
+	        Rating = rematchInform.OpponentPlayer.Rating;
+	        WinCount = rematchInform.OpponentPlayer.WinCount;
+	        DrawCount = rematchInform.OpponentPlayer.DrawCount;
+	        LoseCount = rematchInform.OpponentPlayer.LoseCount;
         }
     }
 
@@ -298,6 +300,14 @@ namespace YoungManGomoku_Protocol.ServerToClient
             MyStoneColorType = stoneColor;
             TimerSettingDTO = timerSettingDTO;
         }
+
+        /// <summary>재대결 성사 상황에서 매칭 정보 최신화</summary>
+        /// <param name="rematchInform">재대결 성사 정보 DTO</param>
+        public void ApplyRematchInform(SC_RematchResultDTO rematchInform)
+        {
+	        MyStoneColorType = rematchInform.MyStoneColor;
+	        OpponentPlayer.UpdateData(rematchInform);
+        }
     }
    
 
@@ -352,7 +362,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
     public class SC_RematchResultDTO
     {
         public RematchOpponentData OpponentPlayer { get; set; }
-        StoneColorType MyStoneColor { get; set; }
+        public StoneColorType MyStoneColor { get; set; }
         public bool IsRematchSuccess { get; set; }
 
         public SC_RematchResultDTO(bool isRematchable, StoneColorType myStoneColor)

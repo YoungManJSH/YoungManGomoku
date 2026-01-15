@@ -70,6 +70,7 @@ public class EventManager : MonoBehaviour
         _networkManager = GetComponent<NetworkManager>();
         _networkManager.OnRequestFailed += OnRequestFailed;
         _ingameRequestDTO = new CS_InGameRequestDTO(_gameManager.IdToken, IngameRequestType.None);
+        _lastRequestTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		
         IsGameEnd = false;
     }
@@ -106,7 +107,7 @@ public class EventManager : MonoBehaviour
         
         OnOppositeDisconnectedWin += OnGameWin;
         OnPlayerDisconnectedLose += OnGameLose;
-
+        
         enabled = false;
     }
 
@@ -470,8 +471,7 @@ public class EventManager : MonoBehaviour
             if (result.IsRematchSuccess)
             {
                 Debug.Log("재대결이 성사되었음!");
-                PlayerDataFromWebServer.Instance.MatchResultDTO.
-                    OpponentPlayer.UpdateData(result.OpponentPlayer);
+                PlayerDataFromWebServer.Instance.MatchResultDTO.ApplyRematchInform(result);
                 SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
             }
             else
