@@ -53,7 +53,9 @@ public class GiboMessageController : MonoBehaviour
             MessageBoxOpen(deleteFailedText, BackToList);
     }
 
-    // TODO: 로비씬 이동하면서 리스트 열려 있도록 수정
     private void BackToList()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    {
+        LobbyUIController.UIState = LobbyUIController.PanelState.ReplayOpen;
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    }
 }

@@ -152,8 +152,8 @@ MonoBehaviour:
   players: {fileID: 1570673044754306214}
   result: {fileID: 6735670250327463036}
   winTextColor: {r: 0, g: 1, b: 0.627451, a: 1}
-  loseTextColor: {r: 1, g: 0.74509805, b: 0, a: 1}
-  drawTextColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+  loseTextColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+  drawTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5308457875269203765
 GameObject:
   m_ObjectHideFlags: 0

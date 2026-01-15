@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class LobbySceneManager : MonoBehaviour
@@ -7,8 +8,7 @@ public class LobbySceneManager : MonoBehaviour
     [SerializeField] private GameObject matchMakePanel;
     
     private PlayerDataFromWebServer playerDataFromWebServer;
-
-
+    
     private void Awake()
     {
         if (Instance == null)
@@ -29,37 +29,43 @@ public class LobbySceneManager : MonoBehaviour
 
     public async void MatchMaking()
     {
-        matchMakePanel.SetActive(true);
-
-        if (playerDataFromWebServer == null)
+        try
         {
-            return;
+            matchMakePanel.SetActive(true);
+
+            if (playerDataFromWebServer == null)
+            {
+                return;
+            }
+
+            var matchData =
+                await NetworkManager.Instance.RegisterMatchingRequest(playerDataFromWebServer.IDToken);
+
+            if (matchData == null || matchData.MatchingSuccess is false)
+            {
+                matchMakePanel.SetActive(false);
+                return;
+            }
+
+            PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
+            SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
         }
-        
-        var matchData = await GetComponent<NetworkManager>().RegisterMatchingRequest(playerDataFromWebServer.IDToken);
-
-        if (matchData.MatchingSuccess is false)
-            return;
-
-        if (matchData == null)
+        catch (Exception e)
         {
+            Debug.LogError($"Error in MatchMaking Request: {e}");
             matchMakePanel.SetActive(false);
-            return;
         }
-        
-        PlayerDataFromWebServer.Instance.CompleteMatchFromWebServer(matchData);
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.IngameScene).Cancel();
     }
     
-    public async void CancelMatchMaking()
+    public void CancelMatchMaking()
     {
         matchMakePanel.SetActive(false);
-        
+
         if (playerDataFromWebServer == null)
         {
             return;
         }
-        
-        await GetComponent<NetworkManager>().CancelMatchingRequest(playerDataFromWebServer.IDToken);
+
+        NetworkManager.Instance.CancelMatchingRequest(playerDataFromWebServer.IDToken).Cancel();
     }
 }

@@ -194,10 +194,12 @@ public class GiboButtonManager : MonoBehaviour
         messageBox.MessageBoxOpen(exitMessage, LoadLobbyScene);
     }
 
-    // Todo: 기보 리스트 열려있도록 수정
     private void LoadLobbyScene()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
-    
+    {
+        LobbyUIController.UIState = LobbyUIController.PanelState.ReplayOpen;
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    }
+
     private void SetSpeed(AutoPlaySpeed speed)
     {
         _speedSets[(int)_speed].buttonText.font = _defaultFont;

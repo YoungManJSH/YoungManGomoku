@@ -4,6 +4,17 @@ using YoungManGomoku_Protocol;
 
 public class LobbyUIController : MonoBehaviour
 {
+    public enum PanelState
+    {
+        Default, MenuOpen, ReplayOpen
+    }
+
+    /* 이 부분은 최대한 간단하게 구현
+     * 다른 씬 → 로비 씬 이동 시에 해당 씬에서 원하는 UI 상태는
+     * 해당 씬에서 알아서 주문한다는 느낌으로... */
+    public static PanelState UIState { private get; set; }
+    static LobbyUIController() => UIState = PanelState.Default;
+    
     [Header("MenuPanel")]
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private TextMeshProUGUI playerNicknameInMenu;
@@ -19,9 +30,28 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private GameObject matchMakingPanel;
     [SerializeField] private TextMeshProUGUI playerNicknameInMatchMaking;
     [SerializeField] private TextMeshProUGUI playerStatsInMatchMaking;
-
+    
     private PlayerData playerData;
     
+    private void Awake()
+    {
+        switch (UIState)
+        {
+            case PanelState.Default:
+                break;
+            case PanelState.MenuOpen:
+                menuPanel.SetActive(true);
+                break;
+            case PanelState.ReplayOpen:
+                menuPanel.SetActive(true);
+                replayPanel.SetActive(true);
+                break;
+        }
+        
+        // 다른 씬에서 주문한 상태를 적용하고 나면 초기화
+        UIState = PanelState.Default;
+    }
+
     private void Start()
     {
         if (PlayerDataFromWebServer.Instance == null)
@@ -60,24 +90,17 @@ public class LobbyUIController : MonoBehaviour
                 settingPanel.SetActive(false);
                 return;
             }
-
-            bool isActive = menuPanel.activeSelf;
-            menuPanel.SetActive(!isActive);
+            
+            menuPanel.SetActive(!menuPanel.activeSelf);
         }
     }
-
+    
     public void MoveSceneToShop()
         => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.ShopScene).Cancel();
 
     public void OpenCloseReplayPanel()
-    {
-        bool isActive = replayPanel.activeSelf;
-        replayPanel.SetActive(!isActive);
-    }
+        => replayPanel.SetActive(!replayPanel.activeSelf);
     
     public void OpenCloseSettingPanel()
-    {
-        bool isActive = settingPanel.activeSelf;
-        settingPanel.SetActive(!isActive);
-    }
+        => settingPanel.SetActive(!settingPanel.activeSelf);
 }

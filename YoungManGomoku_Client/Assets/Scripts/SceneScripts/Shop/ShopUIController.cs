@@ -60,5 +60,10 @@ public class ShopUIController : MonoBehaviour
     }
 
     public void MoveSceneToLobby()
-        => SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    {
+#if UNITY_STANDALONE || UNITY_EDITOR
+        LobbyUIController.UIState = LobbyUIController.PanelState.MenuOpen;
+#endif
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    }
 }
