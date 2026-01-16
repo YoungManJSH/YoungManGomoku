@@ -59,7 +59,7 @@ public class StoneMoverMulti : StoneMover
     {
         try
         {
-            if (eventManager.IsGameEnd) return;
+            if (eventManager.IsGameEnd || gameEndInBoard) return;
 
             _isPlayerTurn = !_isPlayerTurn;
             enabled = _isPlayerTurn;
