@@ -4,9 +4,8 @@ using YoungManGomoku_Protocol;
 
 public class ShopUIController : MonoBehaviour
 {
-    [SerializeField] private GameObject characterSkinPanel;
-    [SerializeField] private GameObject goBoardSkinPanel;
     [SerializeField] private GameObject warningMessagePanel;
+    [SerializeField] private TextMeshProUGUI playerMoneyInShop;
     
     [Header("MenuPanel")]
     [SerializeField] private GameObject menuPanel;
@@ -26,6 +25,8 @@ public class ShopUIController : MonoBehaviour
         
         playerNicknameInMenu.text = playerData.Nickname;
         playerStatsInMenu.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
+
+        playerMoneyInShop.text = playerData.GameMoney.ToString();
     }
     
     private void Update()
@@ -35,18 +36,6 @@ public class ShopUIController : MonoBehaviour
             bool isActive = menuPanel.activeSelf;
             menuPanel.SetActive(!isActive);
         }
-    }
-    
-    public void ChangeToGoBoardSkinPanel()
-    {
-        goBoardSkinPanel.SetActive(true);
-        characterSkinPanel.SetActive(false);
-    }
-    
-    public void ChangeToCharacterSkinPanel()
-    {
-        goBoardSkinPanel.SetActive(false);
-        characterSkinPanel.SetActive(true);
     }
 
     public void OpenDevelopingWarning()
