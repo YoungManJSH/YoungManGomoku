@@ -1,12 +1,15 @@
+using System;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ReplayButtonCell : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI dateTime;
     [SerializeField] private TextMeshProUGUI players;
     [SerializeField] private TextMeshProUGUI result;
+    [SerializeField] private Button deleteButton;
     [SerializeField, Tooltip("결과가 승리일 때의 글자색")]
     private Color winTextColor;
     [SerializeField, Tooltip("결과가 패배일 때의 글자색")]
@@ -15,8 +18,11 @@ public class ReplayButtonCell : MonoBehaviour
     private Color drawTextColor;
     
     private string _fileName;
+
+    private void Awake()
+        => GetComponent<Button>().onClick.AddListener(OpenFile);
     
-    public void SetUIByData(in GiboFileManager.GiboTitleData data)
+    public void SetUIByData(in GiboFileManager.GiboTitleData data, Action<string> deleteFunc)
     {
         _fileName = data.FileName;
         
@@ -43,9 +49,11 @@ public class ReplayButtonCell : MonoBehaviour
         if (winLose == '승') result.color = winTextColor;
         else if (winLose == '패') result.color = loseTextColor;
         else result.color = drawTextColor;
+
+        deleteButton.onClick.AddListener(() => deleteFunc(_fileName));
     }
 
-    public void LoadThisFile()
+    private void OpenFile()
     {
         GiboFileManager.GiboFileName = _fileName;
         SceneLoadManager.LoadScene(SceneLoadManager.SceneType.GiboPlayScene).Cancel();

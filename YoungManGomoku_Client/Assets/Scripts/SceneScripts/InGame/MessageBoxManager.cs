@@ -9,7 +9,6 @@ public class MessageBoxManager : MonoBehaviour
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
     
-
     public event Action OnOpened;
     public event Action TurnBackToGame;
 

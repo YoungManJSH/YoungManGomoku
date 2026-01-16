@@ -174,13 +174,23 @@ public static class GiboFileManager
         return false;
     }
     
-    public static void ReadGiboList(out List<GiboTitleData> giboList)
+    /// <summary>지정된 기보 저장 위치에서 유효한 기보 파일의 리스트를 읽어옴</summary>
+    /// <returns>
+    /// <para>예외가 발생하지 않으면 모든 파일의 리스트</para>
+    /// <para>예외가 발생하면 예외 직전까지 읽어낸 리스트</para>
+    /// <para>비어있는 리스트일 수는 있으나 null은 반환하지 않음</para>
+    /// </returns>
+    public static async Awaitable<List<GiboTitleData>> ReadGiboList()
     {
-        giboList = new List<GiboTitleData>();
-        
+        List<GiboTitleData> giboList = new List<GiboTitleData>();
+        Exception ex = null;
+
+        if (IsGiboFolderExists is false)
+            return giboList;
+
         try
         {
-            if (IsGiboFolderExists is false) return;
+            await Awaitable.BackgroundThreadAsync();
 
             string[] giboFiles = Directory.GetFiles(GiboFolderPath, "*.gibo");
             // 읽기 실패하는 기보 파일이 있을 수 있으므로 List 자료구조가 유효함
@@ -189,10 +199,10 @@ public static class GiboFileManager
             foreach (string fileName in giboFiles)
             {
                 using StreamReader reader = new StreamReader(fileName);
-                
-                string titleLine = reader.ReadLine();
-                string blackInformLine = reader.ReadLine();
-                string whiteInformLine = reader.ReadLine();
+
+                string titleLine = await reader.ReadLineAsync();
+                string blackInformLine = await reader.ReadLineAsync();
+                string whiteInformLine = await reader.ReadLineAsync();
 
                 if (titleLine == null || blackInformLine == null || whiteInformLine == null)
                     continue;
@@ -208,17 +218,24 @@ public static class GiboFileManager
                 giboList.Add(new GiboTitleData(fileName, dateTime,
                     blackPlayer: blackInforms[0], whitePlayer: whiteInforms[0], result: titleInforms[2]));
             }
-            
+
             // 최신 기보를 앞쪽으로 정렬
-            giboList.Sort(comparison: (a,b) => b.DateTime.CompareTo(a.DateTime));
+            giboList.Sort(comparison: (a, b) => b.DateTime.CompareTo(a.DateTime));
         }
         catch (Exception e)
         {
-            Debug.LogError($"기보 리스트 읽기 실패! : {e}");
+            ex = e;
             /* 읽어오던 도중에 예외가 터지면 그 전까지 읽었던 내용들은 유지됨
              * giboList를 null로 바꿔주지 않는 것은 의도된 설계
              * Why? 성공적으로 읽은 부분들은 사용자에게 보여줘도 문제되지 않음 */
         }
+        finally { await Awaitable.MainThreadAsync(); }
+        
+        
+        if (ex != null)
+            Debug.LogError($"기보 리스트 읽어오기 중 예외 발생: {ex}");
+        
+        return giboList;
     }
     
     public static void CreateGiboFile(List<(int row, int col)> record, BasicPlayerData blackData, BasicPlayerData whiteData, string result)
@@ -259,6 +276,18 @@ public static class GiboFileManager
         }
     }
 
+    /// <summary>기보 폴더에서 지정한 이름을 가진 파일을 삭제</summary>
+    /// <param name="fileName">삭제할 파일 이름</param>
+    /// <returns>
+    /// <para> true: 해당 파일이 이미 존재하지 않거나 삭제에 성공함 </para>
+    /// <para> false: 삭제 시도 중 예외 발생 </para>
+    /// </returns>
+    public static bool TryDeleteGiboFile(string fileName)
+    {
+        GiboFileName = fileName;
+        return TryDeleteGiboFile();
+    }
+    
     /// <summary> 현재 세팅되어 있는 GiboFileName 파일을 삭제 </summary>
     /// <returns>
     /// <para> true: 해당 파일이 이미 존재하지 않거나 삭제에 성공함 </para>

@@ -71,7 +71,7 @@ public class LobbyUIController : MonoBehaviour
     // 키보드 esc를 누를 때, 메치메이킹 취소 / 리플레이 창 제거 / 메뉴 창 온오프 기능을 넣음.
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetButtonDown("Cancel"))
         {
             if (matchMakingPanel.activeSelf)
             {
