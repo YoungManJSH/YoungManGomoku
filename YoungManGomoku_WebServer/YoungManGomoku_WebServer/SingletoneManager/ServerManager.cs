@@ -70,7 +70,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
             PlayerSession? user = GetPlayerSession(UID);
             if (user == null)
                 return $"[{UID}] : (Invalid User UID)";
-            return $"UID[{UID}] : Token[{user.AuthToken}]\nLv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating})\n";
+            return $"===== User Information =====\nUID[{UID}] : Token[{user.AuthToken}]\nLv.{user.Account.Status.Level} {user.Account.Nickname} ({user.Account.Status.Rating})\n";
         }
 
         public string UserInfo(string idToken) => UserInfo(GetPlayerUID(idToken));
