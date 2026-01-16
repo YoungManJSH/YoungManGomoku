@@ -59,14 +59,15 @@ public class StoneMoverMulti : StoneMover
     {
         try
         {
-            if (eventManager.IsGameEnd || gameEndInBoard) return;
+            if (eventManager.IsGameEnd) return;
 
             _isPlayerTurn = !_isPlayerTurn;
-            enabled = _isPlayerTurn;
+            enabled = _isPlayerTurn && gameEndInBoard is false;
+            
 #if UNITY_ANDROID
             _confirmButton.interactable = _isPlayerTurn;
 #endif
-
+            
             if (_isPlayerTurn is false) // 내가 착수를 완료한 상황
             {
                 _placeStoneDTO.MyTimer = _playerTimer.SyncData;
