@@ -9,8 +9,10 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private TextMeshProUGUI playerNicknameInMenu;
     [SerializeField] private TextMeshProUGUI playerStatsInMenu;
-    [SerializeField] private Slider playerLevelSliderInMenu;
-    [SerializeField] private TextMeshProUGUI playerLevelInMenu;
+    
+    [Header("UserLevelPanel")]
+    [SerializeField] private Slider playerLevelSlider;
+    [SerializeField] private TextMeshProUGUI playerLevel;
     
     [Header("ReplayPanel")]
     [SerializeField] private GameObject replayPanel;
@@ -42,8 +44,8 @@ public class LobbyUIController : MonoBehaviour
         
         Debug.Log($"{playerData.ExperiencePoint}, {playerData.MaxExperiencePoint}, {playerData.ExperiencePoint / playerData.MaxExperiencePoint}");
         
-        playerLevelSliderInMenu.value = (float)playerData.ExperiencePoint / playerData.MaxExperiencePoint;
-        playerLevelInMenu.text = playerData.Level.ToString();
+        playerLevelSlider.value = (float)playerData.ExperiencePoint / playerData.MaxExperiencePoint;
+        playerLevel.text = playerData.Level.ToString();
     }
 
     // 키보드 esc를 누를 때, 메치메이킹 취소 / 리플레이 창 제거 / 메뉴 창 온오프 기능을 넣음.

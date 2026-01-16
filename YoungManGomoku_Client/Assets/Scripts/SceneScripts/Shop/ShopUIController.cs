@@ -4,7 +4,6 @@ using YoungManGomoku_Protocol;
 
 public class ShopUIController : MonoBehaviour
 {
-    [SerializeField] private GameObject warningMessagePanel;
     [SerializeField] private TextMeshProUGUI playerMoneyInShop;
     
     [Header("MenuPanel")]
@@ -14,6 +13,9 @@ public class ShopUIController : MonoBehaviour
 
     private PlayerData playerData;
     
+    /// <summary>
+    /// 서버로부터 받아온 플레이어 데이터를 기반으로 UI적인 화면 표시
+    /// </summary>
     private void Start()
     {
         if (PlayerDataFromWebServer.Instance == null)
@@ -29,6 +31,9 @@ public class ShopUIController : MonoBehaviour
         playerMoneyInShop.text = playerData.GameMoney.ToString();
     }
     
+    /// <summary>
+    /// esc 키 입력으로 메뉴 UI on/off
+    /// </summary>
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -36,16 +41,6 @@ public class ShopUIController : MonoBehaviour
             bool isActive = menuPanel.activeSelf;
             menuPanel.SetActive(!isActive);
         }
-    }
-
-    public void OpenDevelopingWarning()
-    {
-        warningMessagePanel.SetActive(true);
-    }
-
-    public void CloseDevelopingWarning()
-    {
-        warningMessagePanel.SetActive(false);
     }
 
     public void MoveSceneToLobby()
