@@ -42,19 +42,25 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 게임 시작 실패. 플레이어 세션 탐색 실패 {idToken}");
                 return Unauthorized($"[{idToken}] Player Session Not Found. Please Re Login.");
+            }
 
             player.LastRequestTime = DateTime.UtcNow;
 
             // 네 이놈 게임 룸에 있지도 않은 주제에 게임 시작이라고 뻥카를 쳐?
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 게임 시작 실패. Not In Game : {player.Account.UID}");
                 return BadRequest("Not in game");
+            }
 
             // 아직 이 방 게임 대기 중이 아닌데??? 미쳐버린거냐
             // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
             // if (room.State != GameRoomState.Waiting)return BadRequest("Not Game Wait");
 
-            _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] Game Start Request - ID Token {idToken}");
+            _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] Game Start Request [{player.Account.UID}]");
 
             // 상대방도 게임시작 요청을 해서 둘 다 게임 시작하면 돌아옴
             // SC_OpponentPlaceStoneDTO response = await room.WaitNextPlaceStoneAsync(player.Account.UID, ct);
@@ -77,13 +83,19 @@ namespace YoungManGomoku_WebServer.Controllers
             // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 착수 요청 실패. 플레이어 세션 탐색 실패 : {player.Account.UID}");
                 return Unauthorized($"[{userPlaceStoneDTO.IDToken}] Player Session Not Found.");
+            }
 
             player.LastRequestTime = DateTime.UtcNow;
 
             // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 착수 요청을 해?
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 착수 요청 실패. Not In Game : {player.Account.UID}");
                 return BadRequest("Not in game");
+            }
 
             // 내 돌은 두었고, 그 결과가 return됨
             PlaceStoneResultType result = room.PlaceStone(player.Account.UID, userPlaceStoneDTO.Row, userPlaceStoneDTO.Col);
@@ -94,7 +106,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 내가 승리한 상황이 아닌데 내 행동 결과가 즉시 끝나는 경우 (클라 변조임)
             if (result != PlaceStoneResultType.Success)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 착수 요청 실패. 내 승리가 아닌데 착수가 즉시 끝날 리 없음 : {player.Account.UID}");
                 return Unauthorized($"Place Stone Result : {result}");
+            }
 
             // 내 돌 착수에 성공했으면 다음 이벤트(상대방 착수)까지 대기 후 상대방이 착수하면 await해서 정보를 받아옴
             return Ok(await room.WaitNextPlaceStoneAsync(player.Account.UID, ct));
@@ -113,7 +128,10 @@ namespace YoungManGomoku_WebServer.Controllers
             // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
             // 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : 플레이어 세션 검색에 실패 {player.Account.UID}");
                 return Unauthorized($"[{reqTimerSyncDTO.IDToken}] Player Session Not Found.");
+            }
 
             player.LastRequestTime = DateTime.UtcNow;
 
@@ -121,7 +139,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : Not In Game {player.Account.UID}");
                 return BadRequest("Not in game");
+            }
 
             return Ok(room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
@@ -145,6 +166,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             if (player == null)
             {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : 플레이어 세션 탐색 실패 {player.Account.UID}");
                 // 인증 정보는 왔지만 유효한 세션이 아니다
                 return Unauthorized($"Player Session Not Found. Please Re-Login.");
             }
@@ -154,7 +176,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 인게임 요청을 했다고?
             if (_gameRoomManager.TryGetRoomByPlayer(uid, out GameRoom? room) == false || room == null)
-                return BadRequest("Not in game");
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 인게임 리퀘스트 실패 : Not In Game {player.Account.UID}");
+                return BadRequest("IngameRequest Failed : Not in game");
+            }
 
             // 여기서 인게임 리퀘스트 처리 
             // 무르기, 항복 등등
@@ -199,7 +224,10 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
-                return BadRequest("Not in game");
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 이벤트 대기 요청 실패 : Not In Game {player.Account.UID}");
+                return BadRequest("WaitEvent Failed : Not in game");
+            }
 
             // await
             return Ok(await room.WaitGameEventAsync(player.Account.UID, ct));
@@ -221,9 +249,12 @@ namespace YoungManGomoku_WebServer.Controllers
 
             _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] Response Game End By : {takebackPermitDTO.IDToken}");
 
-            // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
+            // 게임 룸에 있지도 않으면서 무슨 무르기를 허용하네 마네..
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
-                return BadRequest("Not in game");
+            {
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 무르기 허가 여부 요청 실패 : Not In Game {player.Account.UID}");
+                return BadRequest("Takeback Permit Failed : Not in game");
+            }
 
             room.TakeBackResult(player.Account.UID, takebackPermitDTO.IsPermit);
 
@@ -251,7 +282,7 @@ namespace YoungManGomoku_WebServer.Controllers
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
             {
                 _logger.LogWarning($"[{DateTime.Now}][Gomoku Controller] [Game Result] {player.Account.UID} 유저가 게임 방 탐색에 실패했습니다...");
-                return BadRequest("Not in game");
+                return BadRequest("Game Result Request Failed : Not in game");
             }
 
             //_logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] [Game Result]");
@@ -279,8 +310,14 @@ namespace YoungManGomoku_WebServer.Controllers
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
             {
-                _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] 리매치 요청 실패 : 방이 없습니다. {requestRematchDTO.IDToken}");
-                return BadRequest("Not in game");
+                if (room != null)
+                    _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] 리매치 요청 실패 : 이 UID가 속한 방을 찾을 수 없습니다. {player.Account.UID}");
+                else
+                {
+                    _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] 리매치 요청 실패 : 방이 없습니다. {player.Account.UID}");
+                    return Ok(new SC_ResponseStringDTO("Rematch Request Response - game room is null", false));
+                }
+                return BadRequest("Rematch Request Failed : Not in game");
             }
 
             return Ok(new SC_ResponseStringDTO("Rematch Request Response", room.RequestRematch(player.Account.UID, requestRematchDTO.IsPermit)));
@@ -305,8 +342,11 @@ namespace YoungManGomoku_WebServer.Controllers
             // 게임 룸에 있지도 않으면서 무슨 게임 종료 결과를 달라는거야
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
             {
-                _logger.LogTrace($"[{DateTime.Now}][Gomoku Controller] 리매치 결과 요청 실패 : 방이 없습니다. {IDToken}");
-                return BadRequest("Not in game");
+                if (room != null)
+                    _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] 리매치 결과 요청 실패 : 이 UID가 속한 방을 찾을 수 없습니다. {player.Account.UID}");
+                else
+                    _logger.LogTrace($"[{DateTime.Now}] [Gomoku Controller] 리매치 결과 요청 실패 : 방이 없습니다. {player.Account.UID}");
+                return BadRequest("Rematch Result Request Failed : Not in game");
             }
 
             return Ok(await room.WaitRematchAsync(player.Account.UID, ct));
