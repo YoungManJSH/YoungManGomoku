@@ -523,9 +523,11 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 오목 상황에서 적용할 연출 </summary>
     private async Awaitable OnGomoku(StoneColorType stoneColor)
     {
+        enabled = false;
+        
         // 월드에서 착수 처리가 완료되고 다음 프레임에 실행 
         await Awaitable.NextFrameAsync();
-        
+
         Dictionary<LineDirection, List<(int row, int col)>> informs =
             JudgeMove.OmokLineInforms(_boardInform, NowCoord, stoneColor);
         

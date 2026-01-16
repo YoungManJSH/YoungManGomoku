@@ -201,6 +201,8 @@ public class ResultPresenter : MonoBehaviour
 
     private void OnRequestFailed(RequestError error)
     {
+        if (EventManager.Instance.IsGameEnd) return;
+        
         Debug.LogError($"{error.Result}({error.StatusCode}): {error.Message}, {error.ResponseBody}");
         mainText.text = "통신 실패";
         detailText.text = disconnectedText;
