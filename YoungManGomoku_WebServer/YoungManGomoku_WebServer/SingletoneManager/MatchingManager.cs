@@ -134,12 +134,15 @@ namespace YoungManGomoku_WebServer.SingletoneManager
         {
             lock (_lock)
             {
-                _logger.LogTrace($"[{DateTime.Now}]{_serverManagerContext.UserInfo(playerIDToken)}Matching Cancel ");
+                _logger.LogTrace($"[{DateTime.Now}] [Matching Cancel] {_serverManagerContext.GetPlayerUID(playerIDToken)}");
 
                 if (_waitingMap.TryGetValue(playerIDToken, out WaitingPlayer? wp) == false)
+                {
+                    _logger.LogDebug($"[{DateTime.Now}] 매칭 대기 맵에 유저 [ {_serverManagerContext.GetPlayerUID(playerIDToken)}]가 없습니다.");
                     return;
+                }
 
-                _logger.LogTrace($"[{DateTime.Now}] Matching Cancel - Has WaitingMap in User");
+                
 
                 wp.TaskCompSrc?.TrySetResult(
                     new MatchResult
@@ -165,9 +168,10 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 WaitingPlayer? p1 = _matchingQueue.Dequeue();
 
                 if (!_waitingMap.ContainsKey(p1.PlayerIdToken))
+                {
+                    _logger.LogWarning($"[{DateTime.Now}] Matching Queue에는 있는데 대기자 맵에 없습니다. [{_serverManagerContext.GetPlayerUID(p1.PlayerIdToken)}]");
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
-
-                _logger.LogTrace($"[{DateTime.Now}] [Try Matching] {_serverManagerContext.UserInfo(p1.PlayerIdToken)}Player is Playable.");
+                }
 
                 WaitingPlayer? p2 = null;
                 while (_matchingQueue.Count > 0)
@@ -175,12 +179,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
                     if (p1.PlayerIdToken == candidate.PlayerIdToken)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}] {_serverManagerContext.UserInfo(candidate.PlayerIdToken)}Matching Queue에 자기 자신과 매칭됨 ");
+                        _logger.LogWarning($"[{DateTime.Now}] Matching Queue에 자기 자신과 매칭됨\n{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}");
                         continue;
                     }
                     if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
-                        _logger.LogTrace($"[{DateTime.Now}] {_serverManagerContext.UserInfo(candidate.PlayerIdToken)}Matching 다른 플레이어 발견");
+                        _logger.LogTrace($"[{DateTime.Now}] Matching 다른 플레이어 발견\n{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}");
                         p2 = candidate;
                         break;
                     }
