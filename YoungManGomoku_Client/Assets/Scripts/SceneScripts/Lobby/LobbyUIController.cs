@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using YoungManGomoku_Protocol;
 
 public class LobbyUIController : MonoBehaviour
@@ -8,6 +9,8 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private TextMeshProUGUI playerNicknameInMenu;
     [SerializeField] private TextMeshProUGUI playerStatsInMenu;
+    [SerializeField] private Slider playerLevelSliderInMenu;
+    [SerializeField] private TextMeshProUGUI playerLevelInMenu;
     
     [Header("ReplayPanel")]
     [SerializeField] private GameObject replayPanel;
@@ -36,6 +39,11 @@ public class LobbyUIController : MonoBehaviour
 
         playerNicknameInMatchMaking.text = playerData.Nickname;
         playerStatsInMatchMaking.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
+        
+        Debug.Log($"{playerData.ExperiencePoint}, {playerData.MaxExperiencePoint}, {playerData.ExperiencePoint / playerData.MaxExperiencePoint}");
+        
+        playerLevelSliderInMenu.value = (float)playerData.ExperiencePoint / playerData.MaxExperiencePoint;
+        playerLevelInMenu.text = playerData.Level.ToString();
     }
 
     // 키보드 esc를 누를 때, 메치메이킹 취소 / 리플레이 창 제거 / 메뉴 창 온오프 기능을 넣음.
