@@ -35,6 +35,7 @@ public abstract class StoneMover : MonoBehaviour
     protected (int row, int col) NowCoord { get; private set; }
     
     protected EventManager eventManager;
+    protected bool gameEndInBoard;
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
     private AudioSource _audioSource;
@@ -78,6 +79,7 @@ public abstract class StoneMover : MonoBehaviour
         _stoneObjects = new StoneController[Board.BoardSize, Board.BoardSize];
         
         _boardInform = GameManager.Instance.BoardInform;
+        gameEndInBoard = false;
         NowCoord = (-1, -1);
         _isBlackTurn = true;
         _muteDeniedSound = false;
@@ -523,9 +525,9 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 오목 상황에서 적용할 연출 </summary>
     private async Awaitable OnGomoku(StoneColorType stoneColor)
     {
-        enabled = false;
+        gameEndInBoard = true;
         
-        // 월드에서 착수 처리가 완료되고 다음 프레임에 실행 
+        // 월드에서 착수 처리가 완료되고 다음 프레임에 실행
         await Awaitable.NextFrameAsync();
 
         Dictionary<LineDirection, List<(int row, int col)>> informs =
@@ -543,7 +545,7 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 흑돌 금수패 상황에서 적용할 연출 </summary>
     private void OnBlackUnmovable()
     {
-        enabled = false;
+        gameEndInBoard = true;
         _muteDeniedSound = true;
 
         for (int row = 0; row < Board.BoardSize; ++row)
