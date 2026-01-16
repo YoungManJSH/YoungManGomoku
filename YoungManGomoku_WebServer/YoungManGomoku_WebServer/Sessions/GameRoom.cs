@@ -364,7 +364,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 if (State != GameRoomState.Finished)
                 {
                     _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitEventAsync] Room {RoomID} : 게임이 진행중인데 {UID}에게서 재대결 요청이 날아옴\n");
-                    return Task.FromResult(new SC_RematchResultDTO(false));
+                    return Task.FromResult(new SC_RematchResultDTO(false, GetColor(UID)));
                 }
 
                 _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [WaitEventAsync] Room {RoomID} : {UID} 특수 게임 발생 이벤트 대기\n");
@@ -784,7 +784,7 @@ namespace YoungManGomoku_WebServer.Sessions
                 foreach (GomokuRematchWaitingPlayer waitingPlayer in _waitingRematchMap.Values)
                 {
                     _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Rematch Result] 이벤트 대기자({GetColor(waitingPlayer.UID)}){_gameRoomManager.ServerContext.UserInfo(waitingPlayer.UID)}에게 리매치 실패 응답");
-                    waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(false));
+                    waitingPlayer.TaskCompSrc?.TrySetResult(new SC_RematchResultDTO(false, GetColor(waitingPlayer.UID)));
                 }
                 
                 _waitingEventMap.Clear();
