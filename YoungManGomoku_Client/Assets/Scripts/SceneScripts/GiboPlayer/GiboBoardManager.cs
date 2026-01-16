@@ -34,6 +34,13 @@ public class GiboBoardManager : MonoBehaviour
         public HashSet<(int row, int col)> this[int turn]
             => turn < 7 ? _empty : _records[turn - 7];
     }
+
+    /// <summary>기보 재생을 종료하고 로비로 이동</summary>
+    public static void TurnBackToLobby()
+    {
+        LobbyUIController.UIState = LobbyUIController.PanelState.ReplayOpen;
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+    }
     
     [SerializeField] private BoardImageData boardData;
     [SerializeField] private RectTransform blackPrefab;

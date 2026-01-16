@@ -52,20 +52,23 @@ public class ReplayListReader : MonoBehaviour
         for (int i = 0; i < giboList.Count; ++i)
         {
             _replayButtonCells[i] = Instantiate(cellPrefab, content);
-            _replayButtonCells[i].SetUIByData(giboList[i], TryDeleteFile);
+            _replayButtonCells[i].SetUIByData(giboList[i], DeleteFile);
             _replayButtonCells[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -unitHeight * i);
         }
         
         noReplayText.enabled = false;
     }
     
-    private async void TryDeleteFile(string fileName)
+    private async void DeleteFile(string fileName, Action outlineOff)
     {
         try
         {
             // 메시지 박스에서 취소 응답이 오면 그대로 종료
             if (await messageBox.OpenMessageBox(deleteConfirmMessage) is false)
+            {
+                outlineOff!.Invoke();
                 return;
+            }
 
             // 파일 삭제에 성공하면 리스트 UI를 새로고침
             if (GiboFileManager.TryDeleteGiboFile(fileName))
@@ -77,6 +80,8 @@ public class ReplayListReader : MonoBehaviour
             // 파일 삭제에 실패하면 유저의 선택에 따라 리스트 UI 새로고침
             if (await messageBox.OpenMessageBox(deleteFailedMessage))
                 GenerateGiboCells().Cancel();
+            else
+                outlineOff!.Invoke();
         }
         catch (Exception e)
         {

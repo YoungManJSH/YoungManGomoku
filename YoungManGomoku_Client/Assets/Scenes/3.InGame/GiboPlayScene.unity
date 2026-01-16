@@ -351,19 +351,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 141152950}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: SetSpeedOrigin
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &141152950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -484,19 +472,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 161570665}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MoveLastTurn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &161570665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -964,19 +940,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 340715081}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MovePrevTurn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &340715081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1097,19 +1061,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 357808874}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MovePrev10Turn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &357808874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1366,19 +1318,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 373960747}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: Exit
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &373960747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1499,19 +1439,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 432726983}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MoveNextTurn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &432726983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2042,19 +1970,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 534272926}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MoveNext10Turn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &534272926
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3508,19 +3424,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 794953872}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 833283643}
-        m_TargetAssemblyTypeName: GiboMessageController, Assembly-CSharp
-        m_MethodName: OnCancel
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &794953872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3788,6 +3692,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GiboMessageController
   messageText: {fileID: 1687899451}
   boardManager: {fileID: 1549436739}
+  confirmButton: {fileID: 1563393464}
+  cancelButton: {fileID: 794953871}
   readFailedText: "\uC62C\uBC14\uB978 \uC591\uC2DD\uC774 \uC544\uB2D9\uB2C8\uB2E4.\\n\uC774
     \uD30C\uC77C\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?"
   deleteFailedText: "\uC0AD\uC81C\uB97C \uC2E4\uD328\uD558\uC600\uC2B5\uB2C8\uB2E4.\\n\uB9AC\uC2A4\uD2B8\uB85C
@@ -4015,19 +3921,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 940303153}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: AutoPlay
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &940303153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4671,19 +4565,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1120175423}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: MoveZeroTurn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1120175423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5334,19 +5216,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1456378512}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: SetSpeedDouble
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1456378512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5878,19 +5748,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1563393465}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 833283643}
-        m_TargetAssemblyTypeName: GiboMessageController, Assembly-CSharp
-        m_MethodName: OnConfirm
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1563393465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6147,19 +6005,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1633151608}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: SetSpeedHalf
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1633151608
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6624,19 +6470,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1925784704}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 553377827}
-        m_TargetAssemblyTypeName: GiboButtonManager, Assembly-CSharp
-        m_MethodName: ToggleMarkForbidden
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1925784704
 MonoBehaviour:
   m_ObjectHideFlags: 0

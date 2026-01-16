@@ -103,7 +103,7 @@ public class GiboButtonManager : MonoBehaviour
 
     private void OnDestroy() => CancelAutoPlay();
 
-    public void AutoPlay()
+    private void AutoPlay()
     {
         if (_isAutoPlaying)
         {
@@ -126,19 +126,19 @@ public class GiboButtonManager : MonoBehaviour
         }
     }
 
-    public void MoveNextTurn()
+    private void MoveNextTurn()
     {
         CancelAutoPlay();
         boardManager.MoveNextTurn();
     }
 
-    public void MovePrevTurn()
+    private void MovePrevTurn()
     {
         CancelAutoPlay();
         boardManager.MovePrevTurn();
     }
 
-    public void MoveNext10Turn()
+    private void MoveNext10Turn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
@@ -146,7 +146,7 @@ public class GiboButtonManager : MonoBehaviour
             moveCount: 10, isNext: true).Cancel();
     }
 
-    public void MovePrev10Turn()
+    private void MovePrev10Turn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
@@ -154,21 +154,21 @@ public class GiboButtonManager : MonoBehaviour
             moveCount: 10, isNext: false).Cancel();
     }
 
-    public void MoveLastTurn()
+    private void MoveLastTurn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
         boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay, isNext: true).Cancel();
     }
 
-    public void MoveZeroTurn()
+    private void MoveZeroTurn()
     {
         CancelAutoPlay();
         _autoPlayCancelToken = new CancellationTokenSource();
         boardManager.MoveTurnWithDelay(_autoPlayCancelToken.Token, moveJumpingDelay, isNext: false).Cancel();
     }
 
-    public void ToggleMarkForbidden()
+    private void ToggleMarkForbidden()
     {
         boardManager.ToggleMarkForbidden();
 
@@ -184,20 +184,14 @@ public class GiboButtonManager : MonoBehaviour
         }
     }
     
-    public void SetSpeedHalf() => SetSpeed(AutoPlaySpeed.Half);
-    public void SetSpeedOrigin() => SetSpeed(AutoPlaySpeed.Origin);
-    public void SetSpeedDouble() => SetSpeed(AutoPlaySpeed.Double);
+    private void SetSpeedHalf() => SetSpeed(AutoPlaySpeed.Half);
+    private void SetSpeedOrigin() => SetSpeed(AutoPlaySpeed.Origin);
+    private void SetSpeedDouble() => SetSpeed(AutoPlaySpeed.Double);
 
-    public void Exit()
+    private void Exit()
     {
         CancelAutoPlay();
-        messageBox.MessageBoxOpen(exitMessage, LoadLobbyScene);
-    }
-
-    private void LoadLobbyScene()
-    {
-        LobbyUIController.UIState = LobbyUIController.PanelState.ReplayOpen;
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+        messageBox.MessageBoxOpen(exitMessage, GiboBoardManager.TurnBackToLobby);
     }
 
     private void SetSpeed(AutoPlaySpeed speed)
