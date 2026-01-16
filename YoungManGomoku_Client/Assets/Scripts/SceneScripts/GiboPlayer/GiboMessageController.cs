@@ -1,11 +1,14 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GiboMessageController : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private GiboBoardManager boardManager;
+    [SerializeField] private Button confirmButton;
+    [SerializeField] private Button cancelButton;
     [SerializeField] private string readFailedText;
     [SerializeField] private string deleteFailedText;
     [SerializeField] private string simulationFailedText;
@@ -14,6 +17,9 @@ public class GiboMessageController : MonoBehaviour
     
     private void Awake()
     {
+        confirmButton.onClick.AddListener(OnConfirm);
+        cancelButton.onClick.AddListener(OnCancel);
+        
         boardManager.OnReadFailed += OnReadFailed;
         boardManager.OnSimulationCompleted += OnSimulationCompleted;
         
@@ -27,17 +33,21 @@ public class GiboMessageController : MonoBehaviour
         _requestedAction = requestedAct;
         gameObject.SetActive(true);
     }
-
-    public void OnCancel() => gameObject.SetActive(false);
     
-    public void OnConfirm()
+    private void OnConfirm()
     {
-        _requestedAction?.Invoke();
         gameObject.SetActive(false);
+        _requestedAction?.Invoke();
+    }
+
+    private void OnCancel()
+    {
+        gameObject.SetActive(false);
+        _requestedAction = null;
     }
 
     private void OnReadFailed()
-        => MessageBoxOpen(readFailedText, TryDeleteFile);
+        => MessageBoxOpen(readFailedText, DeleteFile);
 
     private void OnSimulationCompleted(bool isSuccess)
     {
@@ -45,17 +55,11 @@ public class GiboMessageController : MonoBehaviour
             MessageBoxOpen(simulationFailedText);
     }
 
-    private void TryDeleteFile()
+    private void DeleteFile()
     {
         if (GiboFileManager.TryDeleteGiboFile())
-            BackToList();
+            GiboBoardManager.TurnBackToLobby();
         else
-            MessageBoxOpen(deleteFailedText, BackToList);
-    }
-
-    private void BackToList()
-    {
-        LobbyUIController.UIState = LobbyUIController.PanelState.ReplayOpen;
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LobbyScene).Cancel();
+            MessageBoxOpen(deleteFailedText, GiboBoardManager.TurnBackToLobby);
     }
 }
