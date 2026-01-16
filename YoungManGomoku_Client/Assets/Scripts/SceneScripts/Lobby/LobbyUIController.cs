@@ -71,11 +71,9 @@ public class LobbyUIController : MonoBehaviour
 
         playerNicknameInMatchMaking.text = playerData.Nickname;
         playerStatsInMatchMaking.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
-        
-        Debug.Log($"{playerData.ExperiencePoint}, {playerData.MaxExperiencePoint}, {playerData.ExperiencePoint / playerData.MaxExperiencePoint}");
-        
-        playerLevelSlider.value = (float)playerData.ExperiencePoint / playerData.MaxExperiencePoint;
-        playerLevel.text = playerData.Level.ToString();
+
+        playerLevelSlider.value = playerData.ExperienceRate;
+        playerLevel.text = $"현재 레벨 : {playerData.Level.ToString()}";
     }
 
     // 키보드 esc를 누를 때, 메치메이킹 취소 / 리플레이 창 제거 / 메뉴 창 온오프 기능을 넣음.
