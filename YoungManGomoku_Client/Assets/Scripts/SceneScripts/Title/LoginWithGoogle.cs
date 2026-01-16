@@ -11,8 +11,6 @@ public class LoginWithGoogle : MonoBehaviour
     [Header("Google API")]
     private string googleAPI = "73345955248-rkt1qojvprclr1g2es3p878bv6d0c7tc.apps.googleusercontent.com";
 
-    //private GoogleSignInConfiguration configuration;
-
     [Header("Firebase Auth")] 
     private FirebaseAuth auth;
     private FirebaseUser user;
@@ -172,7 +170,6 @@ public class LoginWithGoogle : MonoBehaviour
 
     // pc 환경에서만 실행되는 코드
     // 닉네임을 입력받고 해당 닉네임을 웹통신으로 보내준다.
-    // TODO : 새로 만들어질 DTO를 이용해서 데이터 담아서 보내기
     public async void RegisterNewUser()
     {
         string userNickname = userNicknameInputField.text;

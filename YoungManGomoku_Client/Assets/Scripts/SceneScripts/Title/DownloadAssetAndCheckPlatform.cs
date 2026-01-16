@@ -6,7 +6,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class CheckData : MonoBehaviour
@@ -141,7 +140,7 @@ public class CheckData : MonoBehaviour
     /// 모든 패치 파일을 다운받는 함수
     /// </summary>
     /// <returns></returns>
-    IEnumerator PatchFiles()
+    private IEnumerator PatchFiles()
     {
         var labels = new List<string>() { defaultLabel.labelString };
 
@@ -170,7 +169,7 @@ public class CheckData : MonoBehaviour
     /// </summary>
     /// <param name="label"></param>
     /// <returns></returns>
-    IEnumerator DownLoadLabel(string label)
+    private IEnumerator DownLoadLabel(string label)
     {
         patchMap.Add(label, 0);
 
@@ -192,7 +191,7 @@ public class CheckData : MonoBehaviour
         Addressables.Release(handle);
     }
 
-    IEnumerator CheckDownLoad()
+    private IEnumerator CheckDownLoad()
     {
         var totalDownloadedSize = 0f;
         downValueText.text = "0 %";
