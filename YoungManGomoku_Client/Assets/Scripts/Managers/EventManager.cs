@@ -329,7 +329,7 @@ public class EventManager : MonoBehaviour
         OnServerReplyFailed!.Invoke();
         _networkManager.RequestCloseSession(_gameManager.IdToken, timeOutSeconds: 5).Cancel(); //일방적 통보
         // 터지는 상황에서는 재로그인이 필요함
-        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.LoadingScene, seconds: 2f).Cancel();
+        SceneLoadManager.LoadScene(SceneLoadManager.SceneType.TitleScene, seconds: 2f).Cancel();
     }
     
     /// <summary>게임 종료 결과를 받아서 처리</summary>
