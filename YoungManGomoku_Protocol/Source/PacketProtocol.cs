@@ -173,7 +173,14 @@ namespace YoungManGomoku_Protocol
 			ByoyomiSeconds = byoyomiSeconds;
 			ByoyomiPurchaseAmount = byoyomiPurchaseAmount;
 		}
-	}
+
+
+
+        public class PlayerInventoryData
+        {
+
+        }
+    }
     
 
     public struct GameRecord

@@ -788,7 +788,9 @@ namespace YoungManGomoku_WebServer.Sessions
                 }
                 
                 _waitingEventMap.Clear();
-                _gameRoomManager.CloseRoom(this);
+
+                // 그럼 늦게 요청을 보낸 애는 방이 없음 에러가 뜨잖아, 2명 다 꺼져야 방을 닫을 수 있는거 아님?
+                _gameRoomManager.CloseRoom(this); 
                 return false;
             }
             else
