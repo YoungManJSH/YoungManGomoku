@@ -20,6 +20,7 @@ public class BoardSweeper : MonoBehaviour
     private Rigidbody2D _rb;
     private AudioSource _audioSource;
     private IngameBoardScaler _boardScaler;
+    private Sequence _seq;
     
     private void Awake()
     {
@@ -35,6 +36,8 @@ public class BoardSweeper : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void OnDestroy() => _seq?.Kill();
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Stone"))
@@ -49,19 +52,19 @@ public class BoardSweeper : MonoBehaviour
         _audioSource.Play();
         _rb.simulated = true;
         
-        Sequence seq = DOTween.Sequence();
+        _seq = DOTween.Sequence();
         
-        seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
+        _seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             endValue: _boardScaler.IsWide ? wideMiddleVel : tallMiddleVel, toMiddleDuration).
             SetEase(Ease.OutQuad));
         
-        seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
+        _seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             endValue: _boardScaler.IsWide ? wideEndVel : tallEndVel, switchingDuration).
             SetEase(Ease.InOutQuad));
         
-        seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
+        _seq.Append(DOTween.To(getter: () => _rb.linearVelocity, setter: vec => _rb.linearVelocity = vec,
             Vector2.zero, toEndDuration).SetEase(Ease.InQuad));
 
-        seq.OnComplete(() => gameObject.SetActive(false));
+        _seq.OnComplete(() => gameObject.SetActive(false));
     }
 }

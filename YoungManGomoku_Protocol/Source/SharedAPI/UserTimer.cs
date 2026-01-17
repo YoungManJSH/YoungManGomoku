@@ -108,6 +108,7 @@ public class UserTimer : IComparable<UserTimer>, IComparable<TimerSyncData>
         ByoyomiCount = targetData.ByoyomiCount;
         NowByoyomiSeconds = initByoyomiSeconds;
         OnTimerSynchro?.Invoke(MainTime, ByoyomiCount);
+        _isTimeOut = false;
     }
 
     /// <summary> 초읽기 구매 적용, 1회 남은 상태임을 전제 </summary>

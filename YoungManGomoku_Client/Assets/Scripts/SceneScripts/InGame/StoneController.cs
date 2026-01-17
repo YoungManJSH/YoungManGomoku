@@ -43,7 +43,7 @@ public class StoneController : MonoBehaviour
     /// <summary>이 개체가 오목의 구성원일 때 적용할 애니메이션을 시작</summary>
     public void GomokuAction()
     {
-        if (_scaleTween.IsPlaying())
+        if (_scaleTween.IsActive())
         {
             _scaleTween.OnComplete(() => circle.SetActive(true));
             return;
