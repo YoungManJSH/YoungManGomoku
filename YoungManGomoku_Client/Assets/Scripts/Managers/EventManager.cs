@@ -170,6 +170,10 @@ public class EventManager : MonoBehaviour
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
             
+            // 게임 종료 응답과 레이스 컨디션 발생 시 아래 케이스 가능
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             if (reply == null)
             {
                 // 나머지는 OnRequestFailed 이벤트로 처리됨
@@ -189,6 +193,9 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             Debug.LogError($"기권 요청 에러: {e}");
             ServerReplyFailed();
         }
@@ -205,6 +212,10 @@ public class EventManager : MonoBehaviour
             _ingameRequestDTO.IngameRequest = IngameRequestType.TakeBack;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
+            
+            // 게임 종료 응답과 레이스 컨디션 발생 시 아래 케이스 가능
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
             
             if (reply == null)
             {
@@ -234,6 +245,9 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             Debug.LogError($"무르기 요청 에러: {e}");
             ServerReplyFailed();
         }
@@ -248,6 +262,10 @@ public class EventManager : MonoBehaviour
             _ingameRequestDTO.IngameRequest = IngameRequestType.PurchaseByoyomi;
             SC_ResponseStringDTO reply =
                 await _networkManager.RequestIngameAction(_ingameRequestDTO, timeOutSeconds: 5);
+            
+            // 게임 종료 응답과 레이스 컨디션 발생 시 아래 케이스 가능
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
             
             if (reply == null)
             {
@@ -274,6 +292,9 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             Debug.LogError($"초읽기 구매 요청 에러: {e}");
             ServerReplyFailed();
         }
@@ -400,6 +421,11 @@ public class EventManager : MonoBehaviour
             UpdateLastRequestTime();
             SC_WaitEventDTO response =
                 await _networkManager.RequestWaitForEvent(_gameManager.IdToken);
+
+            /* 1. ServerReplyFailed → 나가기 → 응답 도착인 경우
+             * 2. 찰나의 순간에 게임 종료 응답과 레이스 컨디션이 발생할 가능성도 이론적으로 존재함 */
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
             
             if (response == null)
             {
@@ -447,6 +473,9 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             Debug.LogError($"인게임 이벤트 대기 요청 실패: {e}");
             ServerReplyFailed();
         }
@@ -459,6 +488,10 @@ public class EventManager : MonoBehaviour
         {
             SC_RematchResultDTO result =
                 await _networkManager.RequestRematchResult(_gameManager.IdToken);
+            
+            // 유저가 인게임 씬을 이미 떠났다면 이 응답은 무효임
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
             
             if (result == null)
             {
@@ -482,6 +515,9 @@ public class EventManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+                return;
+            
             Debug.LogError($"재대결 대기 요청 실패: {e}");
             OnRematchFailed!.Invoke();
         }

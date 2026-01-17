@@ -1,13 +1,11 @@
 ﻿using Newtonsoft.Json; // JsonUtil은 클라 안에서만 쓰세요, 통신에는 너무 구리다
 using System;
-using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
 using YoungManGomoku_Protocol.ServerToClient;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 // OnRequestFailed 등록된 함수에 인자로 넘겨주는 접속 에러 정보들
 public struct RequestError
@@ -51,7 +49,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	[SerializeField] private const string baseURL = "https://115.21.221.6:5001"; //"https://localhost:5001";
+	private const string baseURL = "https://115.21.221.6:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -247,7 +245,7 @@ public class NetworkManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"\"Get\" Or Empty Send String : {Encoding.UTF8.GetBytes(sendJsonString).ToString()}");
+            Debug.Log($"\"Get\" Or Empty Send String : {Encoding.UTF8.GetBytes(sendJsonString ?? "null")}");
         }
 
 		uwr.downloadHandler = new DownloadHandlerBuffer();

@@ -25,8 +25,7 @@ public class CountDown : MonoBehaviour
         _audioSource = GetComponent<AudioSource>();
         _originFontSize = _countDownText.fontSize;
         _minFontSize = _originFontSize * minScale;
-
-        NetworkManager.Instance.OnRequestFailed += OnRequestFailed;
+        
         EventManager.Instance.OnGameEnd += OnGameEnd;
     }
 
@@ -80,6 +79,5 @@ public class CountDown : MonoBehaviour
             endValue: _originFontSize, duration: 1f).SetEase(Ease.OutSine);
     }
 
-    private void OnRequestFailed(RequestError e) => gameObject.SetActive(false);
     private void OnGameEnd() => gameObject.SetActive(false);
 }

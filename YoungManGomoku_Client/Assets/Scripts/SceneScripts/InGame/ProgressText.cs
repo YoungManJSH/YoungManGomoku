@@ -34,5 +34,10 @@ public class ProgressText : MonoBehaviour
         => _progressText.text = $"{(GameManager.Instance.IsPlayerBlack ? "흑" : "백")} {GameManager.Instance.BoardInform.NowTurn}수 {gameResult}";
 
     private void OnRequestFailed(RequestError _)
-        => _progressText.text = "-통신 오류-";
+    {
+        if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+            return;
+        
+        _progressText.text = "-통신 오류-";
+    }
 }
