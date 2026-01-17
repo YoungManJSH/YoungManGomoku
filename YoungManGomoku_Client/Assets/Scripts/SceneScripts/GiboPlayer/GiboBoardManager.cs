@@ -344,7 +344,7 @@ public class GiboBoardManager : MonoBehaviour
 
     public void MoveNextTurn()
     {
-        if (_nowTurn >= LastTurn) return;
+        if (_nowTurn == LastTurn) return;
         
         _recordStones[_nowTurn].gameObject.SetActive(true);
         recentMark.anchorMin = recentMark.anchorMax = _recordStones[_nowTurn].anchorMin;
@@ -382,7 +382,7 @@ public class GiboBoardManager : MonoBehaviour
 
     public void MovePrevTurn()
     {
-        if (_nowTurn <= 0) return;
+        if (_nowTurn == 0) return;
 
         if (_nowTurn == LastTurn && _gomokuStones != null)
         {

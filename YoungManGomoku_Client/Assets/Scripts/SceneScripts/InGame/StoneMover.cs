@@ -248,6 +248,8 @@ public abstract class StoneMover : MonoBehaviour
         }
         
         #region 키보드 방향 입력에 따른 preview 이동 프로세스
+        
+        // 둘 중 어느 축이든 방향 입력이 시작되면 일단 한 번 이동
         if (Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical"))
         {
             int hor = (int)Input.GetAxisRaw("Horizontal");
@@ -262,7 +264,16 @@ public abstract class StoneMover : MonoBehaviour
             _isMoving = false;
             return;
         }
+        
+        // 둘 중 어느 축이라도 입력이 끊긴다면 첫 딜레이 구간부터 다시 시작
+        if (Input.GetButtonUp("Horizontal") || Input.GetButtonUp("Vertical"))
+        {
+            _holdTime = 0f;
+            _isMoving = false;
+            return;
+        }
 
+        // 입력의 종류가 지속되는 동안 기준 시간이 지날 때마다 이동
         if (Input.GetButton("Horizontal") || Input.GetButton("Vertical"))
         {
             _holdTime += Time.deltaTime;
@@ -288,14 +299,6 @@ public abstract class StoneMover : MonoBehaviour
                 _isMoving = true;
                 _holdTime = interval; // 다음 Update 때 바로 이동할 수 있도록
             }
-
-            return;
-        }
-
-        if (Input.GetButtonUp("Horizontal") || Input.GetButtonUp("Vertical"))
-        {
-            _holdTime = 0f;
-            _isMoving = false;
         }
         #endregion
         

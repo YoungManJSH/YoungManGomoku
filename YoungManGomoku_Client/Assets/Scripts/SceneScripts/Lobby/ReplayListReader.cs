@@ -8,7 +8,7 @@ public class ReplayListReader : MonoBehaviour
 {
     [SerializeField] private ReplayButtonCell cellPrefab;
     [SerializeField] private TextMeshProUGUI noReplayText;
-    [SerializeField] private ReplayListMessage messageBox;
+    [SerializeField] private ReplayListMessageBox messageBox;
     [SerializeField] private string deleteConfirmMessage;
     [SerializeField] private string deleteFailedMessage;
     [SerializeField] private float spacing;

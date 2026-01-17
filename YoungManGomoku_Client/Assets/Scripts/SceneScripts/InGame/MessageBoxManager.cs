@@ -30,13 +30,13 @@ public class MessageBoxManager : MonoBehaviour
     private void Update()
     {
 #if UNITY_STANDALONE || UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetButtonDown("Cancel"))
         {
             OnCancel();
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        if (Input.GetButtonDown("Submit"))
         {
             OnConfirm();
             return;

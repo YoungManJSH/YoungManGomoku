@@ -116,7 +116,7 @@ public class ResultPresenter : MonoBehaviour
 
         if (Input.GetButtonDown("Cancel"))
         {
-            RejectRematch();
+            OnCloseButtonClick();
         }
     }
 
