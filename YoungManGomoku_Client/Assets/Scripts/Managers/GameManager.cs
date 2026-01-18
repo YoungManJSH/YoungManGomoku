@@ -182,6 +182,13 @@ public class GameManager : MonoBehaviour
                     Debug.LogWarning("타이머 동기화 요청에 default가 응답됨");
                     return;
                 }
+
+                if (serverTimer.ByoyomiCount <= 0)
+                {
+                    Debug.LogError($"초읽기 개수 {serverTimer.ByoyomiCount}로 동기화가 응답됨!");
+                    _eventManager.ServerReplyFailed();
+                    return;
+                }
                 
                 if (PlayerTimer > serverTimer)
                 {

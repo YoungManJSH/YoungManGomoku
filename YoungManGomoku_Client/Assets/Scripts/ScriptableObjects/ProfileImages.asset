@@ -16,6 +16,6 @@ MonoBehaviour:
   studentBoy: {fileID: 5500625259788728604, guid: ddc55e99c56b31f419ac3624c80274f7, type: 3}
   studentGirl: {fileID: -299998887681647205, guid: 225e8945f48c2c741964e43db25bcc0f, type: 3}
   gentleMan: {fileID: -5664246174610602347, guid: e6db9db43030cc9498fec07406a7ee67, type: 3}
-  lady: {fileID: 4745986964050862534, guid: 6f5d341a17e86954cb2d13b30174a617, type: 3}
+  maam: {fileID: 4745986964050862534, guid: 6f5d341a17e86954cb2d13b30174a617, type: 3}
   grandFather: {fileID: -2721677123315756236, guid: cdb3b4bdac5997243a83c92caf62866b, type: 3}
   grandMather: {fileID: 2670164986882087280, guid: 378542cbb173fef4a842d726941494c5, type: 3}

@@ -10,6 +10,8 @@ using UnityEngine.UI;
 public class ToastBoxController : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI messageUI;
+    [SerializeField] private StoneMover stoneMover;
+    [SerializeField] private string forbiddenMoveString;
     [SerializeField] private string waitingTakeBackString;
     [SerializeField] private string takeBackConfirmString;
     [SerializeField] private string takeBackRejectedString;
@@ -56,6 +58,8 @@ public class ToastBoxController : MonoBehaviour
             _waitingRematchStrings[i] = $"{dots}{waitingRematchString}{dots}";
         }
         #endregion
+
+        stoneMover.OnForbiddenMoveRejected += OnForbiddenMove;
         
         EventManager em = EventManager.Instance;
         em.OnTakeBackRequested += OnTakeBackRequested;
@@ -68,13 +72,19 @@ public class ToastBoxController : MonoBehaviour
     
     private void OnDestroy()
     {
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+
         foreach (var openAnim in _openAnims)
             openAnim.Kill();
         
         foreach (var closeAnim in _closeAnims)
             closeAnim.Kill();
     }
-
+    
     private void OnTakeBackRequested(bool isMyRequest)
     {
         _isMyTakeback = isMyRequest;
@@ -91,55 +101,44 @@ public class ToastBoxController : MonoBehaviour
         StartStringChange(_waitingRematchStrings).Cancel();
         gameObject.SetActive(true);
     }
-    
-    private async void OnTakeBack(bool isAccepted)
-    {
-        try
-        {
-            if (isAccepted || _isMyTakeback)
-            {
-                RestartAnims();
-                
-                messageUI.text = isAccepted ? takeBackConfirmString : takeBackRejectedString;
-                gameObject.SetActive(true);
-                
-                _cts = new  CancellationTokenSource();
-                await Awaitable.WaitForSecondsAsync(toastTime, _cts.Token);
-                
-                foreach (var closeAnim in _closeAnims)
-                    closeAnim.Restart();
-            }
-        }
-        catch (Exception e)
-        {
-            if (e is OperationCanceledException) return;
-            
-            Debug.LogError($"토스트 메시지 박스 에러: {e}");
-        }
-    }
 
-    private async void OnRematchFailed()
+    private async void OpenToastMessage(string message)
     {
         try
         {
             RestartAnims();
 
-            messageUI.text = rematchFailedString;
+            messageUI.text = message;
             gameObject.SetActive(true);
 
             _cts = new CancellationTokenSource();
             await Awaitable.WaitForSecondsAsync(toastTime, _cts.Token);
-                
+
             foreach (var closeAnim in _closeAnims)
                 closeAnim.Restart();
         }
         catch (Exception e)
         {
             if (e is OperationCanceledException) return;
-            
-            Debug.LogError($"토스트 메시지 박스 에러: {e}");
+
+            Debug.LogError($"토스트 메시지 박스 에러{message}: {e}");
         }
     }
+
+    private void OnForbiddenMove()
+        => OpenToastMessage(forbiddenMoveString);
+
+    private void OnTakeBack(bool isAccepted)
+    {
+        if (isAccepted)
+            OpenToastMessage(takeBackConfirmString);
+        // 무르기 거절 시에는 내 요청이었을 때만 거절 메시지 출력
+        else if (_isMyTakeback)
+            OpenToastMessage(takeBackRejectedString);
+    }
+
+    private void OnRematchFailed()
+        => OpenToastMessage(rematchFailedString);
     
     private async Awaitable StartStringChange(string[] strings)
     {

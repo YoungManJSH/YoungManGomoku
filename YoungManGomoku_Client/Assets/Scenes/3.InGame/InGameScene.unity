@@ -3338,8 +3338,9 @@ MonoBehaviour:
   byoyomiWarningSound: {fileID: 0}
   byoyomiPurchaseSound: {fileID: 8300000, guid: b95658f62c0589040a5569d9352254c7, type: 3}
   glowFont: {fileID: 11400000, guid: 5d063449ea5cb71449e32a0000755838, type: 2}
-  otherColorStone: {fileID: 8788387282563938190, guid: 320e1dfd02455db4eae65902787757c5, type: 3}
   profileImages: {fileID: 11400000, guid: 6976f020d387f2b448859e857ca82f44, type: 2}
+  otherColorStone: {fileID: 8788387282563938190, guid: 320e1dfd02455db4eae65902787757c5, type: 3}
+  otherBgColor: {r: 0.80784315, g: 0.8509804, b: 1, a: 0.39215687}
   isPlayer: 0
 --- !u!82 &686054852
 AudioSource:
@@ -3637,8 +3638,9 @@ MonoBehaviour:
   byoyomiWarningSound: {fileID: 8300000, guid: 102a0c83ef638ac4582bb33f431cc41d, type: 3}
   byoyomiPurchaseSound: {fileID: 8300000, guid: 0f59a5469204d6c41a0daa2e8b0b0e78, type: 3}
   glowFont: {fileID: 11400000, guid: 5d063449ea5cb71449e32a0000755838, type: 2}
-  otherColorStone: {fileID: -1062080295673539004, guid: 832e038b31cf74b4f8120132dfd114d0, type: 3}
   profileImages: {fileID: 11400000, guid: 6976f020d387f2b448859e857ca82f44, type: 2}
+  otherColorStone: {fileID: -1062080295673539004, guid: 832e038b31cf74b4f8120132dfd114d0, type: 3}
+  otherBgColor: {r: 1, g: 0.79607844, b: 0.79607844, a: 0.39215687}
   isPlayer: 1
 --- !u!82 &702740388
 AudioSource:
@@ -6676,6 +6678,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   messageUI: {fileID: 1230694820}
+  stoneMover: {fileID: 362371478}
+  forbiddenMoveString: "\uAE08\uC218 \uC704\uCE58\uB85C \uCC29\uC218\uAC00 \uBD88\uAC00\uD569\uB2C8\uB2E4."
   waitingTakeBackString: "\uBB34\uB974\uAE30 \uC218\uB77D\uC744 \uAE30\uB2E4\uB9AC\uB294
     \uC911"
   takeBackConfirmString: "\uBB34\uB974\uAE30\uAC00 \uC9C4\uD589\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
