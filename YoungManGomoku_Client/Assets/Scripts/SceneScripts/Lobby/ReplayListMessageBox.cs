@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ReplayListMessage : MonoBehaviour
+public class ReplayListMessageBox : MonoBehaviour
 {
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
@@ -43,9 +43,16 @@ public class ReplayListMessage : MonoBehaviour
             RectTransformUtility.RectangleContainsScreenPoint(_rect, Input.mousePosition) is false)
         {
             OnCancel();
+        }
+
+#elif UNITY_ANDROID
+        // 뒤로 가기 소프트키 입력 시 취소 처리
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            OnCancel();
             return;
         }
-#elif UNITY_ANDROID
+        
         // 터치 입력 없으면 패스
         if (Input.touchCount == 0) return;
 
@@ -60,6 +67,8 @@ public class ReplayListMessage : MonoBehaviour
 #endif
     }
 
+    /* 책임 분리가 무너지는 방식이지만 마무리 단계이므로 구현 편의에 집중
+     * 이런 게 많아지면 이벤트 구조 같은 걸로 처리하는 게 바람직할 듯? */
     private void OnEnable() => lobbyUIController.enabled = false;
     private void OnDisable() => lobbyUIController.enabled = true;
     

@@ -2126,6 +2126,8 @@ MonoBehaviour:
     originSpeedDelay: 0.5
     doubleSpeedDelay: 0.25
   moveJumpingDelay: 0.05
+  keyHoldDelay: 0.3
+  moveKeyboardDelay: 0.1
   exitMessage: "\uC885\uB8CC\uD558\uACE0 \uB9AC\uC2A4\uD2B8\uB85C \uC774\uB3D9\uD560\uAE4C\uC694?"
 --- !u!1 &570569474
 GameObject:

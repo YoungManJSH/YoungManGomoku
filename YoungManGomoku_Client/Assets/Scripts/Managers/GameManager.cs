@@ -38,26 +38,12 @@ public class GameManager : MonoBehaviour
         BoardInform = new Board();
         IsByoyomiPurchased = false;
         
-        #region 타이머 진행 제어 (Update 활성화 여부)
         _eventManager.OnGameStart += () => enabled = true;
         _eventManager.OnGameEnd += DisableTimer;
-        _eventManager.OnBlackUnmovable += DisableTimer;
-        #endregion
         
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         _eventManager.OnTakeBackRequested += _ => DisableTimer();
         _eventManager.OnTakeBack += OnTakeBack;
-        
-        /*
-        #region 테스트용 임시 초기화
-        IsPlayerBlack = true;
-        MyPlayer = new BasicPlayerData("흑돌 임시", 10, 5, 10, 15.5f, ProfileImageType.None);
-        OppositePlayer = new BasicPlayerData("백돌 임시", 10, 5, 19, 2323.4f, ProfileImageType.StudentGirl);
-        PlayerTimer = new UserTimer(15f, 2, 15f);
-        OppositeTimer = new UserTimer(15f, 2, 15f);
-        ByoyomiPurchaseAmount = 2;
-        #endregion
-        // */
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
@@ -67,15 +53,6 @@ public class GameManager : MonoBehaviour
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
         
         SC_MatchResultDTO matchResult = PlayerDataFromWebServer.Instance.MatchResultDTO;
-        if (matchResult.MatchingSuccess is false ||
-            matchResult.MyStoneColorType is StoneColorType.Empty)
-        {
-            OppositePlayer = new BasicPlayerData(String.Empty, 0, 0, 0, 0f);
-            PlayerTimer = new UserTimer(0f, 3, 30f);
-            OppositeTimer = new UserTimer(0f, 3, 30f);
-            return;
-        }
-            
         IsPlayerBlack = matchResult.MyStoneColorType is StoneColorType.Black;
         
         OpponentPlayerData opponent = matchResult.OpponentPlayer;

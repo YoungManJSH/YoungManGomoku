@@ -7,15 +7,24 @@ public static class SceneLoadManager
 {
     public enum SceneType
     {
-        LoadingScene, TitleScene,
-        LobbyScene, ShopScene,
-        IngameScene, GiboPlayScene
+        LoadingScene,
+        TitleScene,
+        LobbyScene,
+        ShopScene,
+        IngameScene,
+        GiboPlayScene
     }
 
+    /// <summary>현재 열려있는 씬 (정확히는 마지막으로 열기를 시도한 씬):
+    /// 씬 로딩에 실패하는 특수 상황에서는 이 프로퍼티와 현재 씬이 다를 수 있음 </summary>
+    public static SceneType NowScene { get; private set; }
+    
     private static readonly Dictionary<SceneType, string> SceneMap;
 
     static SceneLoadManager()
     {
+        NowScene = SceneType.LoadingScene;
+        
         SceneMap = new Dictionary<SceneType, string>()
         {
             {SceneType.LoadingScene, "LoadingScene"},
@@ -45,6 +54,8 @@ public static class SceneLoadManager
             if (seconds > 0f)
                 await Awaitable.WaitForSecondsAsync(seconds);
 
+            Debug.Log($"{sceneType} 전환 실행!");
+            NowScene = sceneType;
             SceneManager.LoadScene(SceneMap[sceneType]);
         }
         catch (Exception e)

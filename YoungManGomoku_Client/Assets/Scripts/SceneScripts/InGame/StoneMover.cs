@@ -33,9 +33,10 @@ public abstract class StoneMover : MonoBehaviour
     protected Color PreviewColor { get; private set; }
     /// <summary> 직전에 인식한 오목판 좌표 </summary>
     protected (int row, int col) NowCoord { get; private set; }
+    /// <summary>Board 개체에서 게임 종료 이벤트가 발생했는지 여부</summary>
+    protected bool IsGameEndInBoard { get; private set; }
+    protected EventManager EventManager { get; private set; }
     
-    protected EventManager eventManager;
-    protected bool gameEndInBoard;
     private Board _boardInform;
     private SpriteRenderer _spriteRenderer;
     private AudioSource _audioSource;
@@ -79,7 +80,7 @@ public abstract class StoneMover : MonoBehaviour
         _stoneObjects = new StoneController[Board.BoardSize, Board.BoardSize];
         
         _boardInform = GameManager.Instance.BoardInform;
-        gameEndInBoard = false;
+        IsGameEndInBoard = false;
         NowCoord = (-1, -1);
         _isBlackTurn = true;
         _muteDeniedSound = false;
@@ -93,12 +94,12 @@ public abstract class StoneMover : MonoBehaviour
         messageBox.TurnBackToGame += MessageBoxClosed;
         messageBox.TurnBackToGame += UnmarkTakeBack;
 
-        eventManager = EventManager.Instance;
-        eventManager.OnGameStart += OnGameStart;
-        eventManager.OnGameEnd += DisableUpdate;
-        eventManager.OnGameEnd += UnmarkTakeBack;
-        eventManager.OnTakeBackRequested += _ => MarkTakeBack();
-        eventManager.OnTakeBack += OnTakeBack;
+        EventManager = EventManager.Instance;
+        EventManager.OnGameStart += OnGameStart;
+        EventManager.OnGameEnd += DisableUpdate;
+        EventManager.OnGameEnd += UnmarkTakeBack;
+        EventManager.OnTakeBackRequested += _ => MarkTakeBack();
+        EventManager.OnTakeBack += OnTakeBack;
         GameManager.Instance.PlayerTimer.OnTimeOut += DisableUpdate;
         
         PreviewColor = new Color(1f, 1f, 1f, previewAlpha);
@@ -119,13 +120,15 @@ public abstract class StoneMover : MonoBehaviour
 
     protected void Update() => InputProcessing();
     
+    protected void OnDisable() => NowPreview.SetActive(false);
+    
     /// <summary> 무르기가 적용될 돌을 표시 </summary>
     public void MarkTakeBack()
     {
         if (_recentStone.black == null || _recentStone.white == null)
         {
             Debug.LogError("무르기를 할 수 없는 상황에서의 무르기 요청!");
-            eventManager.ServerReplyFailed();
+            EventManager.ServerReplyFailed();
             return;
         }
         
@@ -248,6 +251,8 @@ public abstract class StoneMover : MonoBehaviour
         }
         
         #region 키보드 방향 입력에 따른 preview 이동 프로세스
+        
+        // 둘 중 어느 축이든 방향 입력이 시작되면 일단 한 번 이동
         if (Input.GetButtonDown("Horizontal") || Input.GetButtonDown("Vertical"))
         {
             int hor = (int)Input.GetAxisRaw("Horizontal");
@@ -262,7 +267,16 @@ public abstract class StoneMover : MonoBehaviour
             _isMoving = false;
             return;
         }
+        
+        // 둘 중 어느 축이라도 입력이 끊긴다면 첫 딜레이 구간부터 다시 시작
+        if (Input.GetButtonUp("Horizontal") || Input.GetButtonUp("Vertical"))
+        {
+            _holdTime = 0f;
+            _isMoving = false;
+            return;
+        }
 
+        // 입력의 종류가 지속되는 동안 기준 시간이 지날 때마다 이동
         if (Input.GetButton("Horizontal") || Input.GetButton("Vertical"))
         {
             _holdTime += Time.deltaTime;
@@ -288,14 +302,6 @@ public abstract class StoneMover : MonoBehaviour
                 _isMoving = true;
                 _holdTime = interval; // 다음 Update 때 바로 이동할 수 있도록
             }
-
-            return;
-        }
-
-        if (Input.GetButtonUp("Horizontal") || Input.GetButtonUp("Vertical"))
-        {
-            _holdTime = 0f;
-            _isMoving = false;
         }
         #endregion
         
@@ -473,7 +479,7 @@ public abstract class StoneMover : MonoBehaviour
             if (_recentStone.black == null || _recentStone.white == null)
             {
                 Debug.LogError("무르기를 할 수 없는 상황에서의 무르기 실행!");
-                eventManager.ServerReplyFailed();
+                EventManager.ServerReplyFailed();
                 return;
             }
             
@@ -499,7 +505,7 @@ public abstract class StoneMover : MonoBehaviour
             else
             {
                 Debug.LogError("무르기 이후 마지막 턴 좌표를 가져올 수 없음!");
-                eventManager.ServerReplyFailed();
+                EventManager.ServerReplyFailed();
             }
 
             if (_boardInform.TryGetRecordCoord(out var prev2Coord, _boardInform.NowTurn - 1))
@@ -518,14 +524,14 @@ public abstract class StoneMover : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"무르기에 따른 착수 입력 스크립트 상태 변경 로직 에러: {e}");
-            eventManager.ServerReplyFailed();
+            EventManager.ServerReplyFailed();
         }
     }
 
     /// <summary> 오목 상황에서 적용할 연출 </summary>
     private async Awaitable OnGomoku(StoneColorType stoneColor)
     {
-        gameEndInBoard = true;
+        IsGameEndInBoard = true;
         
         // 월드에서 착수 처리가 완료되고 다음 프레임에 실행
         await Awaitable.NextFrameAsync();
@@ -545,7 +551,7 @@ public abstract class StoneMover : MonoBehaviour
     /// <summary> 흑돌 금수패 상황에서 적용할 연출 </summary>
     private void OnBlackUnmovable()
     {
-        gameEndInBoard = true;
+        IsGameEndInBoard = true;
         _muteDeniedSound = true;
 
         for (int row = 0; row < Board.BoardSize; ++row)

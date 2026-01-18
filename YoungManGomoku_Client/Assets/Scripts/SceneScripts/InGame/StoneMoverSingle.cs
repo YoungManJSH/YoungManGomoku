@@ -8,14 +8,8 @@ public sealed class StoneMoverSingle : StoneMover
 
     protected override void OnAwake()
     {
-        EventManager.Instance.OnGameStart += () => enabled = true;
+        EventManager.OnGameStart += () => enabled = true;
         OnStoneMove += OnTurnChanged;
-    }
-
-    private void OnDisable()
-    {
-        _blackPreview.SetActive(false);
-        _whitePreview.SetActive(false);
     }
 
     protected override void MessageBoxClosed() => enabled = true;
