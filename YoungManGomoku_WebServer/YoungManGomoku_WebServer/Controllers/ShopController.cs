@@ -83,58 +83,56 @@ namespace YoungManGomoku_WebServer.Controllers
 
 			// 인덱스가 0인 None을 제외하고 일단은 다 구매 가능함
 
-			for (ProfileImageType i = ProfileImageType.None; i < ProfileImageType.MAXCOUNT; ++i)
+			for (ProfileImageType imgType = ProfileImageType.None; imgType  < ProfileImageType.MAXCOUNT; ++imgType)
 			{
-				shopItemData.ProfilenShopDatas[(int)i].ItemType = ItemType.ProfileImage;
-				shopItemData.ProfilenShopDatas[(int)i].IsShopBuyAble = true;
+				int i = (int)imgType;
+				shopItemData.ProfilenShopDatas[i].ItemType = ItemType.ProfileImage;
+				shopItemData.ProfilenShopDatas[i].IsShopBuyAble = true;
 
 				// 딱히 외부 기획 데이터 파싱이 없으므로 우선 서버에 직접 하드코딩 때림
 				// 후일 바뀔지 안 바뀔지 미정
 				// 서버매니저가 따로 들고있는것이 좋겠지만, 우선 TDD를 위한 선 적용
 
-				switch (i)
+				switch (imgType)
 				{
 					case ProfileImageType.None:
-						shopItemData.ProfilenShopDatas[(int)i].IsShopBuyAble = false;
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "None";						
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 0;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 0;
+						shopItemData.ProfilenShopDatas[i].IsShopBuyAble = false;
+						shopItemData.ProfilenShopDatas[i].ItemName = "None";						
+						shopItemData.ProfilenShopDatas[i].Cost = 0;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 0;
 						break;
 					case ProfileImageType.StudentBoy:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "StudentBoy";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 300;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 1;
+						shopItemData.ProfilenShopDatas[i].ItemName = "StudentBoy";
+						shopItemData.ProfilenShopDatas[i].Cost = 300;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 1;
 						break;
 					case ProfileImageType.StudentGirl:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "StudentGirl";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 5000;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 50;
+						shopItemData.ProfilenShopDatas[i].ItemName = "StudentGirl";
+						shopItemData.ProfilenShopDatas[i].Cost = 5000;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 50;
 						break;
 					case ProfileImageType.GentleMan:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "GentleMan";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 100;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 0;
+						shopItemData.ProfilenShopDatas[i].ItemName = "GentleMan";
+						shopItemData.ProfilenShopDatas[i].Cost = 100;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 0;
 						break;
 					case ProfileImageType.Maam:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "Maam";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 500;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 10;
+						shopItemData.ProfilenShopDatas[i].ItemName = "Maam";
+						shopItemData.ProfilenShopDatas[i].Cost = 500;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 10;
 						break;
 					case ProfileImageType.GrandFather:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "GrandFather";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 1000;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 15;
+						shopItemData.ProfilenShopDatas[i].ItemName = "GrandFather";
+						shopItemData.ProfilenShopDatas[i].Cost = 1000;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 15;
 						break;
 					case ProfileImageType.GrandMather:
-						shopItemData.ProfilenShopDatas[(int)i].ItemName = "GrandMather";
-						shopItemData.ProfilenShopDatas[(int)i].Cost = 250;
-						shopItemData.ProfilenShopDatas[(int)i].LevelLimit = 5;
+						shopItemData.ProfilenShopDatas[i].ItemName = "GrandMather";
+						shopItemData.ProfilenShopDatas[i].Cost = 250;
+						shopItemData.ProfilenShopDatas[i].LevelLimit = 5;
 						break;
 				}
 			}
-
-
-
 
 			for (int i = 1; i < (int)StoneSkinType.MAXCOUNT; ++i)
 			{
@@ -146,7 +144,6 @@ namespace YoungManGomoku_WebServer.Controllers
 				shopItemData.StoneSkinShopDatas[i].ItemType = ItemType.BoardSkin;
 				shopItemData.BoardSkinShopDatas[i].IsShopBuyAble = true;
 			}
-
 
 			return Ok(new SC_FirstEnterShopDTO(playerSkinInventory, shopItemData));
         }
@@ -165,6 +162,64 @@ namespace YoungManGomoku_WebServer.Controllers
 				return Unauthorized($"[{equipItemDTO.IDToken}] Player Session Not Found. Please Re Login.");
 			}
 
+			PlayerEquip equipState = _context.PlayerEquipItemStateTable.Where(m => m.UID == uid).FirstOrDefault();
+
+			if (equipItemDTO.EquipItemID < 0)
+				return BadRequest("Equip Item ID < 0");
+
+			// 소유중인 아이템 목록을 DB에서 가져와 소유중인지 검사
+			bool isEquipable = false;
+			
+			// 사양 변경으로 존재가 말소된 아이템 (ex. 기간 한정으로만 사용 가능했던 스킨) 등이 존재하면 충분히 현재 enum과 다를 수 있다.
+			// 따라서 아이템 타입 등의 enum이 유효한지 처리는 이후에 해야 하고, 지금은 보유중인지 아닌지만 탐색한다.
+		    // 만약 기간 이후 삭제했어야 하는 아이템이 남아있는 유저라면 클라 뚜따거나 서버 처리 미흡이므로 서버에 로그가 남을 것이다.
+			PlayerInventoryItem[] inventory = _context.PlayerInventoryTable.Where(m => m.UID == uid).ToArray();		
+			for (int i = 0; i < inventory.Length; ++i)
+			{
+				if (inventory[i].ItemType != equipItemDTO.EquipItemType) continue;
+
+				if (inventory[i].ItemID != equipItemDTO.EquipItemID) continue;
+
+				// 보유중
+				isEquipable = true;
+				break;
+			}
+
+			if (isEquipable)
+			{
+				switch (equipItemDTO.EquipItemType)
+				{
+					case ItemType.ProfileImage:
+						if ((ProfileImageType)equipItemDTO.EquipItemID >= ProfileImageType.MAXCOUNT)
+						{
+							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Profile] {equipItemDTO.EquipItemID} 라는 프로필은 없습니다.");
+						}
+						equipState.EquipProfile = (ProfileImageType)equipItemDTO.EquipItemID;
+						break;
+					case ItemType.StoneSkin:
+						if ((StoneSkinType)equipItemDTO.EquipItemID >= StoneSkinType.MAXCOUNT)
+						{
+							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Stone] {equipItemDTO.EquipItemID} 라는 돌 스킨은 없습니다.");
+						}
+						equipState.EquipStoneSkin = (StoneSkinType)equipItemDTO.EquipItemID;
+						break;
+					case ItemType.BoardSkin:
+						if ((BoardSkinType)equipItemDTO.EquipItemID >= BoardSkinType.MAXCOUNT)
+						{
+							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Board] {equipItemDTO.EquipItemID} 라는 보드 스킨은 없습니다.");
+						}
+						equipState.EquipBoardSkin = (BoardSkinType)equipItemDTO.EquipItemID;
+						break;
+					default:
+						_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip] {equipItemDTO.EquipItemType} 라는 아이템 타입은 없습니다.");
+						break;
+				}
+
+				// DB Process
+				_context.PlayerEquipItemStateTable.Update(equipState);
+				_context.SaveChanges();
+			}
+		
 			return Ok(new SC_ResponseStringDTO("Equip Success", true));
 		}
 

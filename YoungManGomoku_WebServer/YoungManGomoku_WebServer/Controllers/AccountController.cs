@@ -37,7 +37,7 @@ namespace YoungManGomoku_WebServer.Controllers
         [HttpPost("Register")]
         public IActionResult RegisterAccount([FromBody] CS_AccountRegisterDTO registerUserData)
         {
-            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Register - ID Token : {registerUserData.IdToken}\nName : {registerUserData.UserNickname} / Guest : {registerUserData.IsGuest}\n");
+            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Account Register - ID Token : {registerUserData.IdToken}\nName : {registerUserData.UserNickname} / Guest : {registerUserData.IsGuest}\n");
 
             /*
             이미 이 ID토큰을 가지고 있는 회원이 있다면 중복 회원가입을 막는다
@@ -46,8 +46,9 @@ namespace YoungManGomoku_WebServer.Controllers
             변경 사항을 SaveChanges에서 미반영하고 조회 속도가 상승
             */
             if (_context.PlayerAccountTable.AsNoTracking().Any(x => x.AuthToken == registerUserData.IdToken))
-            { 
-                return Conflict("Already registered Token.");
+            {
+				_logger.LogDebug($"[{DateTime.Now}] [Account Controller] 이미 DB에 존재하는 Token입니다. [{registerUserData.IdToken}]");
+				return Conflict("Already registered Token.");
             }
 
 			// Create Account
@@ -63,7 +64,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 , new PlayerSession(_serverManager.GenerateUID64(), playerAccount, isConnect: true))
                 == false)
             {
-                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession already exists. UID={playerAccount.UID}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession already exists. UID [{playerAccount.UID}]");
 
                 // 일단 무식하게 제거
                 while (_serverManager.PlayerDatas.TryRemove(playerAccount.UID, out PlayerSession findRemoveAccount));
@@ -71,7 +72,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             while (_serverManager.UIDByIDToken.TryAdd(playerAccount.AuthToken, playerAccount.UID) == false)
             {
-                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession UID-Token Link already exists. UID={playerAccount.UID} / {playerAccount.AuthToken}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession UID-Token Link already exists. UID [{playerAccount.UID}] / {playerAccount.AuthToken}");
 
                 // 일단 무식하게 제거
                 while (_serverManager.UIDByIDToken.TryRemove(playerAccount.AuthToken, out ulong findRemoveAccountUID));
@@ -95,7 +96,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             if (findAccount == null)
             {
-                _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Fail...");
+                _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account by Token - DB Find  Fail...");
                 return Conflict("Can't Find ID Token. Login Failed!");
             }
 
@@ -112,23 +113,23 @@ namespace YoungManGomoku_WebServer.Controllers
             while (_serverManager.PlayerDatas.TryAdd(findAccount.UID
                 , new PlayerSession(_serverManager.GenerateUID64(), findAccount, isConnect: true)) == false)
             {
-                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession already exists. UID={findAccount.UID}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession already exists. UID [{findAccount.UID}]");
 
                 // 키가 없어서 제거 실패할 때까지 일단 무식하게 제거
                 while ( _serverManager.PlayerDatas.TryRemove(findAccount.UID, out PlayerSession findRemoveAccount));
             }
 
-            _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success\nLogin : {_serverManager.UserInfo(findAccount.UID)}");
-
             while (_serverManager.UIDByIDToken.TryAdd(findAccount.AuthToken, findAccount.UID) == false)
             {
-                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession UID-Token Link already exists. UID={findAccount.UID} / {findAccount.AuthToken}");
+                _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Login : PlayerSession UID-Token Link already exists. UID [{findAccount.UID}] / {findAccount.AuthToken}");
                 
                 // 일단 무식하게 제거
                 while (_serverManager.UIDByIDToken.TryRemove(findAccount.AuthToken, out ulong findRemoveAccountUID));
             }
 
-            return Ok(_serverManager.ComposePlayerData(findAccount.UID));
+			_logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account DB Find Success : {findAccount.Nickname} [{_serverManager.UserInfo(findAccount.UID)}]");
+
+			return Ok(_serverManager.ComposePlayerData(findAccount.UID));
         }
         
 		[HttpGet]
