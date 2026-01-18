@@ -266,6 +266,8 @@ public class PlayerPanelController : MonoBehaviour
 
         int mainTimeToInt = Mathf.CeilToInt(mainTime);
         mainTimer.text = mainTime > 0 ? $"{mainTimeToInt / 60:D2}:{mainTimeToInt % 60:D2}" : "00:00";
+
+        _prevByoyomiCount = leftCount;
         byoyomiCount.text = $"{leftCount}회";
         
         if (leftCount == 1)

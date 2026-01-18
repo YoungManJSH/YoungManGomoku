@@ -98,6 +98,13 @@ public class StoneMoverMulti : StoneMover
                     EventManager.ServerReplyFailed();
                     return;
                 }
+
+                if (opponentMove.OpponentTimer.ByoyomiCount <= 0)
+                {
+                    Debug.LogError($"상대방 초읽기 정보가 {opponentMove.OpponentTimer.ByoyomiCount}로 응답됨!");
+                    EventManager.ServerReplyFailed();
+                    return;
+                }
                 
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
                 
