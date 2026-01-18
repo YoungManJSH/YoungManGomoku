@@ -98,13 +98,6 @@ public class StoneMoverMulti : StoneMover
                     EventManager.ServerReplyFailed();
                     return;
                 }
-
-                if (opponentMove.OpponentTimer.ByoyomiCount <= 0)
-                {
-                    Debug.LogError($"상대방 초읽기 정보가 {opponentMove.OpponentTimer.ByoyomiCount}로 응답됨!");
-                    EventManager.ServerReplyFailed();
-                    return;
-                }
                 
                 _oppositeTimer.SynchroTimer(opponentMove.OpponentTimer);
                 
@@ -114,6 +107,13 @@ public class StoneMoverMulti : StoneMover
                     opponentMove.Row > Board.MaxCoord || opponentMove.Col > Board.MaxCoord)
                 {
                     Debug.Log("유효하지 않은 착수 좌표가 응답되었음, 게임 종료 상황이면 정상");
+                    return;
+                }
+                
+                if (opponentMove.OpponentTimer.ByoyomiCount <= 0)
+                {
+                    Debug.LogError($"상대방 초읽기 정보가 {opponentMove.OpponentTimer.ByoyomiCount}로 응답됨!");
+                    EventManager.ServerReplyFailed();
                     return;
                 }
 
