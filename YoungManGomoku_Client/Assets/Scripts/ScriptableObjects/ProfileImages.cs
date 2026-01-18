@@ -8,7 +8,7 @@ public class ProfileImages : ScriptableObject
      [SerializeField] private Sprite studentBoy;
      [SerializeField] private Sprite studentGirl;
      [SerializeField] private Sprite gentleMan;
-     [SerializeField] private Sprite lady;
+     [SerializeField] private Sprite maam;
      [SerializeField] private Sprite grandFather;
      [SerializeField] private Sprite grandMather;
 
@@ -21,7 +21,7 @@ public class ProfileImages : ScriptableObject
              ProfileImageType.StudentBoy => studentBoy,
              ProfileImageType.StudentGirl => studentGirl,
              ProfileImageType.GentleMan => gentleMan,
-             ProfileImageType.Lady => lady,
+             ProfileImageType.Maam => maam,
              ProfileImageType.GrandFather => grandFather,
              ProfileImageType.GrandMather => grandMather,
              _ => none
