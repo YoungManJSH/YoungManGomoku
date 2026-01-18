@@ -58,8 +58,10 @@ public abstract class StoneMover : MonoBehaviour
     private bool _isBlackTurn;
     private bool _muteDeniedSound;
     
-    /// <summary> 매개변수: 시작된 턴이 흑돌 턴인지 여부 </summary>
+    /// <summary>매개변수: 시작된 턴이 흑돌 턴인지 여부</summary>
     public event Action<bool> OnStoneMove;
+    /// <summary>흑돌 금수 위치에 착수를 시도하여 거부됨</summary>
+    public event Action OnForbiddenMoveRejected;
     
     protected void Awake()
     {
@@ -180,6 +182,7 @@ public abstract class StoneMover : MonoBehaviour
         // 금수로 인한 착수 실패
         PlaceForbiddenMark(position);
         _forbiddenCoords.Add(coord);
+        OnForbiddenMoveRejected?.Invoke();
         if (_muteDeniedSound is false)
         {
             _audioSource.PlayOneShot(deniedSound);

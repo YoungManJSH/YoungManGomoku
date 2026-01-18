@@ -24,10 +24,11 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] private AudioClip byoyomiWarningSound;
     [SerializeField] private AudioClip byoyomiPurchaseSound;
     [SerializeField] private TMP_FontAsset glowFont;
-    [SerializeField, Tooltip("플레이어가 백일 경우 교체할 돌 스프라이트")]
-    private Sprite otherColorStone;
     [SerializeField, Tooltip("적용할 프로필 이미지들")]
     private ProfileImages profileImages;
+    [Header("플레이어가 백일 경우 교체할 것들")]
+    [SerializeField, Tooltip("교체할 돌 이미지")] private Sprite otherColorStone;
+    [SerializeField, Tooltip("패널 배경색")] private Color otherBgColor;
     [SerializeField] private bool isPlayer;
 
     private const float TOLERANCE = 0.5f;
@@ -54,7 +55,11 @@ public class PlayerPanelController : MonoBehaviour
         
         GameManager gm = GameManager.Instance;
         _isThisBlack = isPlayer == gm.IsPlayerBlack;
-        if (gm.IsPlayerBlack is false) stoneImage.sprite = otherColorStone;
+        if (gm.IsPlayerBlack is false)
+        {
+            stoneImage.sprite = otherColorStone;
+            GetComponent<Image>().color = otherBgColor;
+        }
         
         _myTimer = isPlayer ? gm.PlayerTimer : gm.OppositeTimer;
         _isByoyomi = _myTimer.MainTime == 0f;
