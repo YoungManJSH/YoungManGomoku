@@ -13,19 +13,19 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 	{
 		[Key]
 		public ulong UID { get; set; }
-		public string AuthToken { get; set; }
+		public string AuthToken { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 		public AuthLevel AuthLevel { get; set; }
-		public string Nickname { get; set; }
+		public string Nickname { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 		public DateTime RegisterDate { get; set; }
         public DateTime LastLoginDate { get; set; }
         public DateTime LastPlayDate { get; set; }	
 
-		// Shared Key로 UID 제공
-        public PlayerMoney Money { get; set; }
-        public PlayerStatus Status { get; set; }
-        public PlayerEquip Equip { get; set; }
-        public ICollection<PlayerInventoryItem> Inventory { get; set; }
-        public PlayerBattleRecord GomokuBattleRecord { get; set; }
+		// Shared Key로 UID 제공, 관계형 DB 연결
+        public PlayerMoney Money { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
+		public PlayerStatus Status { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
+		public PlayerEquip Equip { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
+		public ICollection<PlayerInventoryItem> Inventory { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
+		public PlayerBattleRecord GomokuBattleRecord { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 
 
 		public PlayerAccount() { }

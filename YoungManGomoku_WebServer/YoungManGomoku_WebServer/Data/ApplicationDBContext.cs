@@ -106,7 +106,7 @@ namespace YoungManGomoku_WebServer.Data
 
 			// 복합 키 대신 중복 방지 Unique Index (UID + ItemType + ItemId)
 			modelBuilder.Entity<PlayerInventoryItem>()
-				.HasIndex(i => new { i.UID, i.ItemType, i.ItemId })
+				.HasIndex(i => new { i.UID, i.ItemType, i.ItemID })
 				.IsUnique();
 
 			base.OnModelCreating(modelBuilder);

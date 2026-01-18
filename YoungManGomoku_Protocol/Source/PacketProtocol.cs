@@ -1,7 +1,7 @@
 ﻿using System;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
-using Microsoft.VisualBasic;
+
 using YoungManGomoku_Protocol.ServerToClient;
 
 /*
@@ -174,15 +174,8 @@ namespace YoungManGomoku_Protocol
 			ByoyomiPurchaseAmount = byoyomiPurchaseAmount;
 		}
 
-
-
-        public class PlayerInventoryData
-        {
-
-        }
     }
-    
-
+   
     public struct GameRecord
     {
         public GameEndCode EndCode { get; set; }
@@ -195,6 +188,80 @@ namespace YoungManGomoku_Protocol
         public uint DrawCount { get; set; }
         public uint LoseCount { get; set; }
     }
+
+
+	public class PlayerInventoryData
+	{
+        // enum type을 이용해 인덱스 접근
+        // None은 기본적으로 보유했다고 판단 (기본프로필사진), 다른 스킨 장착 중에도 None으로 돌아갈 수 있어야 함
+        // 상점에서 판매하지 않더라도 보유 및 장착이 가능해야함 (ex. None이나 기간 한정 판매 상품)
+        public bool[] ProfileInventrory { get; set; }
+
+		public bool[] StoneSkinInventory { get; set; }
+
+		public bool[] BoardSkinInventory { get; set; }
+
+        public PlayerInventoryData()
+        {
+			// 기본적으로 모든 인벤토리 배열의 값은 false
+
+			ProfileInventrory = new bool[(int)ProfileImageType.MAXCOUNT];
+			StoneSkinInventory = new bool[(int)StoneSkinType.MAXCOUNT];
+			BoardSkinInventory = new bool[(int)BoardSkinType.MAXCOUNT];
+
+			ProfileInventrory[(int)ProfileImageType.None] = true;
+			StoneSkinInventory[(int)StoneSkinType.None] = true;
+			BoardSkinInventory[(int)BoardSkinType.None] = true;
+
+			// 서버에서 보유중인 아이템만 확인해 추가적으로 true로 바뀜
+		}
+	}
+
+
+    public class ShopItemData
+    {
+        public ItemType ItemType { get; set; }
+        public string ItemName { get; set; }
+        public int Cost { get; set; }
+        
+        public int LevelLimit { get; set; }
+		public bool IsShopBuyAble { get; set; }
+
+		public ShopItemData(string name, ItemType type, int sellCost, bool buyAble, int levelLimit = 0)
+        {
+            ItemType = type;
+			ItemName = name;
+            Cost = sellCost;
+			IsShopBuyAble = buyAble;
+            LevelLimit = levelLimit;
+        }
+	}
+
+
+    // 서버에서 보유한, 상점에서 구매 가능한 아이템 목록
+    public class ShotItemBuyables
+    {
+		// enum type을 이용해 인덱스 접근
+		// true면 판매중, false면 판매하지 않음
+		// 판매하지 않는 스킨은 상점에 노출되지는 않지만, 이미 소유중이면 장착이 가능해야 하므로 노출 (None이나 기간 한정 스킨)
+        // 레벨 제한 등 구매 조건부가 있다고 하더라도 일단 상점 구매는 가능하다는 뜻이므로 true
+
+
+		// 현재 판매중인 프로필 이미지 목록
+		public ShopItemData[] ProfilenShopDatas { get; set; }
+
+		public ShopItemData[] StoneSkinShopDatas { get; set; }
+
+		public ShopItemData[] BoardSkinShopDatas { get; set; }
+
+        
+		public ShotItemBuyables()
+		{
+			ProfilenShopDatas = new ShopItemData[(int)ProfileImageType.MAXCOUNT];
+			StoneSkinShopDatas = new ShopItemData[(int)StoneSkinType.MAXCOUNT];
+			BoardSkinShopDatas = new ShopItemData[(int)BoardSkinType.MAXCOUNT];
+		}
+	}
 }
 
 namespace YoungManGomoku_Protocol.ClientToServer
@@ -271,6 +338,36 @@ namespace YoungManGomoku_Protocol.ClientToServer
 			IsPermit = isPermit;
         }
     }
+
+    public class CS_RequestEquipItemDTO
+    {
+		public string IDToken { get; set; }
+
+        // 지금 장착 요청하는 아이템 카테고리가 프로필인지 판인지 돌인지
+        public ItemType EquipItemType { get; set; }
+
+		// ProfileImageType 등을 형변환한 int 값. Request ItemType에 따라 Enum 의미가 바뀌므로 Int로 통일
+		// 어떤 아이템을 장착하려는지의 요청
+		public int EquipItemID { get; set; }
+
+        public CS_RequestEquipItemDTO() { }
+	}
+
+    public class CS_RequestBuyItemDTO
+    {
+		public string IDToken { get; set; }
+
+		// 지금 구매 요청하는 아이템 카테고리가 프로필인지 판인지 돌인지
+		public ItemType BuyItemType { get; set; }
+
+		// ProfileImageType 등을 형변환한 int 값. Request ItemType에 따라 Enum 의미가 바뀌므로 Int로 통일
+        // 어떤 아이템을 구매하고 싶은지의 요청
+		public int BuyItemID { get; set; }
+
+		public int GameMoney { get; set; } // 클라이언트가 보유한 돈, 서버 데이터와 비교 및 유효성 검사를 통해 변조 클라인지 확인
+
+        public CS_RequestBuyItemDTO() { }
+	}
 }
 
 namespace YoungManGomoku_Protocol.ServerToClient
@@ -378,6 +475,22 @@ namespace YoungManGomoku_Protocol.ServerToClient
             IsRematchSuccess = isRematchable;
             MyStoneColor = myStoneColor;
         }
+    }
+    
+    // 한 클라이언트에서 최초로 상점에 진입 시 요청해온 인벤토리, 상점 목록 응답
+    // 서버 버전 등 목록이 바뀐 것이 아니라면 2회 이상 재요청 하지 않음
+    public class SC_FirstEnterShopDTO
+    {
+        public PlayerInventoryData PlayerSkinInventory { get; set; }
+        public ShotItemBuyables ShopItemData { get; set; }
+
+        
+
+        public SC_FirstEnterShopDTO(PlayerInventoryData playerInventoryData, ShotItemBuyables shotItemBuyables)
+        {
+            PlayerSkinInventory = playerInventoryData;
+            ShopItemData = shotItemBuyables;
+		}
     }
 }
 

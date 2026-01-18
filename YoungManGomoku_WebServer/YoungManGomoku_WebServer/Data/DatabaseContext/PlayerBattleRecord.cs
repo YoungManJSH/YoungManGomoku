@@ -10,10 +10,10 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 		public ulong UID { get; set; }
 
         [ForeignKey(nameof(UID))]
-        public PlayerAccount Account { get; set; }
+        public PlayerAccount Account { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 
-        // 승리 횟수
-        public uint WinCount { get; set; }
+		// 승리 횟수
+		public uint WinCount { get; set; }
 
 		// 오목판이 꽉 찰 때까지 결판이 나지 않았다면 무승부 카운트
 		public uint DrawCount { get; set; }

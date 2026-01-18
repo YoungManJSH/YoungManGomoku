@@ -10,11 +10,11 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public ulong UID { get; set; }
 
         [ForeignKey(nameof(UID))]
-        public PlayerAccount Account { get; set; }
+        public PlayerAccount Account { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 
 
-        // 인게임 재화, 상점 이용에 쓴다
-        public int GameMoney { get; set; }
+		// 인게임 재화, 상점 이용에 쓴다
+		public int GameMoney { get; set; }
 
 		/*
         캐쉬 재화, 과금 시 쓰기 위한 재화인데 이거 구현할 일 있을까? 
