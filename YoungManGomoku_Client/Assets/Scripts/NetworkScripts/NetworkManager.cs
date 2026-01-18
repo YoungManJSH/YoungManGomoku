@@ -34,7 +34,6 @@ class BypassCertificate : CertificateHandler
     }
 }
 
-
 /*
 로그인할 때 인증 토큰(UID같은거)을 보냄
 게임 시작 시점과 게임 결과 시점 등 요청할 때마다 토큰을 같이 보내서 인증
@@ -56,7 +55,6 @@ public class NetworkManager : MonoBehaviour
 
     public static NetworkManager Instance { get; private set; }
 
-    
     // Execution Order -3 : 이 Instance는 가장 먼저 등록돼 있어야 함 
     private void Awake()
     {
@@ -120,7 +118,6 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_MatchResultDTO> RegisterMatchingRequest(string idToken, int timeOutSeconds = 0)
         => await RequestPostServer<SC_MatchResultDTO>("Matching/Register", $"\"{idToken}\"", timeOutSeconds, "Match Register");
 
-
 	/// <summary>
 	/// 웹 서버에 ID Token으로 등록한 매칭 취소
 	/// </summary>
@@ -167,7 +164,6 @@ public class NetworkManager : MonoBehaviour
     public async Awaitable<SC_ResponseStringDTO> RequestIngameAction(CS_InGameRequestDTO ingameReqDTO, int timeOutSeconds = 0)
     => await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/Request", JsonConvert.SerializeObject(ingameReqDTO), timeOutSeconds, "Gomoku Ingame : In Game Request Success");
 
-
 	/// <summary>
 	/// 서버로부터 상대의 무르기 요청 이벤트가 온 경우, 상대의 무르기 요청에 대한 승인이나 거절 여부를 담아 서버로 전송
 	/// </summary>
@@ -177,7 +173,6 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_ResponseStringDTO> RequestTakeBackPermit(CS_PermitDTO takebackPermitDTO, int timeOutSeconds = 0)
 	=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/TakeBackPermit", JsonConvert.SerializeObject(takebackPermitDTO), timeOutSeconds, "Gomoku Ingame : Send Takeback Permit Success");
 
-
 	/// <summary>
 	/// 서버로 자신이 재대결할 의사 여부에 대해 전달
 	/// </summary>
@@ -186,7 +181,6 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_ResponseStringDTO> RequestRematch(CS_PermitDTO requestRematchDTO, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_ResponseStringDTO>("GomokuIngame/RematchRequest", JsonConvert.SerializeObject(requestRematchDTO), timeOutSeconds, "Gomoku Rematch Request Success");
 	
-	
 	/// <summary>
 	/// 서버가 각 클라이언트의 재대결 의사를 확인한 재대결 성사 결과를 요청, 재대결 의사 여부와 함께 요청할 것
 	/// </summary>
@@ -194,19 +188,51 @@ public class NetworkManager : MonoBehaviour
 	public async Awaitable<SC_RematchResultDTO> RequestRematchResult(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_RematchResultDTO>("GomokuIngame/RematchResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Rematch Result Response Success");
 
-	
 	/// <summary>게임 종료 정보를 받아오기 위한 요청</summary>
 	public async Awaitable<GameRecord> RequestGameResult(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<GameRecord>("GomokuIngame/GameResult", $"\"{idToken}\"", timeOutSeconds, "Gomoku Game Result Success");
 
-	
+
+	/// <summary>
+	/// 접속한 유저가 소유 중인 아이템 목록과, 상점에서 판매중인 아이템 목록을 요청
+	/// 클라이언트가 실행 된 후 최초로 상점에 입장한 1회에만 수행하고, 2번째 이후의 상점 입장은 이미 캐시된 데이터를 사용하자
+	/// </summary>
+	/// <param name="idToken"></param>
+	/// <param name="timeOutSeconds"></param>
+	/// <returns></returns>
+	public async Awaitable<SC_FirstEnterShopDTO> RequestShopData(string idToken, int timeOutSeconds = 0)
+	=> await RequestPostServer<SC_FirstEnterShopDTO>("Shop/RequestInventoryAndShopItemList", $"\"{idToken}\"", timeOutSeconds, "Get Inventory & Shop Item Success");
+
+	/// <summary>
+	/// 아이템 장착 요청
+	/// </summary>
+	/// <param name="equipDTO"> 장착할 아이템 타입과 아이템 ID(타입별 Enum값) 등의 정보</param>
+	/// <param name="timeOutSeconds"></param>
+	/// <returns>  
+	/// 장착 요청, 아이템 장착 성공/실패 여부를 SC_ResponseStringDTO의 Is Success로 반환
+	/// 소유하지 않은 아이템이나 비정상 아이템을 요청 시 (존재하지 않는 enum 값이라든가) false
+	/// </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestEquipSkin(CS_RequestEquipItemDTO equipDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_ResponseStringDTO>("Shop/EquipItem", JsonConvert.SerializeObject(equipDTO), timeOutSeconds, "Skin Equip Success");
+
+
+	/// <summary>
+	/// 아이템 구매 요청
+	/// </summary>
+	/// <param name="buyItemDTO"> 구매할 아이템 타입과 아이템 ID(타입별 Enum값), 클라 소지금(서버 유효성 확인용) 등의 정보</param>
+	/// <param name="timeOutSeconds"></param>
+	/// <returns>  
+	/// 구매 요청, 구매 성공/실패 여부를 SC_ResponseStringDTO의 Is Success로 반환
+	/// 구매가 불가능한 아이템이나 비정상 아이템을 요청 시 false
+	/// </returns>
+	public async Awaitable<SC_ResponseStringDTO> RequestBuySkin(CS_RequestBuyItemDTO buyItemDTO, int timeOutSeconds = 0)
+		=> await RequestPostServer<SC_ResponseStringDTO>("Shop/BuyItem", JsonConvert.SerializeObject(buyItemDTO), timeOutSeconds, "Buy Shop Item Success");
+
+
 
 	/// <summary> 서버가 응답이 이상하거나 클라가 이상한 등 아무튼 클라의 접속을 끊어버리고 서버의 관리에서 죽여버리고 싶을 때(로그아웃) </summary>
 	public async Awaitable<SC_ResponseStringDTO> RequestCloseSession(string idToken, int timeOutSeconds = 0)
 		=> await RequestPostServer<SC_ResponseStringDTO>("Session/Close", $"\"{idToken}\"", timeOutSeconds, "Session Close");
-
-
-
 
 	/// <summary>
 	/// 웹 서버에 하트 비트 요청 (접속 여부 확인)

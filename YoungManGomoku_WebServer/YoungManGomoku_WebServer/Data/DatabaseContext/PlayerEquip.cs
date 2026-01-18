@@ -10,10 +10,10 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
         public ulong UID { get; set; }
 
         [ForeignKey(nameof(UID))]
-        public PlayerAccount Account { get; set; }
+        public PlayerAccount Account { get; set; } = null!; // EF를 위한 null 허용, 도메인적으로는 "항상 존재"라는 의미 유지
 
-        // 프로필이미지 = 캐릭터 (상점에서 팜)
-        public ProfileImageType EquipProfile { get; set; }
+		// 프로필이미지 = 캐릭터 (상점에서 팜)
+		public ProfileImageType EquipProfile { get; set; }
 
 		// 현재 장착중인 바둑돌 스킨
 		public StoneSkinType EquipStoneSkin { get; set; }
