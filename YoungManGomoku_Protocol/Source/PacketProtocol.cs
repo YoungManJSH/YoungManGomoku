@@ -149,9 +149,20 @@ namespace YoungManGomoku_Protocol
 		    MainTime = mainTime;
 		    ByoyomiCount = byoyomiCount;
 	    }
-	    
-	    // 프로퍼티로 만들면 직렬화되어 날아가므로 주의
-	    public bool IsDefault() => MainTime == 0 && ByoyomiCount == 0;
+		
+		/// <summary>유효하지 않은 타이머 정보인지를 반환</summary>
+		/// <returns>
+		/// <para>true: 0 이하의 타이머 정보 (유효하지 않음)</para>
+		/// <para>false: 0보다 큰 타이머 정보 (유효)</para>
+		/// </returns>
+	    public bool IsInvalid()
+	    {
+		    // 둘 중 하나라도 음수면 유효하지 않음
+		    if (MainTime < 0 || ByoyomiCount < 0) return true;
+
+		    // 둘 다 0이어도 유효하지 않음
+		    return MainTime == 0 && ByoyomiCount == 0;
+	    }
     }
 
 	///<summary> 

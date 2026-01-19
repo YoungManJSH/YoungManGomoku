@@ -110,11 +110,13 @@ public class StoneMoverMulti : StoneMover
                     return;
                 }
                 
-                if (opponentMove.OpponentTimer.ByoyomiCount <= 0)
+                if (opponentMove.OpponentTimer.IsInvalid())
                 {
-                    Debug.LogError($"상대방 초읽기 정보가 {opponentMove.OpponentTimer.ByoyomiCount}로 응답됨!");
-                    EventManager.ServerReplyFailed();
-                    return;
+                    /* 연출상 하자가 있는 상황이지만 시간승/시간패 로직은 별도로 처리되므로
+                     * fast-fail 대신 ignore-continue 전략 선택
+                     * 서버의 로직 오류가 클라이언트로 전달된 상황이므로 책임도 제한적으로만 진다. */
+                    Debug.LogWarning($"상대방 초읽기 정보가 {opponentMove.OpponentTimer.MainTime:F1}초," +
+                                     $"{opponentMove.OpponentTimer.ByoyomiCount}회로 응답됨!");
                 }
 
                 // 상대방 착수 정보 적용

@@ -168,7 +168,7 @@ public class GameManager : MonoBehaviour
                 TimerSyncData serverTimer =
                     await _networkManager.RequestTimerSynchro(_timerSynchroDTO);
 
-                if (serverTimer.IsDefault())
+                if (serverTimer.IsInvalid())
                 {
                     /* case 1: OnRequestFailed
                      * case 2: 서버 연산 로직 버그
@@ -177,16 +177,13 @@ public class GameManager : MonoBehaviour
                      * _eventManager.ServerReplyFailed()를 하지 않는 이유
                      * 타이머 동기화는 UI/UX 보강을 위한 작업일 뿐임.
                      * 게임의 핵심 로직이 아니므로 속행해도 무방함.
-                     * 따라서 유연하게 soft-fail 전략을 선택함 */
+                     * 따라서 유연하게 ignore 전략을 선택함
+                     * 단, 내 타이머는 상대방 타이머와는 다르게 기본적으로 내 클라이언트의 값을
+                     * 사용하는 영역이므로 이 경우 클라이언트 타이머를 그대로 유지함
+                     * (서버가 잘못된 값을 보냈으니 서버의 권위를 인정하지 않겠다...?) */
 
-                    Debug.LogWarning("타이머 동기화 요청에 default가 응답됨");
-                    return;
-                }
-
-                if (serverTimer.ByoyomiCount <= 0)
-                {
-                    Debug.LogError($"초읽기 개수 {serverTimer.ByoyomiCount}로 동기화가 응답됨!");
-                    _eventManager.ServerReplyFailed();
+                    Debug.LogWarning($"타이머 동기화 요청에 {serverTimer.MainTime:F1}초," +
+                                     $"{serverTimer.ByoyomiCount}회가 응답됨!");
                     return;
                 }
                 
