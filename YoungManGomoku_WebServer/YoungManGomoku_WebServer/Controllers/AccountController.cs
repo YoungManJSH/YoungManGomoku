@@ -96,7 +96,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             if (findAccount == null)
             {
-                _logger.LogTrace($"[{DateTime.Now}] [Account Controller] Login : Account by Token - DB Find  Fail...");
+                _logger.LogWarning($"[{DateTime.Now}] [Account Controller] Login : Account by Token - DB Find  Fail...");
                 return Conflict("Can't Find ID Token. Login Failed!");
             }
 

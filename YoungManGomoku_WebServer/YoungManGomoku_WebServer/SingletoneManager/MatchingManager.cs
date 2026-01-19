@@ -179,10 +179,12 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     WaitingPlayer candidate = _matchingQueue.Dequeue();
                     if (p1.PlayerIdToken == candidate.PlayerIdToken)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}] Matching Queue에 자기 자신과 매칭됨\n{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}");
+                        _logger.LogWarning($"[{DateTime.Now}] Matching Queue에 자기 자신과 매칭, 데이터 스킵\n{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}");
                         continue;
                     }
-                    if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
+
+					// Queue에 있어도 _waitingMap에 존재해야만 매칭
+					if (_waitingMap.ContainsKey(candidate.PlayerIdToken))
                     {
                         _logger.LogTrace($"[{DateTime.Now}] Matching 다른 플레이어 발견\n{_serverManagerContext.GetPlayerUID(candidate.PlayerIdToken)}");
                         p2 = candidate;
@@ -192,7 +194,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (p2 == null)
                 {
-                    _logger.LogTrace($"[{DateTime.Now}] Matching Fail - Matching Opponent is not Exist");
+                    // 매칭 큐가 0이 될 때까지 다 뽑았는데 상대가 없다고...? 큐에 취소한 이전의 나만 잔뜩 들어있던 거야?
+                    _logger.LogDebug($"[{DateTime.Now}] Matching Fail - Matching Opponent is not Exist");
                     _matchingQueue.Enqueue(p1);
                     break; // 매칭 가능한 상대 없음
                 }
@@ -200,7 +203,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 // 매칭 성공, 방 배정
                 ulong roomID = _serverManagerContext.GenerateUID64();
-                _logger.LogTrace($"[{DateTime.Now}] [Matching Success] Room ID {roomID}");
+                _logger.LogDebug($"[{DateTime.Now}] [Matching Success] Room ID {roomID}");
 
 
                 Random random = new Random();
