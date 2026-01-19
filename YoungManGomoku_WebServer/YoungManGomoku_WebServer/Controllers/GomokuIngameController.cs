@@ -123,17 +123,16 @@ namespace YoungManGomoku_WebServer.Controllers
             // 일단 보내져온 유저의 ID 토큰으로 서버에 접속중인 유저를 찾아온다
             PlayerSession? player = _serverManager.GetPlayerSession(reqTimerSyncDTO.IDToken);
 
-            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아남
-            // 인증 정보는 왔지만 유효한 세션이 아니다
+            // 클라를 못 찾았음. 비인가 클라이언트거나 게임 도중 서버가 뒤졌다가 살아났거나, 인증 정보는 왔지만 유효한 세션이 아니다
             if (player == null)
             {
-                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : 플레이어 세션 검색에 실패 {player.Account.UID}");
+                _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : 플레이어 세션 검색에 실패 {reqTimerSyncDTO.IDToken}");
                 return Unauthorized($"[{reqTimerSyncDTO.IDToken}] Player Session Not Found.");
             }
 
             player.LastRequestTime = DateTime.UtcNow;
 
-            // 네 이놈 게임 룸에 소속해 있지도 않은 주제에 이하생략
+            // 게임 룸에도 없는 유저가 무슨 시간 동기화를 하겠다고?
             if (_gameRoomManager.TryGetRoomByPlayer(player.Account.UID, out GameRoom? room) == false || room == null)
             {
                 _logger.LogWarning($"[{DateTime.Now}] [Gomoku Controller] 타이머 동기화 실패 : Not In Game {player.Account.UID}");

@@ -31,7 +31,7 @@ namespace YoungManGomoku_WebServer.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterMatching([FromBody] string idToken, CancellationToken ct)
         {
-            _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] {_serverManager.UserInfo(idToken)}Match Register");
+            // _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] {_serverManager.UserInfo(idToken)}Match Register");
 
             // Long Polling
             MatchResult mr = await _matchingManager.EnqueueAsync(idToken, ct);
@@ -48,7 +48,7 @@ namespace YoungManGomoku_WebServer.Controllers
 
             player.LastRequestTime = DateTime.UtcNow;
                 
-            _logger.LogTrace($"Match Result : {mr.OpponentUID} / {mr.Message} / {mr.Success} / {mr.StoneColor} /  {mr.GameRoomUID}");
+            _logger.LogTrace($"[{DateTime.Now}] Match Result : {mr.OpponentUID} / {mr.Message} / {mr.Success} / {mr.StoneColor} /  {mr.GameRoomUID}");
 
             SC_MatchResultDTO scDTO = new SC_MatchResultDTO(
                    null,
@@ -61,10 +61,10 @@ namespace YoungManGomoku_WebServer.Controllers
                    );
 
             if (mr.OpponentUID == 0 || mr.GameRoomUID == 0 || mr.StoneColor == StoneColorType.Empty || mr.Success == false)
-                _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] Match Register Fail : {mr.Message} / {mr.Success}");
+                _logger.LogDebug($"[{DateTime.Now}] [Matching Controller] Match Register Fail : {mr.Message} / {mr.Success}");
             else
             {
-                _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] Match Register Response : {_serverManager.UserInfo(idToken)}\nVerSus\n{_serverManager.UserInfo(mr.OpponentUID)}\n{mr.Message} / {mr.Success}");
+                // _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] Match Register Response : {_serverManager.UserInfo(idToken)}\nVerSus\n{_serverManager.UserInfo(mr.OpponentUID)}\n{mr.Message} / {mr.Success}");
 
                 scDTO.OpponentPlayer =_serverManager.ComposeOpponentPlayerData(mr.OpponentUID);                
             }
@@ -79,12 +79,12 @@ namespace YoungManGomoku_WebServer.Controllers
             if (player == null)
             {
                 // 인증 정보는 왔지만 유효한 세션이 아니다
-                _logger.LogTrace($"Player Session Not Found. ID Token : [{idToken}]");
+                _logger.LogDebug($"Player Session Not Found. ID Token : [{idToken}]");
 
                 return Unauthorized($"[{idToken}] Player Session Not Found.");
             }
 
-            _logger.LogTrace($"[{DateTime.Now}] [Matching Controller] {_serverManager.UserInfo(idToken)}Match Cancel Request");
+            //_logger.LogTrace($"[{DateTime.Now}] [Matching Controller] {_serverManager.UserInfo(idToken)}Match Cancel Request");
 
             player.LastRequestTime = DateTime.UtcNow;
 
