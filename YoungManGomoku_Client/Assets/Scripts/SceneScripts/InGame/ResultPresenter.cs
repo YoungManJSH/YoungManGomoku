@@ -45,6 +45,7 @@ public class ResultPresenter : MonoBehaviour
     private void Awake()
     {
         _audioSource = GetComponent<AudioSource>();
+        _endSound = drawSound;
         _replayText = replayButton.GetComponentInChildren<TextMeshProUGUI>();
         _prevTime = Mathf.CeilToInt(idlingTime);
         rematchTimer.text = _prevTime.ToString();
@@ -196,18 +197,16 @@ public class ResultPresenter : MonoBehaviour
     {
         mainText.text = "무승부";
         detailText.text = drawText;
-        _endSound = drawSound;
     }
 
     private void OnRequestFailed(RequestError error)
     {
-        if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene ||
-            EventManager.Instance.IsGameEnd) return;
+        if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)
+            return;
         
         Debug.LogError($"{error.Result}({error.StatusCode}): {error.Message}, {error.ResponseBody}");
         mainText.text = "통신 실패";
         detailText.text = disconnectedText;
-        _endSound = drawSound;
         DisableRematch();
         DisableReplay();
     }
@@ -216,7 +215,6 @@ public class ResultPresenter : MonoBehaviour
     {
         mainText.text = "통신 에러";
         detailText.text = disconnectedText;
-        _endSound = drawSound;
         DisableRematch();
         DisableReplay();
     }

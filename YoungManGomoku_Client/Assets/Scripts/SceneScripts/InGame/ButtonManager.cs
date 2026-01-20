@@ -105,10 +105,20 @@ public class ButtonManager : MonoBehaviour
 
     private void OnGameStart() => ButtonActivate(_surrenderSet);
     
-    private void OnGameEnd()
+    private async void OnGameEnd()
     {
-        DisableIngameButton();
-        ButtonActivate(_exitSet);
+        try
+        {
+            DisableIngameButton();
+            
+            // 결과창 출력 이전에는 나가기 버튼 비허용
+            await Awaitable.WaitForSecondsAsync(0.5f);
+            ButtonActivate(_exitSet);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"게임 종료 상황 버튼 활성화 제어 로직 오류: {e}");
+        }
     }
 
     private void DisableIngameButton()
