@@ -278,8 +278,16 @@ namespace YoungManGomoku_Protocol
 		public ShotItemBuyables()
 		{
 			ProfilenShopDatas = new ShopItemData[(int)ProfileImageType.MAXCOUNT];
+            for (ProfileImageType iType = 0; iType < ProfileImageType.MAXCOUNT; ++iType)
+                ProfilenShopDatas[(int)iType] = new ShopItemData();
+			
 			StoneSkinShopDatas = new ShopItemData[(int)StoneSkinType.MAXCOUNT];
+			for (StoneSkinType iType = 0; iType < StoneSkinType.MAXCOUNT; ++iType)
+				StoneSkinShopDatas[(int)iType] = new ShopItemData();
+
 			BoardSkinShopDatas = new ShopItemData[(int)BoardSkinType.MAXCOUNT];
+			for (BoardSkinType iType = 0; iType < BoardSkinType.MAXCOUNT; ++iType)
+				BoardSkinShopDatas[(int)iType] = new ShopItemData();
 		}
 	}
 }
