@@ -163,7 +163,6 @@ public class LoginWithGoogle : MonoBehaviour
             PlayerDataFromWebServer.Instance.SetIDToken(deviceId);
             PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(loginResult);
             MoveToLobbyScene();
-            //Debug.Log("로그인 성공!");
         }
 #endif
     }
@@ -217,6 +216,10 @@ public class LoginWithGoogle : MonoBehaviour
         {
             PlayerDataFromWebServer.Instance.SetIDToken(deviceId);
             PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(registerResult);
+            
+            // 서버로 상점 데이터 요청 및 대기
+            ShopDataManager.Instance.InitializeShopData(await GetComponent<NetworkManager>().RequestShopData(deviceId));
+            
             MoveToLobbyScene();
         }
     }
