@@ -114,7 +114,7 @@ namespace YoungManGomoku_WebServer.Controllers
         }
 
         [HttpPost("TimerSynchronize")]
-        public IActionResult ClientTimerSynchronize([FromBody] CS_RequestTimerSynchroDTO reqTimerSyncDTO)
+        public async Task<IActionResult> ClientTimerSynchronize([FromBody] CS_RequestTimerSynchroDTO reqTimerSyncDTO)
         {
             // 클라가 데이터를 JOAT같이 줬어요
             if (reqTimerSyncDTO == null)
@@ -139,7 +139,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 return BadRequest("Not in game");
             }
 
-            return Ok(room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
+            return Ok(await room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
         }
 
 
