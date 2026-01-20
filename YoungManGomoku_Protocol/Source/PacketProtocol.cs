@@ -1,8 +1,8 @@
 ﻿using System;
-using YoungManGomoku_Protocol.TypeEnum.PlayerData;
-using YoungManGomoku_Protocol.TypeEnum.InGame;
 
 using YoungManGomoku_Protocol.ServerToClient;
+using YoungManGomoku_Protocol.TypeEnum.InGame;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 /*
  Protocol의 PlayerData는 단순 서버와 통신용
@@ -238,6 +238,15 @@ namespace YoungManGomoku_Protocol
         public int LevelLimit { get; set; }
 		public bool IsShopBuyAble { get; set; }
 
+        public ShopItemData()
+        {
+			ItemType = ItemType.None;
+			ItemName = "";
+			Cost = 0;
+			IsShopBuyAble = false;
+			LevelLimit = 0;
+		}
+        
 		public ShopItemData(string name, ItemType type, int sellCost, bool buyAble, int levelLimit = 0)
         {
             ItemType = type;
