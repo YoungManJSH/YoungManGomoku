@@ -9,17 +9,33 @@ public class ReplayListReader : MonoBehaviour
     [SerializeField] private ReplayButtonCell cellPrefab;
     [SerializeField] private TextMeshProUGUI noReplayText;
     [SerializeField] private ReplayListMessageBox messageBox;
+    [SerializeField] private Button refreshButton;
     [SerializeField] private string deleteConfirmMessage;
     [SerializeField] private string deleteFailedMessage;
     [SerializeField] private float spacing;
 
     private ReplayButtonCell[] _replayButtonCells;
-    
-    private void Awake() => GenerateGiboCells().Cancel();
 
+    private void Awake() => refreshButton.onClick.AddListener(Start);
+    private void Start() => GenerateGiboCells().Cancel();
+    private void OnEnable() => refreshButton.gameObject.SetActive(true);
+    private void OnDisable() => refreshButton.gameObject.SetActive(false);
+        
+#if UNITY_STANDALONE || UNITY_EDITOR
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F5))
+        {
+            GenerateGiboCells().Cancel();
+        }
+    }
+#endif
+    
     /// <summary>기보 리스트 UI 새로고침</summary>
     private async Awaitable GenerateGiboCells()
     {
+        enabled = false;
+        
         if (_replayButtonCells != null)
         {
             foreach (ReplayButtonCell cell in _replayButtonCells)
@@ -35,6 +51,7 @@ public class ReplayListReader : MonoBehaviour
         
         if (giboList.Count == 0)
         {
+            enabled = true;
             noReplayText.text = "저장된 기보가 없습니다.";
             return;
         }
@@ -57,6 +74,7 @@ public class ReplayListReader : MonoBehaviour
         }
         
         noReplayText.enabled = false;
+        enabled = true;
     }
     
     private async void DeleteFile(string fileName, Action outlineOff)
