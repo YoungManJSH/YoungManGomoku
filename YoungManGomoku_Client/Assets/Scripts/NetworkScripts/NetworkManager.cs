@@ -44,11 +44,11 @@ public class NetworkManager : MonoBehaviour
 	/* 나중에 바꿀 예정
 	 * "https://localhost:5001" (서버와 클라이언트가 동일 컴퓨터인 경우)
      * 기존값 : "https://192.168.200.156:5001" (학원 자습실 컴퓨터 공유기 로컬망)
-     * 강찬구 집 데스크탑 : "https://118.37.190.229:5001"
+     * 강찬구 집 데스크탑 : "https://119.197.123.161:5001"
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	private const string baseURL = "https://118.37.190.229:5001"; //"https://localhost:5001";
+	private const string BASE_URL = "https://119.197.123.161:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;
@@ -259,14 +259,14 @@ public class NetworkManager : MonoBehaviour
 
     private async Awaitable<RecvData> RequestServer<RecvData>(string serverURL, string method, string sendJsonString, int timeOutSeconds = 0, string successAnnounce = "=== Request Success! ===")
 	{
-        UnityWebRequest uwr = new UnityWebRequest($"{baseURL}/{serverURL}", method);
+        UnityWebRequest uwr = new UnityWebRequest($"{BASE_URL}/{serverURL}", method);
 
         // Test 단계에서만 잠깐 쓸 코드, 유니티는 전부 신뢰시켜버리는거라 서버 보안적으로 매우 위험
         uwr.certificateHandler = new BypassCertificate();
 
         if (string.IsNullOrEmpty(sendJsonString) == false && method != "GET")
         {
-			Debug.Log($"Request URL: {baseURL}/{serverURL}\nSend Json Data : {sendJsonString}");
+			Debug.Log($"Request URL: {BASE_URL}/{serverURL}\nSend Json Data : {sendJsonString}");
 			uwr.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(sendJsonString));
         }
         else
@@ -286,7 +286,7 @@ public class NetworkManager : MonoBehaviour
 
         if (uwr.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
         {
-            Debug.Log($"{uwr.result} URL: {baseURL}/{serverURL}\n{sendJsonString}");
+            Debug.Log($"{uwr.result} URL: {BASE_URL}/{serverURL}\n{sendJsonString}");
 
             Debug.LogError($"Error: {uwr.error} / Code: {uwr.responseCode}\nBody: {uwr.downloadHandler.text}");
 

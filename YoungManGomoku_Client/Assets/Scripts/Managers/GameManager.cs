@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
-        _timerSynchroDTO = new CS_RequestTimerSynchroDTO(IdToken, 0, default);
+        _timerSynchroDTO = new CS_RequestTimerSynchroDTO(IdToken, nowTurn: 0);
         
         PlayerData my = PlayerDataFromWebServer.Instance.PlayerData;
         MyPlayer = new BasicPlayerData(my.Nickname, my.WinCount, my.DrawCount, my.LoseCount, my.Rating, my.EquipProfile);
@@ -164,7 +164,6 @@ public class GameManager : MonoBehaviour
                 if (BoardInform.NowTurn == 1) return;
                 
                 _timerSynchroDTO.NowTurn = BoardInform.NowTurn;
-                _timerSynchroDTO.MyTimer = PlayerTimer.SyncData;
                 TimerSyncData serverTimer =
                     await _networkManager.RequestTimerSynchro(_timerSynchroDTO);
 

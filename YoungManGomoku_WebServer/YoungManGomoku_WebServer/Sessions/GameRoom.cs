@@ -432,7 +432,7 @@ namespace YoungManGomoku_WebServer.Sessions
 			// return State == GameRoomState.Waiting; // 흑돌 착수 후 방의 상태가 플레잉으로 바뀐 다음 백돌의 시작 요청이 올 수 있다...
 		}
 
-        public PlaceStoneResultType PlaceStone(ulong UID, int x, int y)
+        public PlaceStoneResultType PlaceStone(ulong UID, int x, int y, TimerSyncData clientTimer)
         {
             lock (_gameroomLock)
             {
@@ -443,7 +443,7 @@ namespace YoungManGomoku_WebServer.Sessions
                     if (IsFinished)
                         return PlaceStoneResultType.Invalid;
 
-                    // 니 턴 아니야, 근데 첫턴은 네 턴 아닐 수도 있으니 제외
+                    // 네 턴이 아닌데 첫 턴도 아니라면 잘못된 요청임
                     if (UID != _currentTurnUID && _board.NowTurn != 0)
                         return PlaceStoneResultType.NotYourTurn;
                 }
@@ -500,11 +500,28 @@ namespace YoungManGomoku_WebServer.Sessions
 				// 타이머 진행 - (예시) 착수요청자 흑 기준이면 [흑].프로그레스(흑턴 시작 시간, 흑턴 착수 정보가 온 시간)
 				myTimer.ProgressExcludingTol(_gameProgressMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 				//_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] [{UID}] 타이머 진행 후 : 서버시간 {_gameProgressMilliseconds}ms - {myTimer.MainTime} / {myTimer.ByoyomiCount} / {myTimer.NowByoyomiSeconds}");
-				
+                
+                // 서버 타이머 값보다 클라이언트 타이머 값이 더 작으면 클라이언트 데이터 승인
+                if (myTimer >= clientTimer)
+                {
+                    // _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되었습니다.");
+                    
+                    myTimer.SynchroTimer(clientTimer); // 서버 타이머를 클라이언트 타이머와 동기화
+                }
+                else // 통신 시간에 따른 허용 오차를 고려해도 선 넘은 타이머인 경우 (기기 시각 조작, 개똥 인터넷 등)
+                {
+                    // 이 경우는 서버의 타이머를 그대로 사용한다.
+                    _gameRoomManager.Logger.LogDebug($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되지 않았습니다.\nClient Timer Data : 메인타임 {clientTimer.MainTime} / 초읽기 {clientTimer.ByoyomiCount}회\nServer Timer Data : 메인타임 {myTimer.MainTime} / 초읽기 {myTimer.ByoyomiCount}회");
+                }
+
+                // _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync Result] {_gameRoomManager.ServerContext.UserInfo(UID)} 동기화 및 승인 후 서버 타이머 현황 : {myTimer.SyncData.MainTime}초 / 잔여 초읽기 {myTimer.SyncData.ByoyomiCount}회");
+
+                
 
 				// _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Place Stone] {_board.NowTurn}턴 시작 : {(IsNowTurnBlack ? "Black" : "White")} {_gameRoomManager.ServerContext.UserInfo(_currentTurnUID)}유저의 차례");
 
 				// TryMoveStone이 true일 시 착수 성공. 내부적으로 승패 처리까지 동작하며 _board에 등록한 event들이 실행됨
+                // 또한 여기를 지나면서 NowTurn이 갱신되므로 SynchronizeTimerAsync의 대기가 풀릴 수 있게 된다.
 				if (_board.TryMoveStone(x, y) == false)
                 {
 					// 빈 곳이 아닌데 두려고 시도했거나, 흑돌이 금수 위치에 두려고 시도함. 클라 변조 체크
@@ -581,23 +598,32 @@ namespace YoungManGomoku_WebServer.Sessions
             }
         }
 
-        public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn, TimerSyncData clientTimerData)
+        public async Task<TimerSyncData> SynchronizeTimerAsync(ulong UID, int turn)
         {
             //_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] Client Turn {turn} / Server Board Turn {_board.NowTurn}");
 
             // 이벤트 기반으로 안전하게 턴 대기, 기존 while busy waiting 으로 인한 무식한 CPU 점유 제거
             //await WaitForSynchronizeTimerTurnAsync(turn);
 
-            const int MAX_TRYCOUNT = 1200;
-            int tryCnt = 0;
+            const int MAX_TRYCOUNT = 20;
+            int tryCnt;
+            
             for (tryCnt = 0; tryCnt < MAX_TRYCOUNT; ++tryCnt)
             {
-                if (turn == _board.NowTurn) break;
+                // 서버의 착수 상태가 클라이언트 요청 시점 이후이면 대기 중단
+                if (turn <= _board.NowTurn) break;
+                
+                // 클라이언트 요청 시점에 도달하지 않았으면 0.5초 뒤 다시 체크
                 await Task.Delay(500); // 500ms
             }
             if (tryCnt == MAX_TRYCOUNT)
             {
-                _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] try 1200회... 10분을 기다렸는데 턴 동기화가 안 되었다. {turn} / {_board.NowTurn}");
+                _gameRoomManager.Logger.LogWarning(
+                    $"[{DateTime.Now}] [Timer Sync] {MAX_TRYCOUNT / 2}초를 기다려도 착수 상태가 맞춰지지 않다니? {turn} / {_board.NowTurn}");
+                
+                /* 일반적인 상황에서 10초면 착수 상태가 동기화 되고도 남을 시간
+                 * 여기 왔다는 건 상당히 비정상적인 상황이므로 서버가 목 매달고 유효한 값을 보내줄 필요는 없음.
+                 * 즉, 난 할 만큼 했으니 일부러 무효한 값을 던져주고 마무리 */
                 return new TimerSyncData(0f, 0);
             }
 
@@ -607,23 +633,8 @@ namespace YoungManGomoku_WebServer.Sessions
                 _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)} 유저가 유저 타이머를 보유하고 있지 않다?!");
                 return new TimerSyncData(0f, 0);
             }
-
-            //_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)} 동기화 및 승인 전 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
-
-            // 서버 타이머 값보다 클라이언트 데이터값이 더 작으면 클라이언트 데이터 승인, 아니라면 클라이언트가 자기 컴퓨터 시계를 조작하거나 개똥인터넷이거나 등등
-            if (timer >= clientTimerData)
-            {
-                // _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되었습니다.");
-                timer.SynchroTimer(clientTimerData);
-            }
-            else
-            {
-                _gameRoomManager.Logger.LogDebug($"[{DateTime.Now}] [Timer Sync] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 타이머가 승인되지 않았습니다.\nClient Timer Data : 메인타임 {clientTimerData.MainTime} / 초읽기 {clientTimerData.ByoyomiCount}회\nServer Timer Data : 메인타임 {timer.MainTime} / 초읽기 {timer.ByoyomiCount}회");
-            }
-
-            //_gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] [Timer Sync Result] {_gameRoomManager.ServerContext.UserInfo(UID)} 동기화 및 승인 후 서버 타이머 현황 : {timer.SyncData.MainTime}초 / 잔여 초읽기 {timer.SyncData.ByoyomiCount}회");
-
-            // 승인 되지 않았다면 서버 타이머 데이터를 그대로 보냄
+            
+            // Happy Path, 서버가 결정해둔 타이머 정보를 보내주면 됨
             return timer.SyncData;
         }
 
