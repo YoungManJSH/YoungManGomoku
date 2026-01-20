@@ -8,6 +8,8 @@ public class LobbySceneManager : MonoBehaviour
     [SerializeField] private GameObject matchMakePanel;
     
     private PlayerDataFromWebServer playerDataFromWebServer;
+
+    private bool isMatchMaking;
     
     private void Awake()
     {
@@ -15,6 +17,8 @@ public class LobbySceneManager : MonoBehaviour
         {
             Instance = this;
         }
+
+        isMatchMaking = false;
     }
 
     private void Start()
@@ -31,12 +35,14 @@ public class LobbySceneManager : MonoBehaviour
     {
         try
         {
-            matchMakePanel.SetActive(true);
-
             if (playerDataFromWebServer == null)
             {
+                matchMakePanel.SetActive(true);
                 return;
             }
+            
+            matchMakePanel.SetActive(true);
+            isMatchMaking = true;
 
             var matchData =
                 await NetworkManager.Instance.RegisterMatchingRequest(playerDataFromWebServer.IDToken);
@@ -57,15 +63,22 @@ public class LobbySceneManager : MonoBehaviour
         }
     }
     
-    public void CancelMatchMaking()
+    public async void CancelMatchMaking()
     {
-        matchMakePanel.SetActive(false);
-
         if (playerDataFromWebServer == null)
         {
+            matchMakePanel.SetActive(false);
             return;
         }
 
-        NetworkManager.Instance.CancelMatchingRequest(playerDataFromWebServer.IDToken).Cancel();
+        if (isMatchMaking == false)
+        {
+            return;
+        }
+        
+        isMatchMaking = false;
+        await NetworkManager.Instance.CancelMatchingRequest(playerDataFromWebServer.IDToken);
+        
+        matchMakePanel.SetActive(false);
     }
 }
