@@ -96,7 +96,8 @@ namespace YoungManGomoku_WebServer.Controllers
             }
 
             // 내 돌은 두었고, 그 결과가 return됨
-            PlaceStoneResultType result = room.PlaceStone(player.Account.UID, userPlaceStoneDTO.Row, userPlaceStoneDTO.Col);
+            PlaceStoneResultType result = room.PlaceStone(player.Account.UID,
+                userPlaceStoneDTO.Row, userPlaceStoneDTO.Col, userPlaceStoneDTO.MyTimer);
 
             // 이번 착수로 내가 승리했기 때문에 상대방 착수를 대기할 필요가 없으니 즉시 return
             if (result == PlaceStoneResultType.NowWin)
@@ -139,7 +140,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 return BadRequest("Not in game");
             }
 
-            return Ok(await room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn, reqTimerSyncDTO.MyTimer));
+            return Ok(await room.SynchronizeTimerAsync(player.Account.UID, reqTimerSyncDTO.NowTurn));
         }
 
 
