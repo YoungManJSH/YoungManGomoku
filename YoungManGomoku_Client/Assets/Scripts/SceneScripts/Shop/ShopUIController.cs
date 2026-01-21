@@ -3,6 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using YoungManGomoku_Protocol;
+using YoungManGomoku_Protocol.ClientToServer;
+using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 public class ShopUIController : MonoBehaviour
@@ -19,6 +21,16 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private GridLayoutGroup grid;
     [SerializeField] private GameObject profileUIPrefab;
     [SerializeField] private ProfileImages profileImages;
+    
+    [Header("ItemBuyPanel")]
+    [SerializeField] private GameObject itemBuyPanel;
+    [SerializeField] private Image itemImage;
+    [SerializeField] private TextMeshProUGUI itemName;
+    [SerializeField] private TextMeshProUGUI itemCost;
+    [SerializeField] private Button itemBuyButton;
+    
+    [Header("NotEnoughMoneyPanel")]
+    [SerializeField] private GameObject notEnoughMoneyPanel;
 
     private PlayerData playerData;
 
@@ -53,7 +65,7 @@ public class ShopUIController : MonoBehaviour
         playerMoneyInShop.text = playerData.GameMoney.ToString();
         
         // 상점 UI 설정
-        
+        UpdateShopProfileUI();
     }
     
     /// <summary>
@@ -83,10 +95,16 @@ public class ShopUIController : MonoBehaviour
     private void UpdateShopProfileUI()
     {
         bool[] ownedProfiles = ShopDataManager.Instance.GetOwnedPlayerProfile();
-        int count = 1;
+        int count = 0;
         
         foreach (var profileItem in ShopDataManager.Instance.GetBuyableProfile())
         {
+            if (count == 0)
+            {
+                count++;
+                continue;
+            }
+            
             GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
             
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
@@ -97,13 +115,17 @@ public class ShopUIController : MonoBehaviour
             {
                 newProfileItem.transform.Find("HasItem").gameObject.SetActive(true);
             }
+            else
+            {
+                SetBuyEventToButton(newProfileItem,profileItem,(ProfileImageType)count);
+            }
 
-            if (count == (int)PlayerDataFromWebServer.Instance.PlayerData.EquipProfile)
+            if (count == (int)playerData.EquipProfile)
             {
                 newProfileItem.transform.Find("EquipedItem").gameObject.SetActive(true);
             }
 
-            if (profileItem.LevelLimit < PlayerDataFromWebServer.Instance.PlayerData.Level)
+            if (profileItem.LevelLimit > playerData.Level)
             {
                 newProfileItem.transform.Find("ButtonOff").gameObject.SetActive(true);
                 newProfileItem.transform.Find("ButtonOff").Find("LevelLimit").GetComponent<TextMeshProUGUI>().text = $"레벨제한 {profileItem.LevelLimit}";
@@ -111,5 +133,54 @@ public class ShopUIController : MonoBehaviour
 
             count++;
         }
+    }
+
+    private void SetBuyEventToButton(GameObject button, ShopItemData shopItemData, ProfileImageType imageType)
+    {
+        button.GetComponent<Button>().onClick.AddListener(()=>
+        {
+            if (playerData.CashMoney >= shopItemData.Cost)
+            {
+                notEnoughMoneyPanel.SetActive(true);
+                return;
+            }
+            
+            // 상점 구매 확정 창 출현 및 내부 UI 채우기
+            itemBuyPanel.SetActive(true);
+            itemImage.sprite = profileImages[imageType];
+            itemName.text = shopItemData.ItemName;
+            itemCost.text =  shopItemData.Cost.ToString();
+            
+            // 구매하기 버튼에 지정할 코드
+            itemBuyButton.onClick.RemoveAllListeners();
+            itemBuyButton.onClick.AddListener(async () =>
+            {
+                CS_RequestBuyItemDTO requestBuyItemDTO = new CS_RequestBuyItemDTO();
+                requestBuyItemDTO.IDToken = SystemInfo.deviceUniqueIdentifier;
+                requestBuyItemDTO.BuyItemType = shopItemData.ItemType;
+                requestBuyItemDTO.BuyItemID = (int)imageType;
+                requestBuyItemDTO.GameMoney = playerData.GameMoney;
+
+                SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestBuySkin(requestBuyItemDTO);
+
+                if (response.IsSuccess==true)
+                {
+                    // 보유 금액 제거 및 UI 갱신
+                    playerData.GameMoney -= shopItemData.Cost;
+                    playerMoneyInShop.text = playerData.GameMoney.ToString();
+                    
+                    // 구매한 아이템 상태 변경
+                    button.transform.Find("HasItem").gameObject.SetActive(true);
+
+                    // 캐시 된 인벤토리 업데이트
+                    ShopDataManager.Instance.GetOwnedPlayerProfile()[(int)imageType] = true;
+                    
+                    // 장비 가능 UI로 변경 필요
+                    
+                    // 아이템 구매 창 비활성화
+                    itemBuyPanel.SetActive(false);
+                }
+            });
+        });
     }
 }

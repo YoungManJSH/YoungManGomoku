@@ -162,6 +162,10 @@ public class LoginWithGoogle : MonoBehaviour
         {
             PlayerDataFromWebServer.Instance.SetIDToken(deviceId);
             PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(loginResult);
+            
+            // 서버로 상점 데이터 요청 및 대기
+            ShopDataManager.Instance.InitializeShopData(await GetComponent<NetworkManager>().RequestShopData(deviceId));
+            
             MoveToLobbyScene();
         }
 #endif
