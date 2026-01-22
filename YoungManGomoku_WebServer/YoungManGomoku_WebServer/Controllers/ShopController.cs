@@ -24,12 +24,14 @@ namespace YoungManGomoku_WebServer.Controllers
 		private  ApplicationDBContext _context;
         private readonly ILogger<ShopController> _logger;
         private readonly ServerManager _serverManager;
+		private readonly ItemManager _itemManager;
 
-        public ShopController(ILogger<ShopController> logger, ApplicationDBContext context, ServerManager serverManager)
+        public ShopController(ILogger<ShopController> logger, ApplicationDBContext context, ServerManager serverManager, ItemManager itemManager)
         {
             _logger = logger;
             _context = context;
             _serverManager = serverManager;
+			_itemManager = itemManager;
         }
 
         // 상점 입장함 (상점 판매 목록 요청)
@@ -50,12 +52,8 @@ namespace YoungManGomoku_WebServer.Controllers
 
 			player.LastRequestTime = DateTime.UtcNow;
 
-
-            
-
 			PlayerInventoryData playerSkinInventory = new PlayerInventoryData();
             
-
 			// DB에서 플레이어 인벤토리를 꺼내와서 보유중인 아이템은 true로 변경 후 전송할 것
             PlayerInventoryItem[] inventory = _context.PlayerInventoryTable.Where(m => m.UID == uid).ToArray();
 
@@ -79,73 +77,8 @@ namespace YoungManGomoku_WebServer.Controllers
             }
 
 			// 상점 목록 갱신
-			ShotItemBuyables shopItemData = new ShotItemBuyables();
 
-			// 인덱스가 0인 None을 제외하고 일단은 다 구매 가능함
-
-			for (ProfileImageType imgType = ProfileImageType.None; imgType  < ProfileImageType.MAXCOUNT; ++imgType)
-			{
-				int i = (int)imgType;
-				shopItemData.ProfilenShopDatas[i].ItemType = ItemType.ProfileImage;
-				shopItemData.ProfilenShopDatas[i].IsShopBuyAble = true;
-
-				// 딱히 외부 기획 데이터 파싱이 없으므로 우선 서버에 직접 하드코딩 때림
-				// 후일 바뀔지 안 바뀔지 미정
-				// 서버매니저가 따로 들고있는것이 좋겠지만, 우선 TDD를 위한 선 적용
-
-				switch (imgType)
-				{
-					case ProfileImageType.None:
-						shopItemData.ProfilenShopDatas[i].IsShopBuyAble = false;
-						shopItemData.ProfilenShopDatas[i].ItemName = "None";						
-						shopItemData.ProfilenShopDatas[i].Cost = 0;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 0;
-						break;
-					case ProfileImageType.StudentBoy:
-						shopItemData.ProfilenShopDatas[i].ItemName = "StudentBoy";
-						shopItemData.ProfilenShopDatas[i].Cost = 300;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 1;
-						break;
-					case ProfileImageType.StudentGirl:
-						shopItemData.ProfilenShopDatas[i].ItemName = "StudentGirl";
-						shopItemData.ProfilenShopDatas[i].Cost = 5000;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 50;
-						break;
-					case ProfileImageType.GentleMan:
-						shopItemData.ProfilenShopDatas[i].ItemName = "GentleMan";
-						shopItemData.ProfilenShopDatas[i].Cost = 100;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 0;
-						break;
-					case ProfileImageType.Maam:
-						shopItemData.ProfilenShopDatas[i].ItemName = "Maam";
-						shopItemData.ProfilenShopDatas[i].Cost = 500;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 10;
-						break;
-					case ProfileImageType.GrandFather:
-						shopItemData.ProfilenShopDatas[i].ItemName = "GrandFather";
-						shopItemData.ProfilenShopDatas[i].Cost = 1000;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 15;
-						break;
-					case ProfileImageType.GrandMather:
-						shopItemData.ProfilenShopDatas[i].ItemName = "GrandMather";
-						shopItemData.ProfilenShopDatas[i].Cost = 250;
-						shopItemData.ProfilenShopDatas[i].LevelLimit = 5;
-						break;
-				}
-			}
-
-			for (int i = 1; i < (int)StoneSkinType.MAXCOUNT; ++i)
-			{
-				shopItemData.StoneSkinShopDatas[i].ItemType = ItemType.StoneSkin;
-				shopItemData.StoneSkinShopDatas[i].IsShopBuyAble = true;
-			}
-			for (int i = 1; i < (int)BoardSkinType.MAXCOUNT; ++i)
-			{
-				shopItemData.StoneSkinShopDatas[i].ItemType = ItemType.BoardSkin;
-				shopItemData.BoardSkinShopDatas[i].IsShopBuyAble = true;
-			}
-
-			return Ok(new SC_FirstEnterShopDTO(playerSkinInventory, shopItemData));
+			return Ok(new SC_FirstEnterShopDTO(playerSkinInventory, _itemManager.ComposeBuyableData()));
         }
 
 		// 아이템 장착 요청
@@ -193,6 +126,7 @@ namespace YoungManGomoku_WebServer.Controllers
 						if ((ProfileImageType)equipItemDTO.EquipItemID >= ProfileImageType.MAXCOUNT)
 						{
 							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Profile] {equipItemDTO.EquipItemID} 라는 프로필은 없습니다.");
+							return Ok(new SC_ResponseStringDTO("Unknow Profile Equip Fail", false));
 						}
 						equipState.EquipProfile = (ProfileImageType)equipItemDTO.EquipItemID;
 						break;
@@ -200,6 +134,7 @@ namespace YoungManGomoku_WebServer.Controllers
 						if ((StoneSkinType)equipItemDTO.EquipItemID >= StoneSkinType.MAXCOUNT)
 						{
 							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Stone] {equipItemDTO.EquipItemID} 라는 돌 스킨은 없습니다.");
+							return Ok(new SC_ResponseStringDTO("Unknow Stone Equip Fail", false));
 						}
 						equipState.EquipStoneSkin = (StoneSkinType)equipItemDTO.EquipItemID;
 						break;
@@ -207,19 +142,25 @@ namespace YoungManGomoku_WebServer.Controllers
 						if ((BoardSkinType)equipItemDTO.EquipItemID >= BoardSkinType.MAXCOUNT)
 						{
 							_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Board] {equipItemDTO.EquipItemID} 라는 보드 스킨은 없습니다.");
+							return Ok(new SC_ResponseStringDTO("Unknow Board Equip Fail", false));
 						}
 						equipState.EquipBoardSkin = (BoardSkinType)equipItemDTO.EquipItemID;
 						break;
 					default:
-						_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip] {equipItemDTO.EquipItemType} 라는 아이템 타입은 없습니다.");
-						break;
+						_logger.LogWarning($"[{DateTime.Now}] [Shop] [Equip Unknown] {equipItemDTO.EquipItemType} 라는 아이템 타입은 없습니다.");
+						return Ok(new SC_ResponseStringDTO("Unknow ItemType Equip Fail", false));
 				}
 
 				// DB Process
 				_context.PlayerEquipItemStateTable.Update(equipState);
 				_context.SaveChanges();
 			}
-		
+			else
+			{
+				// 보유중이지 않은 아이템 장착을 시도
+				return Ok(new SC_ResponseStringDTO("Equip Fail", true));
+			}
+
 			return Ok(new SC_ResponseStringDTO("Equip Success", true));
 		}
 
@@ -237,7 +178,49 @@ namespace YoungManGomoku_WebServer.Controllers
 				return Unauthorized($"[{buyItemDTO.IDToken}] Player Session Not Found. Please Re Login.");
 			}
 
-			return Ok(new SC_ResponseStringDTO("Buy Success", true));
+			
+			if (buyItemDTO.GameMoney != player.Account.Money.GameMoney)
+			{
+				_logger.LogWarning($"[{DateTime.Now}] [Shop Controller] 플레이어가 요청해온 소지금과 서버가 확인한 소지금이 다릅니다! 클라이언트 변조 같아요! [{uid}] : {buyItemDTO.IDToken}");
+				return Unauthorized($"[{buyItemDTO.IDToken}] The Values of Client Game Money and Server Game Money are different!!!");
+			}
+
+			ShopItemData? buyTargetItem = null;
+			switch(buyItemDTO.BuyItemType)
+			{
+				case ItemType.ProfileImage:
+					_itemManager.ProfilenShopDatas.TryGetValue((ProfileImageType)buyItemDTO.BuyItemID, out buyTargetItem);
+					break;
+				case ItemType.StoneSkin:
+					_itemManager.StoneSkinShopDatas.TryGetValue((StoneSkinType)buyItemDTO.BuyItemID, out buyTargetItem);
+					break;
+				case ItemType.BoardSkin:
+					_itemManager.BoardSkinShopDatas.TryGetValue((BoardSkinType)buyItemDTO.BuyItemID, out buyTargetItem);
+					break;
+			}
+
+			if (buyTargetItem == null)
+			{
+				_logger.LogDebug($"[{DateTime.Now}] [Shop Controller] 알 수 없는 아이템 타입 혹은 아이템 ID입니다. - Type {buyItemDTO.BuyItemType} : [{buyItemDTO.BuyItemID}]");
+				return BadRequest($"Type {buyItemDTO.BuyItemType} : [{buyItemDTO.BuyItemID}] is Unkonw Item Type or Unknown Item ID.");
+			}
+
+			// 레벨 제한과 소지금 검사
+			if (buyTargetItem.LevelLimit <= player.Account.Status.Level && buyTargetItem.Cost <= player.Account.Money.GameMoney)
+			{
+				// 서버 세션의 소지금 변경 후 DB 업데이트
+				player.Account.Money.GameMoney -= buyTargetItem.Cost;
+				_context.PlayerMoneyTable.Update(player.Account.Money);
+
+				// 인벤토리 DB 테이블에 새 행 추가
+				PlayerInventoryItem newItem = new PlayerInventoryItem(player.Account, buyTargetItem.ItemType, buyItemDTO.BuyItemID);
+				_context.PlayerInventoryTable.Add(newItem);
+
+				_context.SaveChanges();
+				return Ok(new SC_ResponseStringDTO("Buy Success", true));
+			}
+
+			return Ok(new SC_ResponseStringDTO("Buy Failed. Not enough Level or GameMoney.", false));
         }
     }
 }

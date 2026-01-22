@@ -14,7 +14,8 @@ using YoungManGomoku_WebServer.SingletoneManager.Interface;
 namespace YoungManGomoku_WebServer.SingletoneManager
 {
     public class ServerManager : IServerContext
-    {        private readonly ILogger<ServerManager> _logger;
+    {        
+        private readonly ILogger<ServerManager> _logger;
 
         private readonly UIDGenerator _uidGenerator;
         // DB에 사용되는 테이블이 포함된 PlayerSession Class를 Concurrent Dictionary 구현해 접속중인 유저 관리
@@ -159,7 +160,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     DisconnectCount = playerSession.Account.GomokuBattleRecord.DisconnectCount
                 };
             }
-            _logger.LogWarning($"[{DateTime.Now}] Failed : ComposePlayerData By UID ({UID}).\nPlayerSession has not UID Data.");
+            _logger.LogWarning($"[{DateTime.Now}] PlayerSession has not UID Data. Failed ComposePlayerData By UID ({UID})");
             return null;
 		}
 

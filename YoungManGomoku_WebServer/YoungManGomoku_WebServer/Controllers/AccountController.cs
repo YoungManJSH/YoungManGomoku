@@ -6,10 +6,13 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+
 //using System.Security.Cryptography.X509Certificates;
 
 using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ClientToServer;
+using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Data.DatabaseContext;
@@ -57,7 +60,13 @@ namespace YoungManGomoku_WebServer.Controllers
 
             // Database Insert
 			_context.PlayerAccountTable.Add(playerAccount);
-            _context.SaveChanges();
+
+            // 기본 아이템 추가
+            _context.PlayerInventoryTable.Add(new PlayerInventoryItem(playerAccount, ItemType.ProfileImage, (uint)ProfileImageType.None));
+			_context.PlayerInventoryTable.Add(new PlayerInventoryItem(playerAccount, ItemType.StoneSkin, (uint)StoneSkinType.None));
+			_context.PlayerInventoryTable.Add(new PlayerInventoryItem(playerAccount, ItemType.BoardSkin, (uint)BoardSkinType.None));
+
+			_context.SaveChanges();
 
             // Register Server Memory Session
             while (_serverManager.PlayerDatas.TryAdd(playerAccount.UID
@@ -67,7 +76,7 @@ namespace YoungManGomoku_WebServer.Controllers
                 _logger.LogDebug($"[{DateTime.Now}] [Account Controller] Register : PlayerSession already exists. UID [{playerAccount.UID}]");
 
                 // 일단 무식하게 제거
-                while (_serverManager.PlayerDatas.TryRemove(playerAccount.UID, out PlayerSession findRemoveAccount));
+                while (_serverManager.PlayerDatas.TryRemove(playerAccount.UID, out PlayerSession? findRemoveAccount));
             }
 
             while (_serverManager.UIDByIDToken.TryAdd(playerAccount.AuthToken, playerAccount.UID) == false)

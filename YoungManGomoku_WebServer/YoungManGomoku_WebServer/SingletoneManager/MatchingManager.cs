@@ -141,8 +141,6 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     return;
                 }
 
-                
-
                 wp.TaskCompSrc?.TrySetResult(
                     new MatchResult
                     (
@@ -168,10 +166,13 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
                 if (_waitingMap.TryGetValue(p1Token, out WaitingPlayer? p1) == false)
                 {
-                    _logger.LogWarning($"[{DateTime.Now}] Matching Queue에는 있는데 대기자 맵에 없습니다. [{_serverManagerContext.GetPlayerUID(p1Token)}]");
+                    _logger.LogWarning($"[{DateTime.Now}] [Match] Matching Queue에는 있는데 대기자 맵에 없습니다. - P1 : [{_serverManagerContext.GetPlayerUID(p1Token)}]");
                     continue; // p1이 매칭을 취소해서 맵에 없으니 큐에서 버림
                 }
 
+                // 이미 취소되어서 날아가있는 Queue의 WaitingPlayer를 사용하려 들어서 매칭 이슈 발생.
+                // 따라서 Queue를 wp class가 아닌 ID Token만 담고 비교해 wmap의 데이터를 사용하도록 조정.
+                // 다른 방법으로는 ReferenceEqual로 비교해서 사용할 수도 있었을 것
                 WaitingPlayer? p2 = null;
                 while (_matchingQueue.Count > 0)
                 {
@@ -179,19 +180,21 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                     
                     if (p1Token == p2Token)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}] 중복 등록된 Matching queue 값이므로 스킵\n{_serverManagerContext.GetPlayerUID(p2Token)}");
+                        _logger.LogDebug($"[{DateTime.Now}] [Match] ] Matching Queue에 자기 자신과 매칭, 중복 등록된 Matching queue ID토큰이므로 스킵 - P2 : [{_serverManagerContext.GetPlayerUID(p2Token)}]");
                         continue;
                     }
 
 					// Queue에 있어도 _waitingMap에 존재해야만 매칭
 					if (_waitingMap.TryGetValue(p2Token, out p2))
                     {
-                        _logger.LogTrace($"[{DateTime.Now}] Matching 상대 플레이어 발견\n{_serverManagerContext.GetPlayerUID(p2Token)}");
+                        _logger.LogTrace($"[{DateTime.Now}] [Match] 다른 대기 플레이어 발견 - P2 : [{_serverManagerContext.GetPlayerUID(p2Token)}]");
                         break;
                     }
                 }
 
-                if (p2 == null) // 큐를 끝까지 다 뽑았는데 p2를 찾지 못함
+				// 큐를 끝까지 다 뽑았는데 다른 플레이어 p2를 찾지 못함
+                // 취소해버려서 유효한 상대가 없었거나, 자기 자신만 잔뜩 나왔거나
+				if (p2 == null) 
                 {
                     _logger.LogDebug($"[{DateTime.Now}] Matching Fail - Matching Opponent is not Exist");
                     _matchingQueue.Enqueue(p1Token); // p1Token은 유효했던 Queue이므로 되돌려놓기
@@ -202,7 +205,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
                 ulong roomID = _serverManagerContext.GenerateUID64();
                 _logger.LogDebug($"[{DateTime.Now}] [Matching Success] Room ID {roomID}");
 
-                
+                // Random() is Critical Section
                 int colorRandomValue = Random.Next(0, 2);
 
                 // 매칭에 성공한 두 플레이어에게 각각의 게임을 위한 정보 (색, 방번호) 전달 및 클라이언트로 응답
