@@ -404,7 +404,7 @@ namespace YoungManGomoku_Protocol.ClientToServer
 
 		// ProfileImageType 등을 형변환한 int 값. Request ItemType에 따라 Enum 의미가 바뀌므로 Int로 통일
         // 어떤 아이템을 구매하고 싶은지의 요청
-		public int BuyItemID { get; set; }
+		public uint BuyItemID { get; set; }
 
 		public int GameMoney { get; set; } // 클라이언트가 보유한 돈, 서버 데이터와 비교 및 유효성 검사를 통해 변조 클라인지 확인
 
@@ -526,9 +526,7 @@ namespace YoungManGomoku_Protocol.ServerToClient
     public class SC_FirstEnterShopDTO
     {
         public PlayerInventoryData PlayerSkinInventory { get; set; }
-        public ShotItemBuyables ShopItemData { get; set; }
-
-        
+        public ShotItemBuyables ShopItemData { get; set; }        
 
         public SC_FirstEnterShopDTO(PlayerInventoryData playerInventoryData, ShotItemBuyables shotItemBuyables)
         {

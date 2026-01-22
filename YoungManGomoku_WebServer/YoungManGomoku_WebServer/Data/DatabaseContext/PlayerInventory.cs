@@ -28,18 +28,13 @@ namespace YoungManGomoku_WebServer.Data.DatabaseContext
 
         public PlayerInventoryItem() {}
 
-        public PlayerInventoryItem(PlayerAccount account)
-        {
-            this.Account = account;
-            this.UID = account.UID;
-        }
-
-        public PlayerInventoryItem(PlayerAccount account, ItemType type, uint itemId)
+		// account 유저에게 type 형태의 itemID 아이템 추가
+        public PlayerInventoryItem(PlayerAccount account, ItemType type, uint itemID)
 		{
 			this.Account = account;
 			this.UID = account.UID;
 			this.ItemType = type;
-			this.ItemID = itemId;
+			this.ItemID = itemID;
 		}
 	}
 }
