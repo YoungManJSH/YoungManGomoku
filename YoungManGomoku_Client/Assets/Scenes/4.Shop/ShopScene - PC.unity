@@ -2784,7 +2784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GridLayoutGroup
   m_Padding:
-    m_Left: 30
+    m_Left: 20
     m_Right: 0
     m_Top: 15
     m_Bottom: 0
@@ -2792,7 +2792,7 @@ MonoBehaviour:
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 350, y: 400}
-  m_Spacing: {x: 30, y: 30}
+  m_Spacing: {x: 20, y: 30}
   m_Constraint: 0
   m_ConstraintCount: 3
 --- !u!114 &633272459
@@ -5396,6 +5396,7 @@ MonoBehaviour:
   menuPanel: {fileID: 775757324}
   playerNicknameInMenu: {fileID: 92131847}
   playerStatsInMenu: {fileID: 1837545228}
+  playerProfileInMenu: {fileID: 1979064649}
   scaler: {fileID: 982347274}
   grid: {fileID: 633272458}
   profileUIPrefab: {fileID: 4075700367681981568, guid: ae12a99bb4952e64e884b1f12db7ca2f, type: 3}
