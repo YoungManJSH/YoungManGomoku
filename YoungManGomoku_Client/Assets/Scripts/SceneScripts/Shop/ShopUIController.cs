@@ -10,29 +10,42 @@ using YoungManGomoku_Protocol.TypeEnum.PlayerData;
 public class ShopUIController : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerMoneyInShop;
-    
-    [Header("MenuPanel")]
+
+    [Header("MenuPanel")] 
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private TextMeshProUGUI playerNicknameInMenu;
     [SerializeField] private TextMeshProUGUI playerStatsInMenu;
-    
-    [Header("ShopUI")]
+    [SerializeField] private Image playerProfileInMenu;
+
+    [Header("ShopUI")] 
     [SerializeField] private CanvasScaler scaler;
     [SerializeField] private GridLayoutGroup grid;
     [SerializeField] private GameObject profileUIPrefab;
     [SerializeField] private ProfileImages profileImages;
-    
-    [Header("ItemBuyPanel")]
+
+    [Header("ItemBuyPanel")] 
     [SerializeField] private GameObject itemBuyPanel;
+
     [SerializeField] private Image itemImage;
     [SerializeField] private TextMeshProUGUI itemName;
     [SerializeField] private TextMeshProUGUI itemCost;
     [SerializeField] private Button itemBuyButton;
-    
-    [Header("NotEnoughMoneyPanel")]
+
+    [Header("NotEnoughMoneyPanel")] 
     [SerializeField] private GameObject notEnoughMoneyPanel;
 
-    private PlayerData playerData;
+    /// <summary>
+    /// 더블 클릭 감지용 변수들
+    /// </summary>
+    /// <returns></returns>
+    private Button lastClickedButton;
+    private float lastClickTime; 
+    private float doubleClickIntervalTime;
+
+    /// <summary>
+    /// 장착된 아이템 캐시용
+    /// </summary>
+    private GameObject equippedProfile;
 
     private void Awake()
     {
@@ -44,6 +57,9 @@ public class ShopUIController : MonoBehaviour
         float cellWidth = 450f * widthRatio;
         float cellHeight = 500f * heightRatio;
         grid.cellSize = new Vector2(cellWidth, cellHeight);
+
+        lastClickTime = 0f;
+        doubleClickIntervalTime = 0.3f;
     }
 
     /// <summary>
@@ -55,19 +71,20 @@ public class ShopUIController : MonoBehaviour
         {
             return;
         }
-        
+
         // 플레이어 정보 UI 설정
-        playerData =  PlayerDataFromWebServer.Instance.PlayerData;
-        
+        var playerData = PlayerDataFromWebServer.Instance.PlayerData;
+
+        playerProfileInMenu.sprite = profileImages[playerData.EquipProfile];
         playerNicknameInMenu.text = playerData.Nickname;
         playerStatsInMenu.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
 
         playerMoneyInShop.text = playerData.GameMoney.ToString();
-        
+
         // 상점 UI 설정
         UpdateShopProfileUI();
     }
-    
+
     /// <summary>
     /// esc 키 입력으로 메뉴 UI on/off
     /// </summary>
@@ -96,61 +113,68 @@ public class ShopUIController : MonoBehaviour
     {
         bool[] ownedProfiles = ShopDataManager.Instance.GetOwnedPlayerProfile();
         int count = 0;
-        
+
         foreach (var profileItem in ShopDataManager.Instance.GetBuyableProfile())
         {
-            if (count == 0)
-            {
-                count++;
-                continue;
-            }
-            
+
             GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
-            
+
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
-            newProfileItem.transform.Find("ItemImage").GetComponent<Image>().sprite = profileImages[(ProfileImageType)count];
-            newProfileItem.transform.Find("Image").Find("Cost").GetComponent<TextMeshProUGUI>().text = profileItem.Cost.ToString();
+            newProfileItem.transform.Find("ItemImage").GetComponent<Image>().sprite =
+                profileImages[(ProfileImageType)count];
+            newProfileItem.transform.Find("Image").Find("Cost").GetComponent<TextMeshProUGUI>().text =
+                profileItem.Cost.ToString();
 
             if (ownedProfiles[count] == true)
             {
                 newProfileItem.transform.Find("HasItem").gameObject.SetActive(true);
+                SetEquipEventToButton(newProfileItem, profileItem, (ProfileImageType)count);
+            }
+            else if (profileItem.LevelLimit <= PlayerDataFromWebServer.Instance.PlayerData.Level)
+            {
+                SetBuyEventToButton(newProfileItem, profileItem, (ProfileImageType)count);
             }
             else
             {
-                SetBuyEventToButton(newProfileItem,profileItem,(ProfileImageType)count);
-            }
-
-            if (count == (int)playerData.EquipProfile)
-            {
-                newProfileItem.transform.Find("EquipedItem").gameObject.SetActive(true);
-            }
-
-            if (profileItem.LevelLimit > playerData.Level)
-            {
                 newProfileItem.transform.Find("ButtonOff").gameObject.SetActive(true);
-                newProfileItem.transform.Find("ButtonOff").Find("LevelLimit").GetComponent<TextMeshProUGUI>().text = $"레벨제한 {profileItem.LevelLimit}";
+                newProfileItem.transform.Find("ButtonOff").Find("LevelLimit").GetComponent<TextMeshProUGUI>().text =
+                    $"레벨제한 {profileItem.LevelLimit}";
+            }
+
+            if (count == (int)PlayerDataFromWebServer.Instance.PlayerData.EquipProfile)
+            {
+                newProfileItem.transform.Find("EquippedItem").gameObject.SetActive(true);
+                equippedProfile = newProfileItem;
             }
 
             count++;
         }
     }
 
-    private void SetBuyEventToButton(GameObject button, ShopItemData shopItemData, ProfileImageType imageType)
+    /// <summary>
+    /// 구매 가능한 프로필이라면 클릭시 실행되는 이벤트
+    /// 프로필 버튼 클릭시 -> 구매 확정 창이 뜨고, 해당 창의 내부를 채우기.
+    /// 구매 확정 버튼 -> 서버로 요청 보내고 긍정이 오면, 구매 이후 데이터 반영 및 UI 변경.
+    /// </summary>
+    /// <param name="button"></param>
+    /// <param name="shopItemData"></param>
+    /// <param name="profileType"></param>
+    private void SetBuyEventToButton(GameObject button, ShopItemData shopItemData, ProfileImageType profileType)
     {
-        button.GetComponent<Button>().onClick.AddListener(()=>
+        button.GetComponent<Button>().onClick.AddListener(() =>
         {
-            if (playerData.CashMoney >= shopItemData.Cost)
+            if (PlayerDataFromWebServer.Instance.PlayerData.CashMoney >= shopItemData.Cost)
             {
                 notEnoughMoneyPanel.SetActive(true);
                 return;
             }
-            
+
             // 상점 구매 확정 창 출현 및 내부 UI 채우기
             itemBuyPanel.SetActive(true);
-            itemImage.sprite = profileImages[imageType];
+            itemImage.sprite = profileImages[profileType];
             itemName.text = shopItemData.ItemName;
-            itemCost.text =  shopItemData.Cost.ToString();
-            
+            itemCost.text = shopItemData.Cost.ToString();
+
             // 구매하기 버튼에 지정할 코드
             itemBuyButton.onClick.RemoveAllListeners();
             itemBuyButton.onClick.AddListener(async () =>
@@ -158,29 +182,84 @@ public class ShopUIController : MonoBehaviour
                 CS_RequestBuyItemDTO requestBuyItemDTO = new CS_RequestBuyItemDTO();
                 requestBuyItemDTO.IDToken = SystemInfo.deviceUniqueIdentifier;
                 requestBuyItemDTO.BuyItemType = shopItemData.ItemType;
-                requestBuyItemDTO.BuyItemID = (int)imageType;
-                requestBuyItemDTO.GameMoney = playerData.GameMoney;
+                requestBuyItemDTO.BuyItemID = (int)profileType;
+                requestBuyItemDTO.GameMoney = PlayerDataFromWebServer.Instance.PlayerData.GameMoney;
 
                 SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestBuySkin(requestBuyItemDTO);
 
-                if (response.IsSuccess==true)
+                if (response.IsSuccess == true)
                 {
                     // 보유 금액 제거 및 UI 갱신
-                    playerData.GameMoney -= shopItemData.Cost;
-                    playerMoneyInShop.text = playerData.GameMoney.ToString();
-                    
+                    PlayerDataFromWebServer.Instance.PlayerData.GameMoney -= shopItemData.Cost;
+                    playerMoneyInShop.text = PlayerDataFromWebServer.Instance.PlayerData.GameMoney.ToString();
+
                     // 구매한 아이템 상태 변경
                     button.transform.Find("HasItem").gameObject.SetActive(true);
 
                     // 캐시 된 인벤토리 업데이트
-                    ShopDataManager.Instance.GetOwnedPlayerProfile()[(int)imageType] = true;
-                    
+                    ShopDataManager.Instance.ChangePlayerProfileStateAfterBuy(profileType);
+
                     // 장비 가능 UI로 변경 필요
-                    
+                    button.GetComponent<Button>().onClick.RemoveAllListeners();
+                    SetEquipEventToButton(button, shopItemData, profileType);
+
                     // 아이템 구매 창 비활성화
                     itemBuyPanel.SetActive(false);
                 }
+                else
+                {
+                    // 아이템 구매 창 비활성화만 적용
+                    itemBuyPanel.SetActive(false);
+                }
             });
+        });
+    }
+
+    private void SetEquipEventToButton(GameObject button, ShopItemData shopItemData, ProfileImageType profileType)
+    {
+        button.GetComponent<Button>().onClick.AddListener(async () =>
+        {
+            float timeSinceLastClick = Time.time - lastClickTime;
+            lastClickTime = Time.time;
+            
+            if (lastClickedButton == null || lastClickedButton != button.GetComponent<Button>())
+            {
+                lastClickedButton = button.GetComponent<Button>();
+                return;
+            }
+            
+            if (timeSinceLastClick > doubleClickIntervalTime)
+            {
+                return;
+            }
+
+            // 같은 프로필을 클릭중이고, 더블클릭으로 판정된 해피패스
+            
+            CS_RequestEquipItemDTO requestEquipItemDTO = new CS_RequestEquipItemDTO();
+            requestEquipItemDTO.IDToken = SystemInfo.deviceUniqueIdentifier;
+            requestEquipItemDTO.EquipItemType = shopItemData.ItemType;
+            requestEquipItemDTO.EquipItemID = (int)profileType;
+
+            SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestEquipSkin(requestEquipItemDTO);
+
+            if (response.IsSuccess == true)
+            {
+                // 장착중인 프로필 데이터 변경
+                PlayerDataFromWebServer.Instance.PlayerData.EquipProfile = profileType;
+                
+                // UI 변경사항 적용 (메뉴창)
+                playerProfileInMenu.sprite = profileImages[PlayerDataFromWebServer.Instance.PlayerData.EquipProfile];
+                
+                // UI 변경사항 적용 (상점창)
+                button.transform.Find("EquippedItem").gameObject.SetActive(true);
+
+                if (equippedProfile != null)
+                {
+                    equippedProfile.transform.Find("EquippedItem").gameObject.SetActive(false);
+                }
+                
+                equippedProfile = button;
+            }
         });
     }
 }
