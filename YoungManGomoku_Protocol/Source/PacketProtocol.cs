@@ -200,6 +200,22 @@ namespace YoungManGomoku_Protocol
         public uint LoseCount { get; set; }
     }
 
+    public struct IngameItemCost
+    {
+	    public int TakeBackCost { get; set; }
+	    public int TakeBackReward { get; set; }
+	    public int ByoyomiPurchaseCost { get; set; }
+	    public int ByoyomiPurchaseReward { get; set; }
+
+	    public IngameItemCost(int takeBackCost, int takeBackReward,
+		    int byoyomiPurchaseCost, int byoyomiPurchaseReward)
+	    {
+		    TakeBackCost = takeBackCost;
+		    TakeBackReward = takeBackReward;
+		    ByoyomiPurchaseCost = byoyomiPurchaseCost;
+		    ByoyomiPurchaseReward = byoyomiPurchaseReward;
+	    }
+    }
 
 	public class PlayerInventoryData
 	{
@@ -419,16 +435,18 @@ namespace YoungManGomoku_Protocol.ServerToClient
 		public bool MatchingSuccess { get; set; }
 
         public StoneColorType MyStoneColorType { get; set; }
-
         public TimerSettingData TimerSettingDTO { get; set; }
+        public IngameItemCost ItemCostDTO { get; set; }
   
-        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor, in TimerSettingData timerSettingDTO) 
+        public SC_MatchResultDTO(OpponentPlayerData opponent, string msg, bool isSuccess, StoneColorType stoneColor,
+	        in TimerSettingData timerSettingDTO, in IngameItemCost itemCostDTO) 
         { 
             OpponentPlayer = opponent;
             Message = msg;
             MatchingSuccess = isSuccess;
             MyStoneColorType = stoneColor;
             TimerSettingDTO = timerSettingDTO;
+            ItemCostDTO = itemCostDTO;
         }
 
         /// <summary>재대결 성사 상황에서 매칭 정보 최신화</summary>

@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -35,9 +35,18 @@ public class CheckData : MonoBehaviour
 
     private Dictionary<string, long> patchMap;
 
+#if UNITY_STANDALONE
+    [DllImport("user32.dll")]
+    private static extern void DisableProcessWindowsGhosting();
+#endif
+    
     private void Awake()
     {
         patchMap = new Dictionary<string, long>();
+        
+#if UNITY_STANDALONE
+        DisableProcessWindowsGhosting();
+#endif
     }
 
     private void Start()
