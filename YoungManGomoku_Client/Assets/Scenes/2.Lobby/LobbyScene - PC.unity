@@ -2330,6 +2330,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbyUIController
   menuPanel: {fileID: 690752590}
+  profileImages: {fileID: 11400000, guid: 6976f020d387f2b448859e857ca82f44, type: 2}
+  profileImage: {fileID: 1907978229}
   playerNicknameInMenu: {fileID: 302391198}
   playerStatsInMenu: {fileID: 356742065}
   playerLevelSlider: {fileID: 407339087}
@@ -2337,6 +2339,7 @@ MonoBehaviour:
   replayPanel: {fileID: 673501552}
   settingPanel: {fileID: 1512362805}
   matchMakingPanel: {fileID: 54160392}
+  playerProfileInMatchMaking: {fileID: 756512772}
   playerNicknameInMatchMaking: {fileID: 964741355}
   playerStatsInMatchMaking: {fileID: 511337459}
 --- !u!4 &458822870
@@ -6903,7 +6906,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 58.4
+  m_fontSize: 57.1
   m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -7039,7 +7042,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 42.95
+  m_fontSize: 42.6
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

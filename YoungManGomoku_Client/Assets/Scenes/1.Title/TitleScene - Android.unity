@@ -2519,7 +2519,7 @@ MonoBehaviour:
   userNicknameInputField: {fileID: 751801534}
   nicknameWarningText: {fileID: 550391375}
   disconnectWarning: {fileID: 134998469}
-  statusCheckText: {fileID: 0}
+  statusCheckText: {fileID: 1439398850}
 --- !u!114 &1139001062
 MonoBehaviour:
   m_ObjectHideFlags: 0

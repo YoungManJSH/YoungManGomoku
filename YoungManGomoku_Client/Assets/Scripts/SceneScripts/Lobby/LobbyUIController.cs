@@ -35,6 +35,7 @@ public class LobbyUIController : MonoBehaviour
     
     [Header("MatchMakingPanel")]
     [SerializeField] private GameObject matchMakingPanel;
+    [SerializeField] private Image playerProfileInMatchMaking;
     [SerializeField] private TextMeshProUGUI playerNicknameInMatchMaking;
     [SerializeField] private TextMeshProUGUI playerStatsInMatchMaking;
     
@@ -73,6 +74,7 @@ public class LobbyUIController : MonoBehaviour
         playerNicknameInMenu.text = playerData.Nickname;
         playerStatsInMenu.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
 
+        playerProfileInMatchMaking.sprite = profileImages[playerData.EquipProfile];
         playerNicknameInMatchMaking.text = playerData.Nickname;
         playerStatsInMatchMaking.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
 

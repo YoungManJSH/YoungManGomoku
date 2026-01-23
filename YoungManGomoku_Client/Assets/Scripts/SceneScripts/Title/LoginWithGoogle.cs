@@ -65,7 +65,7 @@ public class LoginWithGoogle : MonoBehaviour
             isGoogleSignInInitialized = true;
         }
         
-        GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
+        await GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
         {
             if (task.IsCanceled)
             {
@@ -97,7 +97,7 @@ public class LoginWithGoogle : MonoBehaviour
                     Debug.LogError("Firebase auth failed: " + authTask.Exception);
                     return;
                 }
-
+                
                 user = auth.CurrentUser;
                 
                 // 파이어베이스 인증 해피패스
@@ -126,6 +126,7 @@ public class LoginWithGoogle : MonoBehaviour
                     {
                         PlayerDataFromWebServer.Instance.SetIDToken(user.UserId);
                         PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(registerResult);
+                        ShopDataManager.Instance.InitializeShopData(await GetComponent<NetworkManager>().RequestShopData(user.UserId));
                         MoveToLobbyScene();
                     }
                 }
@@ -134,6 +135,7 @@ public class LoginWithGoogle : MonoBehaviour
                     // 로그인 성공!
                     PlayerDataFromWebServer.Instance.SetIDToken(user.UserId);
                     PlayerDataFromWebServer.Instance.CompleteLoginFromWebServer(loginResult);
+                    ShopDataManager.Instance.InitializeShopData(await GetComponent<NetworkManager>().RequestShopData(user.UserId));
                     MoveToLobbyScene();
                 }
 

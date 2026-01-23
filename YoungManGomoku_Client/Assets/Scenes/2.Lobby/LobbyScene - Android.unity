@@ -4046,6 +4046,7 @@ MonoBehaviour:
   replayPanel: {fileID: 664771386}
   settingPanel: {fileID: 705819500}
   matchMakingPanel: {fileID: 186002110}
+  playerProfileInMatchMaking: {fileID: 1344365103}
   playerNicknameInMatchMaking: {fileID: 2038386528}
   playerStatsInMatchMaking: {fileID: 1476993794}
 --- !u!4 &839282289
@@ -7475,7 +7476,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 54.95
+  m_fontSize: 29.4
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
