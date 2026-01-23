@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using YoungManGomoku_Protocol;
@@ -185,9 +186,33 @@ namespace YoungManGomoku_WebServer.Controllers
                     room.Surrender(uid);
                     break;
                 case IngameRequestType.PurchaseByoyomi:
+                    if (player.Account.Money.GameMoney < _serverManager.DefaultIngameReqCost.ByoyomiPurchaseCost)
+                    {
+                        return Ok(new SC_ResponseStringDTO("Purchase Count Fail - Not Enough Mone", false));
+                    }
                     room.PurchaseCountdownLife(uid);
-                    break;
+
+                    // 초읽기 구매는 딱히 상대에게 승낙받을 필요 없으므로 즉시 구매 작업 진행
+                    player.Account.Money.GameMoney -= _serverManager.DefaultIngameReqCost.ByoyomiPurchaseCost;
+                    _context.PlayerMoneyTable.Update(player.Account.Money);
+
+                    PlayerSession? opponent = _serverManager.GetPlayerSession(room.GetOpponent(uid));
+
+                    if (opponent == null)
+                    {
+                        return Ok(new SC_ResponseStringDTO("Opponent Session is Invalid.", false));
+                    }
+
+                    opponent.Account.Money.GameMoney += _serverManager.DefaultIngameReqCost.ByoyomiPurchaseReward;
+                    _context.PlayerMoneyTable.Update(opponent.Account.Money);
+
+                    _context.SaveChanges();
+					break;
                 case IngameRequestType.TakeBack:
+                    if (player.Account.Money.GameMoney < _serverManager.DefaultIngameReqCost.TakeBackCost)
+                    {
+                        return Ok(new SC_ResponseStringDTO("Takeback Fail - Not Enough Money", false));
+                    }
                     room.RequestTakeBack(uid);
                     break;
             }
@@ -251,9 +276,33 @@ namespace YoungManGomoku_WebServer.Controllers
                 return BadRequest("Takeback Permit Failed : Not in game");
             }
 
+            // 무르기 처리
             room.TakeBackResult(player.Account.UID, takebackPermitDTO.IsPermit);
 
-            return Ok(new SC_ResponseStringDTO("Take Back Permit Response Success", true));
+
+            // 상대방의 무르기 비용 차감
+			PlayerSession? opponent = _serverManager.GetPlayerSession(room.GetOpponent(player.Account.UID));
+
+			if (opponent == null)
+			{
+				return Ok(new SC_ResponseStringDTO("Opponent Session is Invalid.", false));
+			}
+
+            // 상대가 그지인가
+            if (_serverManager.DefaultIngameReqCost.TakeBackCost > opponent.Account.Money.GameMoney)
+            {
+				return Ok(new SC_ResponseStringDTO("Take Back Permit Response Failed - Opponent Not Enough Takeback Money", true));
+			}
+			opponent.Account.Money.GameMoney -= _serverManager.DefaultIngameReqCost.TakeBackCost;
+			_context.PlayerMoneyTable.Update(opponent.Account.Money);
+
+            // 무르기를 승인한 나에게 소소한 이득
+			player.Account.Money.GameMoney += _serverManager.DefaultIngameReqCost.TakeBackReward;
+			_context.PlayerMoneyTable.Update(player.Account.Money);
+
+			_context.SaveChanges();
+
+			return Ok(new SC_ResponseStringDTO("Take Back Permit Response Success", true));
         }
 
         [HttpPost("GameResult")]
