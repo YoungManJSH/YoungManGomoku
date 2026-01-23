@@ -651,7 +651,9 @@ namespace YoungManGomoku_WebServer.Sessions
 
         public void RequestTakeBack(ulong UID)
         {
-            // 마지막 무르기 요청 시간을 캐싱해둔다
+			// 유저가 돈이 있는지 여부에 대한 검사는 이미 컨트롤러에서 진행했으므로 무르기 작업 진행
+
+			// 마지막 무르기 요청 시간을 캐싱해둔다
 			_lastTakebackRequestTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
 			if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
@@ -719,42 +721,42 @@ namespace YoungManGomoku_WebServer.Sessions
             lock (_gameroomLock)
             {
                 // 유저가 돈이 있을 경우 승인하고 상대방에게 이벤트로 전달
-                if (true)
+                // 유저가 돈이 있는지 여부에 대한 검사는 이미 컨트롤러에서 진행했음.
+
+                if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
                 {
-                    if (_timeOutTimer.TryGetValue(UID, out Timer? myTimerCallback) == false)
-                    {
-                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}초읽기 구매를 요청한 유저의 타이머 콜백이 등록되어 있지 않습니다!!!");
-                        return;
-                    }
-
-                    // 타이머 추가 처리 필요
-                    if (_userTimers.TryGetValue(UID, out UserTimer? myTimer) == false)
-                    {
-                        _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 유저타이머를 찾지 못했습니다.");
-                        return;
-                    }
-
-                    // 초읽기 구매 요청이 들어왔으니 내 시간패 타이머 함수를 정지
-                    myTimerCallback?.Change(Timeout.Infinite, Timeout.Infinite);
-
-                    myTimer?.ByoyomiPurchased(_gameRoomManager.ServerContext.DefaultTimerSetting.ByoyomiPurchaseAmount);
-
-                    ulong opponent = GetOpponent(UID);
-                    if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
-                    {
-                        _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}상대방 유저에게 초읽기 구매했음을 알림!");
-                        waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.PurchaseByoyomi));
-
-                        // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
-                        _waitingEventMap.Remove(opponent);
-                    }
-
-                    _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    // 데드라인값 : 착수 응답을 보내는 놈의 시간패 시각
-                    long waitingTime = myTimer!.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds;
-                    myTimerCallback?.Change(waitingTime, -1L);
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}초읽기 구매를 요청한 유저의 타이머 콜백이 등록되어 있지 않습니다!!!");
+                    return;
                 }
+
+                // 타이머 추가 처리 필요
+                if (_userTimers.TryGetValue(UID, out UserTimer? myTimer) == false)
+                {
+                    _gameRoomManager.Logger.LogWarning($"[{DateTime.Now}] [Purchase Countdown] {_gameRoomManager.ServerContext.UserInfo(UID)}유저의 유저타이머를 찾지 못했습니다.");
+                    return;
+                }
+
+                // 초읽기 구매 요청이 들어왔으니 내 시간패 타이머 함수를 정지
+                myTimerCallback?.Change(Timeout.Infinite, Timeout.Infinite);
+
+                myTimer?.ByoyomiPurchased(_gameRoomManager.ServerContext.DefaultTimerSetting.ByoyomiPurchaseAmount);
+
+                ulong opponent = GetOpponent(UID);
+                if (_waitingEventMap.TryGetValue(opponent, out GomokuGameEventWaitingPlayer? waitingGameEndPlayer))
+                {
+                    _gameRoomManager.Logger.LogTrace($"[{DateTime.Now}] {_gameRoomManager.ServerContext.UserInfo(opponent)}상대방 유저에게 초읽기 구매했음을 알림!");
+                    waitingGameEndPlayer.TaskCompSrc?.TrySetResult(new SC_WaitEventDTO(IngameRequestType.PurchaseByoyomi));
+
+                    // 대기 끝, 현재 턴인 플레이어에게 응답을 보내라
+                    _waitingEventMap.Remove(opponent);
+                }
+
+                _gameProgressMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                // 데드라인값 : 착수 응답을 보내는 놈의 시간패 시각
+                long waitingTime = myTimer!.DeadLine(_gameProgressMilliseconds) - _gameProgressMilliseconds;
+                myTimerCallback?.Change(waitingTime, -1L);
             }
+
         }
 
         public bool RequestRematch(ulong UID, bool isRematch)
@@ -1109,7 +1111,7 @@ namespace YoungManGomoku_WebServer.Sessions
 			}
         }
 	
-		private ulong GetOpponent(ulong UID)
+		public ulong GetOpponent(ulong UID)
 			=> UID == BlackPlayerUID ? WhitePlayerUID : BlackPlayerUID;
 
         public StoneColorType GetColor(ulong UID)

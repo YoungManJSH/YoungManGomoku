@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using System;
-using System.Security.Cryptography;
+
 using System.Threading;
 using System.Threading.Tasks;
+
+using YoungManGomoku_Protocol;
 using YoungManGomoku_Protocol.ServerToClient;
 using YoungManGomoku_Protocol.TypeEnum.InGame;
+
 using YoungManGomoku_WebServer.Data;
 using YoungManGomoku_WebServer.Sessions;
 using YoungManGomoku_WebServer.SingletoneManager;
@@ -57,8 +61,9 @@ namespace YoungManGomoku_WebServer.Controllers
                    mr.StoneColor,
                    // 게임 룸 UID 정보는 서버에서만 쓰고 클라로 넘기지 않는다
                    // 초기값에 대한 정의에 대한 기획이 따로 없으므로 우선 magic number로 처리.
-                   _serverManager.DefaultTimerSetting
-                   );
+                   _serverManager.DefaultTimerSetting,
+				   _serverManager.DefaultIngameReqCost
+				   );
 
             if (mr.OpponentUID == 0 || mr.GameRoomUID == 0 || mr.StoneColor == StoneColorType.Empty || mr.Success == false)
                 _logger.LogDebug($"[{DateTime.Now}] [Matching Controller] Match Register Fail : {mr.Message} / {mr.Success}");

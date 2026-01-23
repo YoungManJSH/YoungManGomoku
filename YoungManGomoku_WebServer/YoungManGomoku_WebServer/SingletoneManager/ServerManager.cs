@@ -26,6 +26,8 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 
 		public TimerSettingData DefaultTimerSetting { get; }
 
+        public IngameItemCost DefaultIngameReqCost { get; }
+
 		public ServerManager(ILogger<ServerManager> logger)
         {
             _logger = logger;
@@ -35,6 +37,7 @@ namespace YoungManGomoku_WebServer.SingletoneManager
 			UIDByIDToken = new ConcurrentDictionary<string, ulong>();
 
 			DefaultTimerSetting = new TimerSettingData(mainTime: 5f, byoyomiCount: 3, byoyomiSeconds: 10f, byoyomiPurchaseAmount: 2);
+            DefaultIngameReqCost = new IngameItemCost(takeBackCost: 25, takeBackReward: 20, byoyomiPurchaseCost: 40, byoyomiPurchaseReward: 25);
 		}
 
         public uint GenerateUID32() => _uidGenerator.GenerateUID32();
