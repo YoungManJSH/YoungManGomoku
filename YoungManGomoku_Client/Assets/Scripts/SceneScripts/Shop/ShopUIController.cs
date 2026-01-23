@@ -21,6 +21,7 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private CanvasScaler scaler;
     [SerializeField] private GridLayoutGroup grid;
     [SerializeField] private GameObject profileUIPrefab;
+    [SerializeField] private GameObject profileUIForAndroidPrefab;
     [SerializeField] private ProfileImages profileImages;
 
     [Header("ItemBuyPanel")] 
@@ -49,6 +50,10 @@ public class ShopUIController : MonoBehaviour
 
     private void Awake()
     {
+        lastClickTime = 0f;
+        doubleClickIntervalTime = 0.3f;
+        
+#if UNITY_STANDALONE || UNITY_EDITOR
         RectTransform rt = grid.GetComponent<RectTransform>(); // CanvasScaler의 기준 해상도
         float referenceWidth = scaler.referenceResolution.x;
         float referenceHeight = scaler.referenceResolution.y; // 현재 RectTransform 크기 기준 비율
@@ -57,9 +62,7 @@ public class ShopUIController : MonoBehaviour
         float cellWidth = 450f * widthRatio;
         float cellHeight = 500f * heightRatio;
         grid.cellSize = new Vector2(cellWidth, cellHeight);
-
-        lastClickTime = 0f;
-        doubleClickIntervalTime = 0.3f;
+#endif
     }
 
     /// <summary>
@@ -117,7 +120,11 @@ public class ShopUIController : MonoBehaviour
         foreach (var profileItem in ShopDataManager.Instance.GetBuyableProfile())
         {
 
+#if UNITY_STANDALONE || UNITY_EDITOR
             GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
+#else
+            GameObject newProfileItem = Instantiate(profileUIForAndroidPrefab, grid.gameObject.transform, true);
+#endif
 
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
             newProfileItem.transform.Find("ItemImage").GetComponent<Image>().sprite =

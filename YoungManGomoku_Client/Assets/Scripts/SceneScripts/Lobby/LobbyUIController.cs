@@ -18,6 +18,8 @@ public class LobbyUIController : MonoBehaviour
     
     [Header("MenuPanel")]
     [SerializeField] private GameObject menuPanel;
+    [SerializeField] private ProfileImages profileImages;
+    [SerializeField] private Image profileImage;
     [SerializeField] private TextMeshProUGUI playerNicknameInMenu;
     [SerializeField] private TextMeshProUGUI playerStatsInMenu;
     
@@ -65,6 +67,8 @@ public class LobbyUIController : MonoBehaviour
         }
         
         playerData =  PlayerDataFromWebServer.Instance.PlayerData;
+        
+        profileImage.sprite = profileImages[playerData.EquipProfile];
         
         playerNicknameInMenu.text = playerData.Nickname;
         playerStatsInMenu.text = $"{playerData.WinCount}승 {playerData.LoseCount}패";
