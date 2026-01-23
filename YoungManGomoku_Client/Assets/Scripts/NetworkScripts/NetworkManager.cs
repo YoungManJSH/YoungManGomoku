@@ -48,7 +48,7 @@ public class NetworkManager : MonoBehaviour
      * 김재환 집 노트북 : "https://115.126.216.245:5001"
      * 김재환 AWS EC2 인스턴스 : "https://15.164.163.249:5001"
      * */
-	private const string BASE_URL = "https://119.197.123.161:5001"; //"https://localhost:5001";
+	private const string BASE_URL = "https://192.168.0.6:5001"; //"https://localhost:5001";
 
     // Server로 무언가의 요청을 했을 때 Connection Error 등 여러 사유로 요청 실패시 호출되는 이벤트
     public event Action<RequestError> OnRequestFailed;

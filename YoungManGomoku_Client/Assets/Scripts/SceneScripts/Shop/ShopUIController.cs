@@ -34,6 +34,9 @@ public class ShopUIController : MonoBehaviour
 
     [Header("NotEnoughMoneyPanel")] 
     [SerializeField] private GameObject notEnoughMoneyPanel;
+    
+    [Header("DebugMode")] 
+    [SerializeField] private TextMeshProUGUI debugText;
 
     /// <summary>
     /// 더블 클릭 감지용 변수들
@@ -123,15 +126,15 @@ public class ShopUIController : MonoBehaviour
 #if UNITY_STANDALONE || UNITY_EDITOR
             GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
 #else
+
             GameObject newProfileItem = Instantiate(profileUIForAndroidPrefab, grid.gameObject.transform, true);
 #endif
-
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
             newProfileItem.transform.Find("ItemImage").GetComponent<Image>().sprite =
                 profileImages[(ProfileImageType)count];
             newProfileItem.transform.Find("Image").Find("Cost").GetComponent<TextMeshProUGUI>().text =
                 profileItem.Cost.ToString();
-
+            
             if (ownedProfiles[count] == true)
             {
                 newProfileItem.transform.Find("HasItem").gameObject.SetActive(true);
@@ -187,11 +190,16 @@ public class ShopUIController : MonoBehaviour
             itemBuyButton.onClick.AddListener(async () =>
             {
                 CS_RequestBuyItemDTO requestBuyItemDTO = new CS_RequestBuyItemDTO();
+#if UNITY_STANDALONE || UNITY_EDITOR
                 requestBuyItemDTO.IDToken = SystemInfo.deviceUniqueIdentifier;
+#else
+                requestBuyItemDTO.IDToken = PlayerDataFromWebServer.Instance.IDToken;
+                debugText.text = $"아이디 토큰 설정완료";
+#endif
                 requestBuyItemDTO.BuyItemType = shopItemData.ItemType;
                 requestBuyItemDTO.BuyItemID = (int)profileType;
                 requestBuyItemDTO.GameMoney = PlayerDataFromWebServer.Instance.PlayerData.GameMoney;
-
+                
                 SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestBuySkin(requestBuyItemDTO);
 
                 if (response.IsSuccess == true)
@@ -243,7 +251,11 @@ public class ShopUIController : MonoBehaviour
             // 같은 프로필을 클릭중이고, 더블클릭으로 판정된 해피패스
             
             CS_RequestEquipItemDTO requestEquipItemDTO = new CS_RequestEquipItemDTO();
+#if UNITY_STANDALONE || UNITY_EDITOR
             requestEquipItemDTO.IDToken = SystemInfo.deviceUniqueIdentifier;
+#else
+                requestEquipItemDTO.IDToken = PlayerDataFromWebServer.Instance.IDToken;
+#endif
             requestEquipItemDTO.EquipItemType = shopItemData.ItemType;
             requestEquipItemDTO.EquipItemID = (int)profileType;
 
