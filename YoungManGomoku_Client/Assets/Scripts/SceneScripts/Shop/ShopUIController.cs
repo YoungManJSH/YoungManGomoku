@@ -197,7 +197,7 @@ public class ShopUIController : MonoBehaviour
                 debugText.text = $"아이디 토큰 설정완료";
 #endif
                 requestBuyItemDTO.BuyItemType = shopItemData.ItemType;
-                requestBuyItemDTO.BuyItemID = (int)profileType;
+                requestBuyItemDTO.BuyItemID = (uint)profileType;
                 requestBuyItemDTO.GameMoney = PlayerDataFromWebServer.Instance.PlayerData.GameMoney;
                 
                 SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestBuySkin(requestBuyItemDTO);
@@ -248,6 +248,11 @@ public class ShopUIController : MonoBehaviour
                 return;
             }
 
+            if (profileType == PlayerDataFromWebServer.Instance.PlayerData.EquipProfile)
+            {
+                return;
+            }
+            
             // 같은 프로필을 클릭중이고, 더블클릭으로 판정된 해피패스
             
             CS_RequestEquipItemDTO requestEquipItemDTO = new CS_RequestEquipItemDTO();
