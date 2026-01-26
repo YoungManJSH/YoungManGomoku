@@ -27,7 +27,7 @@ EditorBuildSettings:
     path: Assets/Scenes/4.Shop/ShopScene - Android.unity
     guid: b7752833e54b9ee44bbe8869bb84084e
   - enabled: 1
-    path: Assets/Scenes/3.InGame/IngameScene.unity
+    path: Assets/Scenes/3.InGame/InGameScene.unity
     guid: c3de258a1270b3347af60f136291a7cb
   - enabled: 1
     path: Assets/Scenes/3.InGame/GiboPlayScene.unity

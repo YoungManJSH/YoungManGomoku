@@ -8,6 +8,7 @@ public class ButtonManager : MonoBehaviour
 {
     [SerializeField] private MessageBoxManager messageBox;
     [SerializeField] private PlayerPanelController playerPanel;
+    [SerializeField] private PlayerMoneyUI playerMoneyUI;
     [SerializeField] private StoneMover stoneMover;
     [SerializeField] private ResultPresenter resultPresenter;
     
@@ -32,9 +33,6 @@ public class ButtonManager : MonoBehaviour
         _byoyomiPurchaseSet = (byoyomiPurchaseButton, byoyomiPurchaseButton.GetComponentInChildren<TextMeshProUGUI>());
         _takeBackSet = (takeBackButton, takeBackButton.GetComponentInChildren<TextMeshProUGUI>());
         _exitSet = (exitButton, exitButton.GetComponentInChildren<TextMeshProUGUI>());
-
-        _byoyomiPurchaseSet.Item2.text = $"{_byoyomiPurchaseSet.Item2.text} ({GameManager.Instance.ByoyomiPurchaseAmount}회)";
-        byoyomiPurchaseConfirmMsg = $"{byoyomiPurchaseConfirmMsg}\n({GameManager.Instance.ByoyomiPurchaseAmount}회)";
         
         ButtonInactivate(_surrenderSet);
         ButtonInactivate(_byoyomiPurchaseSet);
@@ -52,8 +50,15 @@ public class ButtonManager : MonoBehaviour
         GameManager gm = GameManager.Instance;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
+        gm.OnPlayerMoneyChanged += OnPlayerMoneyChanged;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
         stoneMover.OnStoneMove += OnStoneMove;
+        
+        _byoyomiPurchaseSet.Item2.text += $" ({gm.ItemCost.ByoyomiPurchaseCost}G)";
+        _takeBackSet.Item2.text += $" ({gm.ItemCost.TakeBackCost}G)";
+        surrenderConfirmMsg += "\n(판 엎기)";
+        byoyomiPurchaseConfirmMsg += $"\n({gm.ByoyomiPurchaseAmount}회, {gm.ItemCost.ByoyomiPurchaseCost}골드)";
+        takeBackConfirmMsg += $"\n(성사 시 {gm.ItemCost.TakeBackCost}골드)";
         
         surrenderButton.onClick.AddListener(SurrenderInput);
         byoyomiPurchaseButton.onClick.AddListener(TimePurchaseInput);
@@ -89,11 +94,15 @@ public class ButtonManager : MonoBehaviour
         => messageBox.MessageBoxOpen(surrenderConfirmMsg, RequestSurrender);
 
     private void TimePurchaseInput()
-        => messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
+    {
+        playerMoneyUI.StartGlowEffect();
+        messageBox.MessageBoxOpen(byoyomiPurchaseConfirmMsg, RequestTimePurchase);
+    }
 
     private void TakeBackInput()
     {
         stoneMover.MarkTakeBack();
+        playerMoneyUI.StartGlowEffect();
         messageBox.MessageBoxOpen(takeBackConfirmMsg, RequestTakeBack);
     }
 
@@ -130,7 +139,10 @@ public class ButtonManager : MonoBehaviour
     }
 
     private void OnTurnBackActivate()
-        => _activateSet.Add(_takeBackSet);
+    {
+        if (GameManager.Instance.HasTakeBackCost)
+            _activateSet.Add(_takeBackSet);
+    }
 
     private async void OnTakeBack(bool isAccepted)
     {
@@ -152,12 +164,44 @@ public class ButtonManager : MonoBehaviour
             EventManager.Instance.ServerReplyFailed();
         }
     }
+
+    private void OnPlayerMoneyChanged(int _)
+    {
+        GameManager gm = GameManager.Instance;
+        
+        if (gm.HasByoyomiCost is false)
+        {
+            ButtonInactivate(_byoyomiPurchaseSet);
+            _activateSet.Remove(_byoyomiPurchaseSet);
+        }
+        else if (gm.IsByoyomiPurchased is false &&
+                 gm.PlayerTimer.MainTime == 0f &&
+                 gm.PlayerTimer.ByoyomiCount == 1)
+        {
+            // 재화 획득은 상대방 턴일 때만 발생할 수 있으므로 버튼 활성화 생략
+            _activateSet.Add(_byoyomiPurchaseSet);
+        }
+
+        if (gm.HasTakeBackCost is false)
+        {
+            ButtonInactivate(_takeBackSet);
+            _activateSet.Remove(_takeBackSet);
+        }
+        else if (gm.BoardInform.NowTurn >= 3)
+        {
+            // 재화 획득은 상대방 턴일 때만 발생할 수 있으므로 버튼 활성화 생략
+            _activateSet.Add(_takeBackSet);
+        }
+    }
     
     private void OnLastByoyomi()
     {
-        if (GameManager.Instance.IsByoyomiPurchased)
+        GameManager gm = GameManager.Instance;
+        
+        if (gm.IsByoyomiPurchased || gm.HasByoyomiCost is false)
             return;
         
+        // 이전에 초읽기 구매를 한 적이 없고 재화를 충분히 갖고 있는 경우
         ButtonActivate(_byoyomiPurchaseSet);
         _activateSet.Add(_byoyomiPurchaseSet);
     }
