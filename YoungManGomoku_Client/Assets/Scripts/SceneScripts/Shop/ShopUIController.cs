@@ -124,9 +124,8 @@ public class ShopUIController : MonoBehaviour
         {
 
 #if UNITY_STANDALONE || UNITY_EDITOR
-            GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
+            GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, false);
 #else
-
             GameObject newProfileItem = Instantiate(profileUIForAndroidPrefab, grid.gameObject.transform, true);
 #endif
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
