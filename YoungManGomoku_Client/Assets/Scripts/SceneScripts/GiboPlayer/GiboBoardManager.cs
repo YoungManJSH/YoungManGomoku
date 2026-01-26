@@ -281,7 +281,7 @@ public class GiboBoardManager : MonoBehaviour
         else if (gomokuColor == StoneColorType.White && turn == LastTurn)
         {
             var gomokuInform = JudgeMove.OmokLineInforms(simulator,
-                _moveStoneData[LastTurn - 1], StoneColorType.Black);
+                _moveStoneData[LastTurn - 1], StoneColorType.White);
 
             gomokuStoneList = new List<RectTransform>();
             
@@ -289,7 +289,7 @@ public class GiboBoardManager : MonoBehaviour
             {
                 foreach (var coord in coordList)
                 {
-                    gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)].GetComponent<RectTransform>());
+                    gomokuStoneList.Add(_recordStones[Array.IndexOf(_moveStoneData, coord)]);
                 }
             }
         }
