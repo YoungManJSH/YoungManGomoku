@@ -13,14 +13,17 @@ public static class GiboFileManager
         public string BlackPlayer { get; }
         public string WhitePlayer { get; }
         public string Result { get; }
-
-        public GiboTitleData(string fileName, DateTime dateTime, string blackPlayer, string whitePlayer, string result)
+        public int LastTurn { get; }
+        
+        public GiboTitleData(string fileName, DateTime dateTime, string blackPlayer, string whitePlayer,
+            string result, int lastTurn)
         {
             FileName = fileName;
             DateTime = dateTime;
             BlackPlayer = blackPlayer;
             WhitePlayer = whitePlayer;
             Result = result;
+            LastTurn = lastTurn;
         }
     }
     
@@ -212,11 +215,12 @@ public static class GiboFileManager
                 string[] whiteInforms = whiteInformLine.Split(',');
 
                 if (titleInforms.Length != 3 || blackInforms.Length != 6 || whiteInforms.Length != 6 ||
-                    DateTime.TryParse(titleInforms[0], out DateTime dateTime) is false)
+                    DateTime.TryParse(titleInforms[0], out DateTime dateTime) is false ||
+                    int.TryParse(titleInforms[1], out int lastTurn) is false)
                     continue;
 
-                giboList.Add(new GiboTitleData(fileName, dateTime,
-                    blackPlayer: blackInforms[0], whitePlayer: whiteInforms[0], result: titleInforms[2]));
+                giboList.Add(new GiboTitleData(fileName, dateTime, blackPlayer: blackInforms[0],
+                    whitePlayer: whiteInforms[0], result: titleInforms[2], lastTurn));
             }
 
             // 최신 기보를 앞쪽으로 정렬
