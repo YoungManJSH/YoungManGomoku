@@ -260,7 +260,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c18498168b73b5c4bb689d0bda861558, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoneController
-  circle: {fileID: 9015975396128175114}
+  circle: {fileID: 3686888742980929100}
   xMark: {fileID: 695744321589934926}
 --- !u!1 &9015975396128175114
 GameObject:

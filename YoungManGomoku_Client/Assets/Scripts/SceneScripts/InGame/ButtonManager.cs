@@ -48,7 +48,10 @@ public class ButtonManager : MonoBehaviour
         em.OnRematchFailed += () => ButtonActivate(_exitSet);
         
         GameManager gm = GameManager.Instance;
+        gm.BoardInform.OnBlackGomoku += DisableIngameButton;
+        gm.BoardInform.OnWhiteGomoku += DisableIngameButton;
         gm.BoardInform.OnBlackUnmovable += DisableIngameButton;
+        gm.BoardInform.OverMaxTurn += DisableIngameButton;
         gm.BoardInform.OnTurnBackActivate += OnTurnBackActivate;
         gm.OnPlayerMoneyChanged += OnPlayerMoneyChanged;
         playerPanel.OnLastByoyomi += OnLastByoyomi;
