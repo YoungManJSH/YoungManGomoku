@@ -97,8 +97,8 @@ public class StoneController : MonoBehaviour
     {
         circle.gameObject.SetActive(true);
         
-        _fadeTween = circle.DOFade(endValue: 0.3f, duration: 0.25f).
-            SetLoops(10, LoopType.Yoyo).SetEase(Ease.InOutSine);
+        _fadeTween = circle.DOFade(endValue: 0.3f, duration: 0.4f).
+            SetLoops(4, LoopType.Yoyo).SetEase(Ease.InOutCubic);
     }
     
     private void OnStartSweeping()
