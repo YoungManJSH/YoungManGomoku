@@ -44,7 +44,7 @@ public class ReplayButtonCell : MonoBehaviour
         
         if (resultSegments.Length == 1)
         {
-            result.text = resultSegments[0];
+            result.text = $"{data.LastTurn}수\n{resultSegments[0]}";
             result.color = drawTextColor;
             return;
         }
@@ -54,7 +54,7 @@ public class ReplayButtonCell : MonoBehaviour
         else if (resultSegments[1] == "접속끊김패")
             resultSegments[1] = "끊김패";
         
-        result.text = $"{resultSegments[0]}\n{resultSegments[1]}";
+        result.text = $"{resultSegments[0]} {data.LastTurn}수\n{resultSegments[1]}";
         
         char winLose = result.text[^1];
         if (winLose == '승') result.color = winTextColor;

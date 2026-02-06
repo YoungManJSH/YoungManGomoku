@@ -57,7 +57,7 @@ public class RespondTakeBack : MonoBehaviour
         long elapsedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _requestedTime;
         int nowRemain = timeLimit - Mathf.FloorToInt(elapsedTime / 1000f);
 
-        if (nowRemain == _remainSecond) return;
+        if (nowRemain == _remainSecond) goto CheckInput;
 
         if (nowRemain <= 0)
         {
@@ -67,7 +67,8 @@ public class RespondTakeBack : MonoBehaviour
         
         messageUI.text = $"{message} - {nowRemain:D2}";
         _remainSecond = nowRemain;
-
+        
+        CheckInput:
         if (Input.GetButtonDown("Submit"))
         {
             Accept();

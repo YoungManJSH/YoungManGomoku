@@ -124,9 +124,8 @@ public class ShopUIController : MonoBehaviour
         {
 
 #if UNITY_STANDALONE || UNITY_EDITOR
-            GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, true);
+            GameObject newProfileItem = Instantiate(profileUIPrefab, grid.gameObject.transform, false);
 #else
-
             GameObject newProfileItem = Instantiate(profileUIForAndroidPrefab, grid.gameObject.transform, true);
 #endif
             newProfileItem.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text = profileItem.ItemName;
@@ -197,7 +196,7 @@ public class ShopUIController : MonoBehaviour
                 debugText.text = $"아이디 토큰 설정완료";
 #endif
                 requestBuyItemDTO.BuyItemType = shopItemData.ItemType;
-                requestBuyItemDTO.BuyItemID = (int)profileType;
+                requestBuyItemDTO.BuyItemID = (uint)profileType;
                 requestBuyItemDTO.GameMoney = PlayerDataFromWebServer.Instance.PlayerData.GameMoney;
                 
                 SC_ResponseStringDTO response = await GetComponent<NetworkManager>().RequestBuySkin(requestBuyItemDTO);
@@ -248,6 +247,11 @@ public class ShopUIController : MonoBehaviour
                 return;
             }
 
+            if (profileType == PlayerDataFromWebServer.Instance.PlayerData.EquipProfile)
+            {
+                return;
+            }
+            
             // 같은 프로필을 클릭중이고, 더블클릭으로 판정된 해피패스
             
             CS_RequestEquipItemDTO requestEquipItemDTO = new CS_RequestEquipItemDTO();

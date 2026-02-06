@@ -45,7 +45,11 @@ public class CheckData : MonoBehaviour
         patchMap = new Dictionary<string, long>();
         
 #if UNITY_STANDALONE
+        // 운영체제가 우리 프로그램의 응답없음 여부를 판단하지 않도록 변경
         DisableProcessWindowsGhosting();
+#elif UNITY_ANDROID
+        // 화면이 자동으로 꺼지지 않도록 변경
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
 #endif
     }
 

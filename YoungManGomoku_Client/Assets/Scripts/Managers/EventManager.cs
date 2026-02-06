@@ -487,7 +487,8 @@ public class EventManager : MonoBehaviour
         try
         {
             SC_RematchResultDTO result =
-                await _networkManager.RequestRematchResult(_gameManager.IdToken);
+                await _networkManager.RequestRematchResult(_gameManager.IdToken,
+                    timeOutSeconds: Mathf.RoundToInt(ResultPresenter.RematchWaitingTime) + 1);
             
             // 유저가 인게임 씬을 이미 떠났다면 이 응답은 무효임
             if (SceneLoadManager.NowScene != SceneLoadManager.SceneType.IngameScene)

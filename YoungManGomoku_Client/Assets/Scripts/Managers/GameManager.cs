@@ -20,6 +20,20 @@ public class GameManager : MonoBehaviour
     public BasicPlayerData MyPlayer { get; private set; }
     public BasicPlayerData OppositePlayer { get; private set; }
     public string IdToken { get; private set; }
+    public IngameItemCost ItemCost => PlayerDataFromWebServer.Instance.MatchResultDTO.ItemCostDTO;
+    public int PlayerMoney
+    {
+        get => PlayerDataFromWebServer.Instance.PlayerData.GameMoney;
+        private set
+        {
+            PlayerDataFromWebServer.Instance.PlayerData.GameMoney = value;
+            OnPlayerMoneyChanged?.Invoke(value);
+        }
+    }
+    public bool HasByoyomiCost => PlayerMoney >= ItemCost.ByoyomiPurchaseCost;
+    public bool HasTakeBackCost => PlayerMoney >= ItemCost.TakeBackCost;
+    
+    public event Action<int> OnPlayerMoneyChanged;
 
     private UserTimer _nowPlayerTimer;
     private CS_RequestTimerSynchroDTO _timerSynchroDTO; 
@@ -44,6 +58,8 @@ public class GameManager : MonoBehaviour
         _eventManager.OnPlayerByoyomiPurchase += _ => IsByoyomiPurchased = true;
         _eventManager.OnTakeBackRequested += _ => DisableTimer();
         _eventManager.OnTakeBack += OnTakeBack;
+        _eventManager.OnPlayerByoyomiPurchase += OnPlayerByoyomiPurchase;
+        _eventManager.OnOppositeByoyomiPurchase += OnOppositeByoyomiPurchase;
         
         #region 서버에서 받아온 매칭 정보로 초기화
         IdToken = PlayerDataFromWebServer.Instance.IDToken;
@@ -215,6 +231,23 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("무르기 로직 에러: NowTurn, record.Count 확인 요망!");
                 _eventManager.ServerReplyFailed();
             }
+
+            if (BoardInform.NowTurn % 2 == 0 == IsPlayerBlack)
+            {
+                // 내 턴에서 무르기 성사 → 무르기 비용 차감
+                PlayerMoney -= ItemCost.TakeBackCost;
+            }
+            else
+            {
+                // 상대방 턴에서 무르기 성사 → 무르기 보상 획득
+                PlayerMoney += ItemCost.TakeBackReward;
+            }
         }
     }
+
+    private void OnPlayerByoyomiPurchase(int _)
+        => PlayerMoney -= ItemCost.ByoyomiPurchaseCost;
+
+    private void OnOppositeByoyomiPurchase(int _)
+        => PlayerMoney += ItemCost.ByoyomiPurchaseReward;
 }
